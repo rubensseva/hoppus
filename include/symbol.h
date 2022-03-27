@@ -3,9 +3,16 @@
 
 #include "ir.h"
 
+#define SYMBOL_MAX_LEN 256
+
 typedef struct symbol_t {
     char *name;
-    expr val;
+    expr *e;
 } symbol;
+
+void symbol_add(symbol *s);
+symbol *symbol_find(char *s);
+int symbol_remove_i(int index);
+int symbol_remove_name(char *s);
 
 #endif // SYMBOL_H_

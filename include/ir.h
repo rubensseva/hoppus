@@ -5,10 +5,12 @@
 
 typedef enum expr_type_t {
     SYMBOL,
-    PROC_START,
+    LIST,
     PROC_SYMBOL,
     NUMBER,
-    CONS
+    CONS,
+    DEFUN,
+    DEFINE
 } expr_type;
 
 typedef struct expr_t {

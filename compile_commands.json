@@ -1,0 +1,72 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Iinclude",
+      "-o",
+      "build/ukernel_lisp.out",
+      "main.c"
+    ],
+    "directory": "/home/ruben/Code/Ruben/clisp",
+    "file": "/home/ruben/Code/Ruben/clisp/main.c",
+    "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Iinclude",
+      "-o",
+      "build/ukernel_lisp.out",
+      "src/tokenize.c"
+    ],
+    "directory": "/home/ruben/Code/Ruben/clisp",
+    "file": "/home/ruben/Code/Ruben/clisp/src/tokenize.c",
+    "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Iinclude",
+      "-o",
+      "build/ukernel_lisp.out",
+      "src/eval.c"
+    ],
+    "directory": "/home/ruben/Code/Ruben/clisp",
+    "file": "/home/ruben/Code/Ruben/clisp/src/eval.c",
+    "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Iinclude",
+      "-o",
+      "build/ukernel_lisp.out",
+      "src/ir.c"
+    ],
+    "directory": "/home/ruben/Code/Ruben/clisp",
+    "file": "/home/ruben/Code/Ruben/clisp/src/ir.c",
+    "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Iinclude",
+      "-o",
+      "build/ukernel_lisp.out",
+      "src/utility.c"
+    ],
+    "directory": "/home/ruben/Code/Ruben/clisp",
+    "file": "/home/ruben/Code/Ruben/clisp/src/utility.c",
+    "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
+  }
+]
