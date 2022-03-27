@@ -31,7 +31,7 @@ int symbol_remove_i(int index) {
 
 int symbol_remove_name(char *s) {
     for (int i = 0; i < n_symbol; i++) {
-        if (strcmp(symbols[i].name, s) == 0) {
+        if (strcmp(symbols[i]->name, s) == 0) {
             return symbol_remove_i(i);
         }
     }

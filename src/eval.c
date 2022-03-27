@@ -158,7 +158,6 @@ int defun(expr *arg, expr **res) {
     new_e->next = NULL;
     new_e->data = (uint64_t)arg;
 
-
     symbol *new_sym = (symbol *) malloc(sizeof(symbol));
     char *buf = malloc(SYMBOL_MAX_LEN);
     strcpy(buf, (char *)arg->data);
@@ -179,23 +178,28 @@ int defun(expr *arg, expr **res) {
 
    The name of the variable will be in the first arguments ->data field,
    directly as a string. The value of the variable will be in the second argument.
+
+   Define is special in the sense that it accepts an undefined symbol as its first
+   argument, so we should not evaluate this argument. The second argument however, needs
+   to be evaluated.
 */
 int define(expr *arg, expr **res) {
-    if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to cdr \n");
+    if (arg == NULL || arg->next == NULL || arg->next->next != NULL) {
+        printf("ERROR: Define needs exactly two arguments\n");
         return -1;
     }
+
+    /* The second argument needs to be evaluated */
+    expr *evaluated_arg = eval(arg->next);
 
     expr *new_e = malloc(sizeof(expr));
     new_e->type = DEFINE;
     new_e->next = NULL;
-    new_e->data = (uint64_t)arg;
+    new_e->data = (uint64_t) evaluated_arg;
 
     symbol *new_sym = (symbol *) malloc(sizeof(symbol));
     char *buf = malloc(SYMBOL_MAX_LEN);
-    /* In the case of a define, the name of the symbols exists directly as a
-       string in the first argument. */
+    /* The name of the symbol exist directly as a string in the first argument. */
     strcpy(buf, (char *)arg->data);
 
     new_sym->name = buf;
@@ -315,6 +319,11 @@ expr *eval(expr *e) {
                 defun(arg, &res);
                 return res;
             }
+            /* If this is a define, we should only evaluate one of the arguments */
+            if (strcmp((char *)(proc->data), "define") == 0) {
+                define(arg, &res);
+                return res;
+            }
 
             /* Evaluate the arguments, and build a list of those evaluated arguments */
             expr *prev_arg = NULL;
@@ -344,8 +353,6 @@ expr *eval(expr *e) {
                 car(first_arg, &res);
             } else if (strcmp((char *)(proc->data), "cdr") == 0) {
                 cdr(first_arg, &res);
-            } else if (strcmp((char *)(proc->data), "defun") == 0) {
-                defun(first_arg, &res);
             } else {
                 symbol *sym = symbol_find((char *)(proc->data));
                 if (sym != NULL) {

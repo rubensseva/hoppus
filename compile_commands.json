@@ -68,5 +68,19 @@
     "directory": "/home/ruben/Code/Ruben/clisp",
     "file": "/home/ruben/Code/Ruben/clisp/src/utility.c",
     "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-Iinclude",
+      "-o",
+      "build/ukernel_lisp.out",
+      "src/symbol.c"
+    ],
+    "directory": "/home/ruben/Code/Ruben/clisp",
+    "file": "/home/ruben/Code/Ruben/clisp/src/symbol.c",
+    "output": "/home/ruben/Code/Ruben/clisp/build/ukernel_lisp.out"
   }
 ]
