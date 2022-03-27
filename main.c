@@ -28,8 +28,7 @@ int main(int argc, char **argv) {
     }
 
     expr *res = eval(read_from_tokens(tokenize(buf)));
-    printf("result type: %d\n", res->type);
+    // printf("result type: %d\n", res->type);
     printf("%lu\n", res->data);
-
 
 }

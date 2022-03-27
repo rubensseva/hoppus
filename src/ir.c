@@ -30,7 +30,7 @@ expr *read_from_tokens(char **tokens) {
 
     if (strcmp("(", token) == 0) {
         expr *list_expr = (expr *)malloc(sizeof(expr));
-        list_expr->type = LIST;
+        list_expr->type = PROC_START;
         list_expr->data = 0;
         list_expr->next = NULL;
 
@@ -48,10 +48,11 @@ expr *read_from_tokens(char **tokens) {
                 if (new->type != SYMBOL) {
                     printf("Got first entry in a list, but it is not a symbol\n");
                 }
-                new->type = PROC;
+                new->type = PROC_SYMBOL;
             }
             prev = new;
         }
+        tokens_pop(tokens); // At this point, there is a ")" on tokens[], so we need to pop it
         return list_expr;
     }
 
