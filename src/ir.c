@@ -30,7 +30,7 @@ expr *read_from_tokens(char **tokens) {
 
     if (strcmp("(", token) == 0) {
         expr *list_expr = (expr *)malloc(sizeof(expr));
-        list_expr->type = PROC_START;
+        list_expr->type = LIST;
         list_expr->data = 0;
         list_expr->next = NULL;
 
