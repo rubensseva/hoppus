@@ -3,8 +3,6 @@
 
 #include "ir.h"
 
-#define SYMBOL_MAX_LEN 256
-
 typedef struct symbol_t {
     char *name;
     expr *e;

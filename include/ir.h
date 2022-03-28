@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 typedef enum expr_type_t {
+    ROOT,
+    SEQUENCE_HOLDER,
     SYMBOL,
     LIST,
     PROC_SYMBOL,
@@ -20,5 +22,6 @@ typedef struct expr_t {
 } expr;
 
 expr *read_from_tokens(char **tokens);
+expr *continually_read_from_tokens(char **tokens);
 
 #endif // IR_H_

@@ -26,9 +26,17 @@ int main(int argc, char **argv) {
         perror("read");
         return 1;
     }
+    buf[bytes_read] = '\0';
 
-    expr *res = eval(read_from_tokens(tokenize(buf)));
-    // printf("result type: %d\n", res->type);
+    char **tokens = tokenize(buf);
+    expr *root = continually_read_from_tokens(tokens);
+
+    free_tokens(tokens);
+
+    expr *res = eval(root);
     printf("%lu\n", res->data);
 
+    free(buf);
+    free(root);
+    free_tree(res);
 }

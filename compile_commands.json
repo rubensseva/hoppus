@@ -3,7 +3,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-g",
+      "-fsanitize=address",
+      "-g3",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
@@ -17,7 +18,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-g",
+      "-fsanitize=address",
+      "-g3",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
@@ -31,7 +33,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-g",
+      "-fsanitize=address",
+      "-g3",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
@@ -45,7 +48,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-g",
+      "-fsanitize=address",
+      "-g3",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
@@ -59,7 +63,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-g",
+      "-fsanitize=address",
+      "-g3",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
@@ -73,7 +78,8 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-g",
+      "-fsanitize=address",
+      "-g3",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",

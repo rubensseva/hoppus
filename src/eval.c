@@ -4,8 +4,7 @@
 
 #include "ir.h"
 #include "symbol.h"
-
-// #include "eval.h"
+#include "config.h"
 
 expr *eval(expr *e);
 
@@ -159,13 +158,15 @@ int defun(expr *arg, expr **res) {
     new_e->data = (uint64_t)arg;
 
     symbol *new_sym = (symbol *) malloc(sizeof(symbol));
-    char *buf = malloc(SYMBOL_MAX_LEN);
-    strcpy(buf, (char *)arg->data);
+    char *buf = malloc(MAX_TOKEN_LENGTH);
+    char *defun_name = (char *)(((expr *)(arg->data))->data);
+    strcpy(buf, defun_name);
 
     new_sym->name = buf;
     new_sym->e = new_e;
 
     symbol_add(new_sym);
+    *res = new_e;
     return 0;
 }
 
@@ -198,7 +199,7 @@ int define(expr *arg, expr **res) {
     new_e->data = (uint64_t) evaluated_arg;
 
     symbol *new_sym = (symbol *) malloc(sizeof(symbol));
-    char *buf = malloc(SYMBOL_MAX_LEN);
+    char *buf = malloc(MAX_TOKEN_LENGTH);
     /* The name of the symbol exist directly as a string in the first argument. */
     strcpy(buf, (char *)arg->data);
 
@@ -206,6 +207,7 @@ int define(expr *arg, expr **res) {
     new_sym->e = new_e;
 
     symbol_add(new_sym);
+    *res = new_e;
     return 0;
 }
 
@@ -262,7 +264,8 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
     /* The function logic is contained in the second defun arguments */
     expr *defun_function = (expr *)defun_args->next->data;
 
-    expr *curr_defun_function_arg = defun_function_args;
+    /* Go to the next function arg to skip the function name */
+    expr *curr_defun_function_arg = defun_function_args->next;
     expr *curr_invocation_value = invocation_values;
     while (curr_invocation_value || curr_defun_function_arg) {
         if (!curr_invocation_value || !curr_defun_function_arg) {
@@ -287,16 +290,83 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
     /* TODO: Implement shadowing of variables. As it is now, all
         variables must be unique, otherwise they are removed when an
         otherwise shadowed variable is removed */
-    curr_defun_function_arg = defun_function_args;
+    curr_defun_function_arg = defun_function_args->next;
     while (curr_defun_function_arg) {
         symbol_remove_name((char *)curr_defun_function_arg->data);
+        curr_defun_function_arg = curr_defun_function_arg->next;
     }
 
     return res;
 }
 
+expr *free_tree(expr *e) {
+    switch (e->type) {
+        case ROOT:
+            free_tree((expr *)e->data);
+            free(e);
+            break;
+        case SEQUENCE_HOLDER:;
+        {
+            expr *curr = e;
+            expr *res = NULL;
+            while (curr) {
+                free_tree((expr *)curr->data);
+                expr *tmp = curr;
+                curr = curr->next;
+                free(tmp);
+            }
+            break;
+        }
+        case NUMBER:
+            free(e);
+            break;
+        case SYMBOL:;
+            symbol *sym = symbol_find((char *)e->data);
+            if (sym != NULL) {
+                free(sym);
+            }
+            /* The data field contains a string, the name of the symbol, so we need to
+               free that as well */
+            free((char *)e->data);
+            free(e);
+            break;
+        case LIST:
+            free_tree((expr *)e->data);
+            free(e);
+            break;
+        case PROC_SYMBOL:;
+            expr *curr = e;
+            expr *res = NULL;
+            while (curr) {
+                expr *next = curr->next;
+                free_tree(curr);
+                curr = next;
+            }
+            break;
+
+        default:
+            printf("no action\n");
+            return 0;
+    }
+    return 0;
+}
+
 expr *eval(expr *e) {
     switch (e->type) {
+        case ROOT:
+            return eval((expr *)e->data);
+        case SEQUENCE_HOLDER:;
+        {
+            /* TODO: Make sure that curly braces work here */
+            expr *curr = e;
+            expr *res = NULL;
+            while (curr) {
+                res = eval((expr *)curr->data);
+                curr = curr->next;
+            }
+            /* The result of the last eval is the final result */
+            return res;
+        }
         case NUMBER:
             return e;
         case SYMBOL:;
@@ -340,6 +410,8 @@ expr *eval(expr *e) {
                 if (prev_arg)
                     prev_arg->next = new;
                 prev_arg = new;
+
+                expr *tmp = arg;
                 arg = arg->next;
             }
 
@@ -366,6 +438,14 @@ expr *eval(expr *e) {
                     printf("ERROR: No function identified for proc %s\n", (char*)(proc->data));
                 }
             }
+
+            expr *free_arg = first_arg;
+            while (free_arg) {
+                expr *tmp = free_arg;
+                free_arg = free_arg->next;
+                free_tree(tmp);
+            }
+
             return res;
         default:
             printf("no action\n");

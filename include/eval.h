@@ -7,6 +7,7 @@
 
 #include "ir.h"
 
+expr *free_tree(expr *e);
 expr *eval(expr *e);
 
 #endif // EVAL_H_

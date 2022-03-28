@@ -5,26 +5,64 @@
 
 #include "ir.h"
 #include "utility.h"
+#include "config.h"
 
 char *tokens_pop(char **tokens) {
-    char *token = malloc(256);
+    if (tokens[0] == NULL) {
+        printf("WARNING: No tokens to pop\n");
+        return NULL;
+    }
+    char *token = malloc(MAX_TOKEN_LENGTH);
     strcpy(token, tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
         tokens[count] = tokens[count + 1];
         count++;
     }
+    tokens[count] = NULL;
     return token;
 }
 
+/**
+   Create root node by continually reading from tokens
+*/
+expr *continually_read_from_tokens(char **tokens) {
+    expr *root_expr = (expr *)malloc(sizeof(expr));
+    root_expr->type = ROOT;
+    root_expr->data = 0;
+    root_expr->next = NULL;
+
+    expr *prev_holder;
+    while (tokens[0]) {
+        expr *curr_expr = read_from_tokens(tokens);
+        expr *holder = malloc(sizeof(expr));
+        holder->type = SEQUENCE_HOLDER;
+        holder->data = (uint64_t) curr_expr;
+        holder->next = NULL;
+        if (root_expr->data == 0) {
+            root_expr->data = (uint64_t) holder;
+        }
+        if (prev_holder) {
+            prev_holder->next = holder;
+        }
+        prev_holder = holder;
+    }
+    return root_expr;
+}
+
+/**
+   Read one list from tokens
+ */
 expr *read_from_tokens(char **tokens) {
     char *token = tokens_pop(tokens);
+
     if (is_number(token)) {
         int num = atoi(token);
         expr *new_expr = (expr *)malloc(sizeof(expr));
         new_expr->type = NUMBER;
         new_expr->data = num;
         new_expr->next = NULL;
+        free(token);
         return new_expr;
     }
 
@@ -52,7 +90,9 @@ expr *read_from_tokens(char **tokens) {
             }
             prev = new;
         }
-        tokens_pop(tokens); // At this point, there is a ")" on tokens[], so we need to pop it
+        /* At this point, there is a ")" on tokens[], so we need to pop it */
+        free(tokens_pop(tokens));
+        free(token);
         return list_expr;
     }
 
