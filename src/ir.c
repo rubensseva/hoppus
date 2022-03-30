@@ -6,13 +6,14 @@
 #include "ir.h"
 #include "utility.h"
 #include "config.h"
+#include "memory.h"
 
 char *tokens_pop(char **tokens) {
     if (tokens[0] == NULL) {
         printf("WARNING: No tokens to pop\n");
         return NULL;
     }
-    char *token = malloc(MAX_TOKEN_LENGTH);
+    char *token = my_malloc(MAX_TOKEN_LENGTH);
     strcpy(token, tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
@@ -27,7 +28,7 @@ char *tokens_pop(char **tokens) {
    Create root node by continually reading from tokens
 */
 expr *continually_read_from_tokens(char **tokens) {
-    expr *root_expr = (expr *)malloc(sizeof(expr));
+    expr *root_expr = (expr *)my_malloc(sizeof(expr));
     root_expr->type = ROOT;
     root_expr->data = 0;
     root_expr->next = NULL;
@@ -35,7 +36,7 @@ expr *continually_read_from_tokens(char **tokens) {
     expr *prev_holder;
     while (tokens[0]) {
         expr *curr_expr = read_from_tokens(tokens);
-        expr *holder = malloc(sizeof(expr));
+        expr *holder = my_malloc(sizeof(expr));
         holder->type = SEQUENCE_HOLDER;
         holder->data = (uint64_t) curr_expr;
         holder->next = NULL;
@@ -58,16 +59,16 @@ expr *read_from_tokens(char **tokens) {
 
     if (is_number(token)) {
         int num = atoi(token);
-        expr *new_expr = (expr *)malloc(sizeof(expr));
+        expr *new_expr = (expr *)my_malloc(sizeof(expr));
         new_expr->type = NUMBER;
         new_expr->data = num;
         new_expr->next = NULL;
-        free(token);
+        my_free(token);
         return new_expr;
     }
 
     if (strcmp("(", token) == 0) {
-        expr *list_expr = (expr *)malloc(sizeof(expr));
+        expr *list_expr = (expr *)my_malloc(sizeof(expr));
         list_expr->type = LIST;
         list_expr->data = 0;
         list_expr->next = NULL;
@@ -91,13 +92,13 @@ expr *read_from_tokens(char **tokens) {
             prev = new;
         }
         /* At this point, there is a ")" on tokens[], so we need to pop it */
-        free(tokens_pop(tokens));
-        free(token);
+        my_free(tokens_pop(tokens));
+        my_free(token);
         return list_expr;
     }
 
     /* If not a number or a parenthesis, then its a symbol */
-    expr *new_expr = (expr *)malloc(sizeof(expr));
+    expr *new_expr = (expr *)my_malloc(sizeof(expr));
     new_expr->type = SYMBOL;
     new_expr->data = (uint64_t) token;
     new_expr->next = NULL;

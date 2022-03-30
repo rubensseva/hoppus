@@ -7,6 +7,7 @@
 #include "tokenize.h"
 #include "ir.h"
 #include "eval.h"
+#include "memory.h"
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -20,7 +21,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    char *buf = malloc(1024);
+    char *buf = my_malloc(1024);
     int bytes_read = read(fd, buf, 1024);
     if (bytes_read == -1) {
         perror("read");
@@ -36,7 +37,7 @@ int main(int argc, char **argv) {
     expr *res = eval(root);
     printf("%lu\n", res->data);
 
-    free(buf);
-    free(root);
+    my_free(buf);
+    free_tree(root);
     free_tree(res);
 }

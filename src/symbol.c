@@ -4,6 +4,7 @@
 
 #include "symbol.h"
 #include "config.h"
+#include "memory.h"
 
 int n_symbol = 0;
 symbol *symbols[MAX_SYMBOLS];
@@ -29,7 +30,7 @@ symbol *symbol_find(char *s) {
 }
 
 int symbol_remove_i(int index) {
-    free(symbols[index]);
+    my_free(symbols[index]);
     for (int i = index; i < n_symbol; i++) {
         symbols[i] = symbols[i + 1];
     }

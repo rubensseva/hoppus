@@ -4,6 +4,7 @@
 
 #include "utility.h"
 #include "config.h"
+#include "memory.h"
 
 
 int insert_char_in_str(char *str, int i, char c) {
@@ -21,9 +22,12 @@ int insert_char_in_str(char *str, int i, char c) {
 
 void free_tokens(char **tokens) {
     for(int i = 0; i < MAX_TOKENS; i++) {
-        free(tokens[i]);
+        if (tokens[i] == NULL) {
+            break;
+        }
+        my_free(tokens[i]);
     }
-    free(tokens);
+    my_free(tokens);
 }
 
 char **tokenize(char *src_code) {
@@ -46,7 +50,7 @@ char **tokenize(char *src_code) {
     }
 
     /* Tokenize */
-    char **tokens = (char **) malloc(MAX_TOKENS * sizeof(char *));
+    char **tokens = (char **) my_malloc(MAX_TOKENS * sizeof(char *));
     for (int i = 0; i < MAX_TOKENS; i++) {
         tokens[i] = (char *)NULL;
     }

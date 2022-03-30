@@ -5,6 +5,7 @@
 #include "ir.h"
 #include "symbol.h"
 #include "config.h"
+#include "memory.h"
 
 expr *eval(expr *e);
 
@@ -24,7 +25,7 @@ int add(expr *arg, expr **res) {
         arg = arg->next;
     }
 
-    expr *_res = malloc(sizeof(expr));
+    expr *_res = my_malloc(sizeof(expr));
     _res->type = NUMBER;
     _res->data = acc;
     _res->next = NULL;
@@ -56,7 +57,7 @@ int sub(expr *arg, expr **res) {
         acc -= arg->data;
         arg = arg->next;
     }
-    expr *_res = malloc(sizeof(expr));
+    expr *_res = my_malloc(sizeof(expr));
     _res->type = NUMBER;
     _res->data = acc;
     _res->next = NULL;
@@ -71,10 +72,10 @@ int cons(expr *arg, expr **res) {
         return -1;
     }
 
-    expr *cons = malloc(sizeof(expr));
+    expr *cons = my_malloc(sizeof(expr));
     cons->type = CONS;
 
-    expr *exprs = (expr *)malloc(2 * sizeof(expr));
+    expr *exprs = (expr *)my_malloc(2 * sizeof(expr));
     exprs[0].type = arg->type;
     exprs[0].data = arg->data;
     exprs[0].next = NULL;
@@ -152,13 +153,13 @@ int defun(expr *arg, expr **res) {
         return -1;
     }
 
-    expr *new_e = malloc(sizeof(expr));
+    expr *new_e = my_malloc(sizeof(expr));
     new_e->type = DEFUN;
     new_e->next = NULL;
     new_e->data = (uint64_t)arg;
 
-    symbol *new_sym = (symbol *) malloc(sizeof(symbol));
-    char *buf = malloc(MAX_TOKEN_LENGTH);
+    symbol *new_sym = (symbol *) my_malloc(sizeof(symbol));
+    char *buf = my_malloc(MAX_TOKEN_LENGTH);
     char *defun_name = (char *)(((expr *)(arg->data))->data);
     strcpy(buf, defun_name);
 
@@ -193,13 +194,13 @@ int define(expr *arg, expr **res) {
     /* The second argument needs to be evaluated */
     expr *evaluated_arg = eval(arg->next);
 
-    expr *new_e = malloc(sizeof(expr));
+    expr *new_e = my_malloc(sizeof(expr));
     new_e->type = DEFINE;
     new_e->next = NULL;
     new_e->data = (uint64_t) evaluated_arg;
 
-    symbol *new_sym = (symbol *) malloc(sizeof(symbol));
-    char *buf = malloc(MAX_TOKEN_LENGTH);
+    symbol *new_sym = (symbol *) my_malloc(sizeof(symbol));
+    char *buf = my_malloc(MAX_TOKEN_LENGTH);
     /* The name of the symbol exist directly as a string in the first argument. */
     strcpy(buf, (char *)arg->data);
 
@@ -273,7 +274,7 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
                     (char *)defun_name->data);
             return NULL;
         }
-        symbol *new_symbol = malloc(sizeof(symbol));
+        symbol *new_symbol = my_malloc(sizeof(symbol));
         /* The name of the symbol is in the defun args */
         new_symbol->name = (char *)curr_defun_function_arg->data;
         /* The value of the symbol is in the args for the current
@@ -303,7 +304,7 @@ expr *free_tree(expr *e) {
     switch (e->type) {
         case ROOT:
             free_tree((expr *)e->data);
-            free(e);
+            my_free(e);
             break;
         case SEQUENCE_HOLDER:;
         {
@@ -313,29 +314,32 @@ expr *free_tree(expr *e) {
                 free_tree((expr *)curr->data);
                 expr *tmp = curr;
                 curr = curr->next;
-                free(tmp);
+                my_free(tmp);
             }
             break;
         }
         case NUMBER:
-            free(e);
+            my_free(e);
             break;
         case SYMBOL:;
             symbol *sym = symbol_find((char *)e->data);
             if (sym != NULL) {
-                free(sym);
+                my_free(sym);
             }
             /* The data field contains a string, the name of the symbol, so we need to
-               free that as well */
-            free((char *)e->data);
-            free(e);
+               my_free that as well */
+            my_free((char *)e->data);
+            my_free(e);
             break;
         case LIST:
             free_tree((expr *)e->data);
-            free(e);
+            my_free(e);
             break;
         case PROC_SYMBOL:;
-            expr *curr = e;
+            expr *first = e;
+            expr *curr = first->next;
+            my_free((char *)first->data);
+            my_free(first);
             expr *res = NULL;
             while (curr) {
                 expr *next = curr->next;
@@ -400,7 +404,7 @@ expr *eval(expr *e) {
             while (arg) {
                 expr *ev = eval(arg);
 
-                expr *new = malloc(sizeof(expr));
+                expr *new = my_malloc(sizeof(expr));
                 new->type = ev->type;
                 new->data = ev->data;
                 new->next = NULL;
