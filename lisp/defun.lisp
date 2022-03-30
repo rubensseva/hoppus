@@ -4,4 +4,4 @@
 (defun (test x y)
   (add (add x x) y))
 
-(test 1 2)
+(test 1 3)

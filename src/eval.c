@@ -357,7 +357,6 @@ expr *eval(expr *e) {
             return eval((expr *)e->data);
         case SEQUENCE_HOLDER:;
         {
-            /* TODO: Make sure that curly braces work here */
             expr *curr = e;
             expr *res = NULL;
             while (curr) {
