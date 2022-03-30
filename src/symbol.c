@@ -9,6 +9,21 @@
 int n_symbol = 0;
 symbol *symbols[MAX_SYMBOLS];
 
+symbol *__symbol_create(char *name, symbol_type type, expr *e, builtin_fn_t *fn) {
+    symbol *new = (symbol *)malloc(sizeof(symbol));
+    new->name = name;
+    new->type = type;
+    new->e = e;
+    new->builtin_fn = fn;
+    return new;
+}
+symbol *symbol_create(char *name, symbol_type type, expr *e) {
+    return __symbol_create(name, type, e, NULL);
+}
+symbol *symbol_builtin_create(char *name, builtin_fn_t *fn) {
+    return __symbol_create(name, BUILTIN, NULL, fn);
+}
+
 void symbol_add(symbol *s) {
     if (n_symbol >= MAX_SYMBOLS - 1) {
         printf("ERROR: Too many symbols\n");
@@ -48,5 +63,5 @@ int symbol_remove_name(char *s) {
             return symbol_remove_i(i);
         }
     }
-    return 1;
+    return -1;
 }

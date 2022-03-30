@@ -8,6 +8,21 @@
 #include "config.h"
 #include "memory.h"
 
+expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr) {
+    expr *new = (expr *)my_malloc(sizeof(expr));
+    new->type = type;
+    new->data = data;
+    new->car = car;
+    new->cdr = cdr;
+    return new;
+}
+expr *expr_copy(expr* src) {
+    return expr_new(src->type, src->data, src->car, src->cdr);
+}
+expr *expr_cons(expr* car, expr *cdr) {
+    return expr_new(CONS, 0, car, cdr);
+}
+
 char *tokens_pop(char **tokens) {
     if (tokens[0] == NULL) {
         printf("WARNING: No tokens to pop\n");
@@ -27,29 +42,22 @@ char *tokens_pop(char **tokens) {
 /**
    Create root node by continually reading from tokens
 */
-expr *continually_read_from_tokens(char **tokens) {
-    expr *root_expr = (expr *)my_malloc(sizeof(expr));
-    root_expr->type = ROOT;
-    root_expr->data = 0;
-    root_expr->next = NULL;
-
-    expr *prev_holder;
-    while (tokens[0]) {
-        expr *curr_expr = read_from_tokens(tokens);
-        expr *holder = my_malloc(sizeof(expr));
-        holder->type = SEQUENCE_HOLDER;
-        holder->data = (uint64_t) curr_expr;
-        holder->next = NULL;
-        if (root_expr->data == 0) {
-            root_expr->data = (uint64_t) holder;
-        }
-        if (prev_holder) {
-            prev_holder->next = holder;
-        }
-        prev_holder = holder;
-    }
-    return root_expr;
-}
+/* expr *continually_read_from_tokens(char **tokens) { */
+/*     expr *first = NULL; */
+/*     expr *prev = NULL; */
+/*     expr *curr; */
+/*     while (tokens[0]) { */
+/*         curr = read_from_tokens(tokens); */
+/*         if (first == NULL) { */
+/*             first = curr; */
+/*         } */
+/*         if (prev) { */
+/*             prev->cdr = curr; */
+/*         } */
+/*         prev = curr; */
+/*     } */
+/*     return curr; */
+/* } */
 
 /**
    Read one list from tokens
@@ -59,48 +67,36 @@ expr *read_from_tokens(char **tokens) {
 
     if (is_number(token)) {
         int num = atoi(token);
-        expr *new_expr = (expr *)my_malloc(sizeof(expr));
-        new_expr->type = NUMBER;
-        new_expr->data = num;
-        new_expr->next = NULL;
+        expr *new_expr = expr_new(NUMBER, num, NULL, NULL);
         my_free(token);
         return new_expr;
     }
 
     if (strcmp("(", token) == 0) {
-        expr *list_expr = (expr *)my_malloc(sizeof(expr));
-        list_expr->type = LIST;
-        list_expr->data = 0;
-        list_expr->next = NULL;
-
+        expr *first = NULL;
+        expr *curr = NULL;
         expr *prev = NULL;
-
         while (strcmp(")", tokens[0]) != 0) {
             expr *new = read_from_tokens(tokens);
-            /* Let curr->data point to the first entry in the list */
-            if (!list_expr->data) {
-                list_expr->data = (uint64_t)new;
-            }
-            if (prev) {
-                prev->next = new;
-            } else {
+            if (!prev) {
                 if (new->type != SYMBOL) {
                     printf("Got first entry in a list, but it is not a symbol\n");
                 }
-                new->type = PROC_SYMBOL;
             }
-            prev = new;
+            curr = expr_cons(new, NULL);
+            if (!first)
+                first = curr;
+            if (prev)
+                prev->cdr = curr;
+            prev = curr;
         }
         /* At this point, there is a ")" on tokens[], so we need to pop it */
         my_free(tokens_pop(tokens));
         my_free(token);
-        return list_expr;
+        return first;
     }
 
     /* If not a number or a parenthesis, then its a symbol */
-    expr *new_expr = (expr *)my_malloc(sizeof(expr));
-    new_expr->type = SYMBOL;
-    new_expr->data = (uint64_t) token;
-    new_expr->next = NULL;
+    expr *new_expr = expr_new(SYMBOL, (uint64_t) token, NULL, NULL);
     return new_expr;
 }

@@ -6,117 +6,10 @@
 #include "symbol.h"
 #include "config.h"
 #include "memory.h"
+#include "builtins.h"
 
 expr *eval(expr *e);
 
-int add(expr *arg, expr **res) {
-    if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to add \n");
-        return -1;
-    }
-    uint64_t acc = 0;
-    while (arg) {
-        if (arg->type != NUMBER) {
-            printf("TYPE ERROR: Add can only handle numbers\n");
-            return -1;
-        }
-        acc += arg->data;
-        arg = arg->next;
-    }
-
-    expr *_res = my_malloc(sizeof(expr));
-    _res->type = NUMBER;
-    _res->data = acc;
-    _res->next = NULL;
-    *res = _res;
-    return 0;
-}
-
-int sub(expr *arg, expr **res) {
-    if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to sub \n");
-        return -1;
-    }
-    if (arg->next == NULL) {
-        if (arg->type != NUMBER) {
-            printf("TYPE ERROR: Sub can only handle numbers\n");
-            return -1;
-        }
-        return arg->data * (-1);
-    }
-
-    uint64_t acc = arg->data;
-    arg = arg->next;
-    while (arg) {
-        if (arg->type != NUMBER) {
-            printf("TYPE ERROR: Sub can only handle numbers\n");
-            return -1;
-        }
-        acc -= arg->data;
-        arg = arg->next;
-    }
-    expr *_res = my_malloc(sizeof(expr));
-    _res->type = NUMBER;
-    _res->data = acc;
-    _res->next = NULL;
-    *res = _res;
-    return 0;
-}
-
-int cons(expr *arg, expr **res) {
-    if (arg == NULL || arg->next == NULL || arg->next->next != NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Cons accepts exactly two arguments \n");
-        return -1;
-    }
-
-    expr *cons = my_malloc(sizeof(expr));
-    cons->type = CONS;
-
-    expr *exprs = (expr *)my_malloc(2 * sizeof(expr));
-    exprs[0].type = arg->type;
-    exprs[0].data = arg->data;
-    exprs[0].next = NULL;
-    exprs[1].type = arg->next->type;
-    exprs[1].data = arg->next->data;
-    exprs[1].next = NULL;
-
-    cons->data = (uint64_t) exprs;
-    *res = cons;
-    return 0;
-}
-
-
-int car(expr *arg, expr **res) {
-    if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to car \n");
-        return -1;
-    }
-    if (arg->type != CONS) {
-        printf("ERROR: Car can only handle cons cells\n");
-        return -1;
-    }
-    *res = &((expr *)arg->data)[0];
-    return 0;
-}
-
-int cdr(expr *arg, expr **res) {
-    if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to cdr \n");
-        return -1;
-    }
-    if (arg->type != CONS) {
-        printf("ERROR: Cdr can only handle cons cells\n");
-        return -1;
-    }
-
-    *res = &((expr *)arg->data)[1];
-    return 0;
-}
 
 /**
    Example defun: (defun (add x y) (+ x y)), here (add x y) is
@@ -132,18 +25,15 @@ int cdr(expr *arg, expr **res) {
    the ->next field of the first argument points to the the second
    field which is the logic of the function (also a list).
 
-   Illustraion, vertical lines are ->data field, horizontal lines are ->next field
+   Illustraion, vertical lines are ->cdr field, horizontal lines are ->car field
+   (of course, still need to use car after cdr to get the actual element data)
 
 
-   defun
-    |
-    |
-    |
-   args        -->         function logic
-    |                              \
-    |                               \
-    |                                \
-   f_name --> arg1 --> arg2         list of function logic
+   args        cdr-->         first list of function logic    cdr-->     next list of function logic
+     |                                     |                                   |
+    car                                   car                                 car
+     |                                     |                                   |
+   f_name --> arg1 --> arg2         list of function logic               list of function logic
 
 */
 int defun(expr *arg, expr **res) {
@@ -153,21 +43,14 @@ int defun(expr *arg, expr **res) {
         return -1;
     }
 
-    expr *new_e = my_malloc(sizeof(expr));
-    new_e->type = DEFUN;
-    new_e->next = NULL;
-    new_e->data = (uint64_t)arg;
-
-    symbol *new_sym = (symbol *) my_malloc(sizeof(symbol));
     char *buf = my_malloc(MAX_TOKEN_LENGTH);
-    char *defun_name = (char *)(((expr *)(arg->data))->data);
+    char *defun_name = (char *)(arg->car->car->data);
     strcpy(buf, defun_name);
 
-    new_sym->name = buf;
-    new_sym->e = new_e;
+    symbol *new_sym = symbol_create(buf, FUNCTION, arg);
 
     symbol_add(new_sym);
-    *res = new_e;
+    *res = arg;
     return 0;
 }
 
@@ -186,29 +69,21 @@ int defun(expr *arg, expr **res) {
    to be evaluated.
 */
 int define(expr *arg, expr **res) {
-    if (arg == NULL || arg->next == NULL || arg->next->next != NULL) {
+    if (arg == NULL || arg->cdr == NULL || arg->cdr->car == NULL || arg->cdr->cdr != NULL) {
         printf("ERROR: Define needs exactly two arguments\n");
         return -1;
     }
 
     /* The second argument needs to be evaluated */
-    expr *evaluated_arg = eval(arg->next);
+    expr *evaluated_arg = eval(arg->cdr->car);
 
-    expr *new_e = my_malloc(sizeof(expr));
-    new_e->type = DEFINE;
-    new_e->next = NULL;
-    new_e->data = (uint64_t) evaluated_arg;
-
-    symbol *new_sym = (symbol *) my_malloc(sizeof(symbol));
     char *buf = my_malloc(MAX_TOKEN_LENGTH);
     /* The name of the symbol exist directly as a string in the first argument. */
-    strcpy(buf, (char *)arg->data);
-
-    new_sym->name = buf;
-    new_sym->e = new_e;
+    strcpy(buf, (char *)arg->car->data);
+    symbol *new_sym = symbol_create(buf, VARIABLE, evaluated_arg);
 
     symbol_add(new_sym);
-    *res = new_e;
+    *res = evaluated_arg;
     return 0;
 }
 
@@ -256,17 +131,17 @@ int define(expr *arg, expr **res) {
 expr *function_invocation(symbol *sym, expr *invocation_values) {
     /* The two defun args (the list of arguments, and list of function logic) is
         in the data field of the defun symbol */
-    expr *defun_args = (expr *)sym->e->data;
+    expr *defun_args = sym->e;
     /* The function arguments for the defun is contained in the ->data field in
        the first defun_args entry */
-    expr *defun_function_args = (expr *)defun_args->data;
+    expr *defun_function_args = defun_args->car;
     /* The name of the defun is in the first function argument */
-    expr *defun_name = defun_function_args;
+    expr *defun_name = defun_args->car->car;
     /* The function logic is contained in the second defun arguments */
-    expr *defun_function = (expr *)defun_args->next->data;
+    expr *defun_function_logic = defun_args->cdr;
 
     /* Go to the next function arg to skip the function name */
-    expr *curr_defun_function_arg = defun_function_args->next;
+    expr *curr_defun_function_arg = defun_function_args->cdr;
     expr *curr_invocation_value = invocation_values;
     while (curr_invocation_value || curr_defun_function_arg) {
         if (!curr_invocation_value || !curr_defun_function_arg) {
@@ -274,27 +149,33 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
                     (char *)defun_name->data);
             return NULL;
         }
-        symbol *new_symbol = my_malloc(sizeof(symbol));
-        /* The name of the symbol is in the defun args */
-        new_symbol->name = (char *)curr_defun_function_arg->data;
         /* The value of the symbol is in the args for the current
             procedure being handled. This value can be anything, so we
             need to evaluate. */
-        new_symbol->e = eval(curr_invocation_value);
+        expr *new_e = eval(curr_invocation_value->car);
+        char *name = (char *)curr_defun_function_arg->car->data;
+        symbol *new_symbol = symbol_create(name, VARIABLE, new_e);
         symbol_add(new_symbol);
-        curr_defun_function_arg = curr_defun_function_arg->next;
-        curr_invocation_value = curr_invocation_value->next;
+        curr_defun_function_arg = curr_defun_function_arg->cdr;
+        curr_invocation_value = curr_invocation_value->cdr;
     }
-    /* After all the symbols are added, evaluate */
-    expr *res = eval(defun_function);
+    /* After all the symbols are added, evaluate.
+       There might be several lists of function logic, the return
+       value will be the last of these */
+    expr *curr_defun_function_logic = defun_function_logic;
+    expr *res;
+    while (curr_defun_function_logic) {
+        res = eval(curr_defun_function_logic->car);
+        curr_defun_function_logic = curr_defun_function_logic->cdr;
+    }
     /* After the function is evaluated, remove the symbols */
-    /* TODO: Implement shadowing of variables. As it is now, all
-        variables must be unique, otherwise they are removed when an
-        otherwise shadowed variable is removed */
-    curr_defun_function_arg = defun_function_args->next;
+    curr_defun_function_arg = defun_function_args->cdr;
     while (curr_defun_function_arg) {
-        symbol_remove_name((char *)curr_defun_function_arg->data);
-        curr_defun_function_arg = curr_defun_function_arg->next;
+        if (symbol_remove_name((char *)curr_defun_function_arg->car->data) == -1) {
+            printf("WARNING: Unable to remove sumbol %s\n",
+                   (char *)curr_defun_function_arg->car->data);
+        }
+        curr_defun_function_arg = curr_defun_function_arg->cdr;
     }
 
     return res;
@@ -306,46 +187,30 @@ expr *free_tree(expr *e) {
             free_tree((expr *)e->data);
             my_free(e);
             break;
-        case SEQUENCE_HOLDER:;
-        {
-            expr *curr = e;
-            expr *res = NULL;
-            while (curr) {
-                free_tree((expr *)curr->data);
-                expr *tmp = curr;
-                curr = curr->next;
-                my_free(tmp);
-            }
-            break;
-        }
         case NUMBER:
             my_free(e);
             break;
         case SYMBOL:;
-            symbol *sym = symbol_find((char *)e->data);
-            if (sym != NULL) {
-                my_free(sym);
-            }
+            /* symbol *sym = symbol_find((char *)e->data); */
+            /* if (sym != NULL) { */
+            /*     my_free(sym); */
+            /* } */
             /* The data field contains a string, the name of the symbol, so we need to
                my_free that as well */
             my_free((char *)e->data);
             my_free(e);
             break;
-        case LIST:
-            free_tree((expr *)e->data);
+        case CONS:;
+            if (e->cdr)
+                free_tree(e->cdr);
+            if (e->car)
+                free_tree(e->car);
             my_free(e);
             break;
+
         case PROC_SYMBOL:;
-            expr *first = e;
-            expr *curr = first->next;
-            my_free((char *)first->data);
-            my_free(first);
-            expr *res = NULL;
-            while (curr) {
-                expr *next = curr->next;
-                free_tree(curr);
-                curr = next;
-            }
+            my_free((char *)e->data);
+            my_free(e);
             break;
 
         default:
@@ -359,94 +224,86 @@ expr *eval(expr *e) {
     switch (e->type) {
         case ROOT:
             return eval((expr *)e->data);
-        case SEQUENCE_HOLDER:;
-        {
-            expr *curr = e;
-            expr *res = NULL;
-            while (curr) {
-                res = eval((expr *)curr->data);
-                curr = curr->next;
-            }
-            /* The result of the last eval is the final result */
-            return res;
-        }
         case NUMBER:
             return e;
         case SYMBOL:;
+        {
             symbol *sym = symbol_find((char *)e->data);
             if (sym != NULL) {
+                /* If its a builtin, the function is defined in C, so we
+                   dont care about the expression. So lets just return the
+                   given expression in that case. */
+                if (sym->type == BUILTIN) {
+                    return e;
+                }
                 return sym->e;
             }
             printf("WARNING: Found symbol with no value: %s. There is probably something wrong.\n",
                    (char *)e->data);
             return e;
-        case LIST:
-            return eval((expr *)e->data);
-        case PROC_SYMBOL:;
+        }
+        case CONS:;
             expr *proc = e;
-            expr *arg = e->next;
+            expr *fun = proc->car;
+            expr *arg = e->cdr;
             expr *res;
 
+            if (proc == NULL || proc->car == NULL) {
+                printf("ERROR: expr was NULL when evaluating cons cell \n");
+                return NULL;
+            }
+            if (proc->car->type != SYMBOL) {
+                printf("ERROR: expected car of cons cell to be a symbol, but it wasnt \n");
+                return NULL;
+            }
+
             /* If this is a defun, we should not evaluate the arguments */
-            if (strcmp((char *)(proc->data), "defun") == 0) {
+            if (strcmp((char *)(fun->data), "defun") == 0) {
                 defun(arg, &res);
+                /* TODO: Maybe need to free args here? */
                 return res;
             }
             /* If this is a define, we should only evaluate one of the arguments */
-            if (strcmp((char *)(proc->data), "define") == 0) {
+            if (strcmp((char *)(fun->data), "define") == 0) {
                 define(arg, &res);
+                /* TODO: Maybe need to free args here? */
                 return res;
             }
 
-            /* Evaluate the arguments, and build a list of those evaluated arguments */
-            expr *prev_arg = NULL;
-            expr *first_arg = NULL;
-            while (arg) {
-                expr *ev = eval(arg);
-
-                expr *new = my_malloc(sizeof(expr));
-                new->type = ev->type;
-                new->data = ev->data;
-                new->next = NULL;
-                if (!first_arg)
-                    first_arg = new;
-                if (prev_arg)
-                    prev_arg->next = new;
-                prev_arg = new;
-
-                expr *tmp = arg;
-                arg = arg->next;
+            /* Evaluate all arguments, and build a new list of those arguments */
+            expr *curr_arg = arg, *curr_eval = NULL, *first_cons = NULL, *prev_cons = NULL;
+            while (curr_arg) {
+                /* TODO: arg->car should maybe be freed here, but we
+                   cant free it if arg->car is for example a number, since then
+                   arg->car = eval(arg->car) */
+                curr_eval = eval(curr_arg->car);
+                expr *new_cons = expr_cons(curr_eval, NULL);
+                if (first_cons == NULL)
+                    first_cons = new_cons;
+                if (prev_cons != NULL)
+                    prev_cons->cdr = new_cons;
+                prev_cons = new_cons;
+                curr_arg = curr_arg->cdr;
             }
 
-            if (strcmp((char *)(proc->data), "+") == 0) {
-                add(first_arg, &res);
-            } else if (strcmp((char *)(proc->data), "-") == 0) {
-                sub(first_arg, &res);
-            } else if (strcmp((char *)(proc->data), "cons") == 0) {
-                cons(first_arg, &res);
-            } else if (strcmp((char *)(proc->data), "car") == 0) {
-                car(first_arg, &res);
-            } else if (strcmp((char *)(proc->data), "cdr") == 0) {
-                cdr(first_arg, &res);
-            } else {
-                symbol *sym = symbol_find((char *)(proc->data));
-                if (sym != NULL) {
-                    if (sym->e->type == DEFUN) {
-                        res = function_invocation(sym, first_arg);
-                    } else if (sym->e->type == DEFINE) {
-                        printf("ERROR: Cant use variable %s as a function\n", (char*)proc->data);
-                        return NULL;
-                    }
-                } else {
-                    printf("ERROR: No function identified for proc %s\n", (char*)(proc->data));
+            symbol *sym = symbol_find((char *)(fun->data));
+            if (sym != NULL) {
+                if (sym->type == BUILTIN) {
+                    sym->builtin_fn(first_cons, &res);
+                }
+                if (sym->type == FUNCTION) {
+                    res = function_invocation(sym, first_cons);
+                } else if (sym->type == VARIABLE) {
+                    printf("ERROR: Cant use variable %s as a function\n", (char*)fun->data);
+                    return NULL;
                 }
             }
 
-            expr *free_arg = first_arg;
+            expr *free_arg = first_cons;
             while (free_arg) {
                 expr *tmp = free_arg;
-                free_arg = free_arg->next;
-                free_tree(tmp);
+                free_arg = free_arg->cdr;
+                /* free_tree(tmp); */
             }
 
             return res;
