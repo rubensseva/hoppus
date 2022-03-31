@@ -2,19 +2,24 @@
 #include <stdio.h>
 
 #include "builtins.h"
-#include "ir.h"
+#include "parser.h"
 
 
 int bi_add(expr *arg, expr **res) {
     if (arg == NULL) {
         /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to add \n");
+        printf("BUILTIN: ERROR: Nothing to add \n");
         return -1;
     }
     uint64_t acc = 0;
     while (arg) {
+        if (arg->car == NULL) {
+            printf("BUILTIN: ERROR: Argument to add had a car that was NULL\n");
+            return -1;
+        }
         if (arg->car->type != NUMBER) {
-            printf("TYPE ERROR: Add can only handle numbers\n");
+            printf("BUILTIN: ERROR: Add can only handle numbers but got %s\n",
+                   type_str(arg->car->type));
             return -1;
         }
         acc += arg->car->data;
@@ -29,12 +34,14 @@ int bi_add(expr *arg, expr **res) {
 int bi_sub(expr *arg, expr **res) {
     if (arg == NULL) {
         /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to sub \n");
+        printf("BUILTIN: ERROR: Nothing to sub \n");
         return -1;
     }
+    /* If only one argument, return the negative of that argument */
     if (arg->cdr == NULL) {
         if (arg->car->type != NUMBER) {
-            printf("TYPE ERROR: Sub can only handle numbers\n");
+            printf("BUILTIN: ERROR: Sub can only handle numbers but got %s\n",
+                   type_str(arg->car->type));
             return -1;
         }
         return arg->data * (-1);
@@ -43,8 +50,13 @@ int bi_sub(expr *arg, expr **res) {
     uint64_t acc = arg->car->data;
     arg = arg->cdr;
     while (arg) {
+        if (arg->car == NULL) {
+            printf("BUILTIN: ERROR: Argument to sub had a car that was NULL\n");
+            return -1;
+        }
         if (arg->car->type != NUMBER) {
-            printf("TYPE ERROR: Sub can only handle numbers\n");
+            printf("BUILTIN: ERROR: Sub can only handle numbers but got %s\n",
+                   type_str(arg->car->type));
             return -1;
         }
         acc -= arg->car->data;
@@ -59,7 +71,7 @@ int bi_sub(expr *arg, expr **res) {
 int bi_cons(expr *arg, expr **res) {
     if (arg == NULL || arg->cdr == NULL || arg->cdr->cdr != NULL) {
         /* TODO: Consider returning 0? */
-        printf("ERROR: Cons accepts exactly two arguments \n");
+        printf("BUILTIN: ERROR: Cons accepts exactly two arguments \n");
         return -1;
     }
 
@@ -71,11 +83,12 @@ int bi_cons(expr *arg, expr **res) {
 int bi_car(expr *arg, expr **res) {
     if (arg == NULL) {
         /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to car \n");
+        printf("BUILTIN: ERROR: Nothing to car \n");
         return -1;
     }
     if (arg->car->type != CONS) {
-        printf("ERROR: Car can only handle cons cells\n");
+        printf("BUILTIN: ERROR: Car can only handle numbers but got %s\n",
+               type_str(arg->car->type));
         return -1;
     }
     *res = arg->car;
@@ -85,11 +98,12 @@ int bi_car(expr *arg, expr **res) {
 int bi_cdr(expr *arg, expr **res) {
     if (arg == NULL) {
         /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to cdr \n");
+        printf("BUILTIN: ERROR: Nothing to cdr \n");
         return -1;
     }
     if (arg->car->type != CONS) {
-        printf("ERROR: Cdr can only handle cons cells\n");
+        printf("BUILTIN: ERROR: Cdr can only handle numbers but got %s\n",
+               type_str(arg->car->type));
         return -1;
     }
     *res = arg->cdr;

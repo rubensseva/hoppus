@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "ir.h"
+#include "parser.h"
 
 expr *free_tree(expr *e);
 expr *eval(expr *e);

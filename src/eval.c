@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ir.h"
+#include "parser.h"
 #include "symbol.h"
 #include "config.h"
 #include "memory.h"
@@ -38,9 +38,18 @@ expr *eval(expr *e);
 */
 int defun(expr *arg, expr **res) {
     if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("ERROR: Nothing to cdr \n");
+        printf("EVAL: ERROR: Got NULL argument for defun \n");
         return -1;
+    }
+
+    expr *curr_arg = arg->car;
+    while (curr_arg) {
+        if (curr_arg->car->type != SYMBOL) {
+            printf("EVAL: ERROR: Expected all arguments to defun to be symbols, but found one that was of type %s\n",
+                   type_str(curr_arg->car->type));
+            return -1;
+        }
+        curr_arg = curr_arg->cdr;
     }
 
     char *buf = my_malloc(MAX_TOKEN_LENGTH);
@@ -70,7 +79,13 @@ int defun(expr *arg, expr **res) {
 */
 int define(expr *arg, expr **res) {
     if (arg == NULL || arg->cdr == NULL || arg->cdr->car == NULL || arg->cdr->cdr != NULL) {
-        printf("ERROR: Define needs exactly two arguments\n");
+        printf("EVAL: ERROR: Define needs exactly two arguments\n");
+        return -1;
+    }
+
+    if (arg->car->type != SYMBOL) {
+        printf("EVAL: ERROR: The first argument to define must be a symbol, but got %s\n",
+               type_str(arg->car->type));
         return -1;
     }
 
@@ -183,10 +198,6 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
 
 expr *free_tree(expr *e) {
     switch (e->type) {
-        case ROOT:
-            free_tree((expr *)e->data);
-            my_free(e);
-            break;
         case NUMBER:
             my_free(e);
             break;
@@ -207,23 +218,15 @@ expr *free_tree(expr *e) {
                 free_tree(e->car);
             my_free(e);
             break;
-
-        case PROC_SYMBOL:;
-            my_free((char *)e->data);
-            my_free(e);
-            break;
-
         default:
-            printf("no action\n");
-            return 0;
+            printf("EVAL: WARNING: Unknown type when freeing an expr tree\n");
+            return NULL;
     }
-    return 0;
+    return NULL;
 }
 
 expr *eval(expr *e) {
     switch (e->type) {
-        case ROOT:
-            return eval((expr *)e->data);
         case NUMBER:
             return e;
         case SYMBOL:;
@@ -238,7 +241,7 @@ expr *eval(expr *e) {
                 }
                 return sym->e;
             }
-            printf("WARNING: Found symbol with no value: %s. There is probably something wrong.\n",
+            printf("EVAL: WARNING: Found symbol with no value: %s. There is probably something wrong.\n",
                    (char *)e->data);
             return e;
         }
@@ -249,23 +252,30 @@ expr *eval(expr *e) {
             expr *res;
 
             if (proc == NULL || proc->car == NULL) {
-                printf("ERROR: expr was NULL when evaluating cons cell \n");
+                printf("EVAL: ERROR: expr was NULL when evaluating cons cell \n");
                 return NULL;
             }
             if (proc->car->type != SYMBOL) {
-                printf("ERROR: expected car of cons cell to be a symbol, but it wasnt \n");
+                printf("EVAL: ERROR: expected car of cons cell to be a symbol, but it was of type %s\n",
+                       type_str(proc->car->type));
                 return NULL;
             }
 
             /* If this is a defun, we should not evaluate the arguments */
             if (strcmp((char *)(fun->data), "defun") == 0) {
-                defun(arg, &res);
+                if (defun(arg, &res) == -1) {
+                    printf("EVAL: ERROR: Defun\n");
+                    return NULL;
+                }
                 /* TODO: Maybe need to free args here? */
                 return res;
             }
             /* If this is a define, we should only evaluate one of the arguments */
             if (strcmp((char *)(fun->data), "define") == 0) {
-                define(arg, &res);
+                if (define(arg, &res) == -1) {
+                    printf("EVAL: ERROR: Define\n");
+                    return NULL;
+                }
                 /* TODO: Maybe need to free args here? */
                 return res;
             }
@@ -289,12 +299,16 @@ expr *eval(expr *e) {
             symbol *sym = symbol_find((char *)(fun->data));
             if (sym != NULL) {
                 if (sym->type == BUILTIN) {
-                    sym->builtin_fn(first_cons, &res);
+                    int bi_res = sym->builtin_fn(first_cons, &res);
+                    if (bi_res == -1) {
+                        printf("EVAL: ERROR: Builtin function encountered error\n");
+                        return NULL;
+                    }
                 }
                 if (sym->type == FUNCTION) {
                     res = function_invocation(sym, first_cons);
                 } else if (sym->type == VARIABLE) {
-                    printf("ERROR: Cant use variable %s as a function\n", (char*)fun->data);
+                    printf("EVAL: ERROR: Cant use variable %s as a function\n", (char*)fun->data);
                     return NULL;
                 }
             }
@@ -308,7 +322,7 @@ expr *eval(expr *e) {
 
             return res;
         default:
-            printf("no action\n");
-            return 0;
+            printf("EVAL: ERROR: Got unknown type\n");
+            return NULL;
     }
 }

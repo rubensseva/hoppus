@@ -3,37 +3,22 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <error.h>
+#include <string.h>
 
 #include "tokenize.h"
-#include "ir.h"
+#include "parser.h"
 #include "eval.h"
 #include "memory.h"
 #include "symbol.h"
 #include "builtins.h"
 
+#define EXPR_STR_SIZE 1024
+
 int main(int argc, char **argv) {
-    if (argc != 2) {
+    if (argc > 2) {
         printf("USAGE: %s <filename>\n", argv[0]);
         return -1;
     }
-
-    int fd = open(argv[1], O_RDONLY);
-    if (fd == -1) {
-        perror("open");
-        return -1;
-    }
-
-    char *buf = my_malloc(1024);
-    int bytes_read = read(fd, buf, 1024);
-    if (bytes_read == -1) {
-        perror("read");
-        return -1;
-    }
-    buf[bytes_read] = '\0';
-
-    char **tokens = tokenize(buf);
-
-    // expr *root = continually_read_from_tokens(tokens);
 
     symbol *add = symbol_builtin_create("+", bi_add);
     symbol *sub = symbol_builtin_create("-", bi_sub);
@@ -47,22 +32,45 @@ int main(int argc, char **argv) {
     symbol_add(car);
     symbol_add(cdr);
 
-    // expr *res = eval(root);
-    expr *curr, *evald;
-    while (tokens[0]) {
-        curr = read_from_tokens(tokens);
-        evald = eval(curr);
-        if (evald->data) {
-            printf("%lu\n", (uint64_t) evald->data);
+    int fd;
+    if (argc == 2) {
+        fd = open(argv[1], O_RDONLY);
+        if (fd == -1) {
+            perror("open");
+            return -1;
+        }
+    } else {
+        fd = 1;
+    }
+
+    char buf[EXPR_STR_SIZE];
+    while (1) {
+        if (fd == 1)
+            printf("$ ");
+        fflush(stdout);
+        int bytes_read = read(fd, buf, EXPR_STR_SIZE);
+        if (bytes_read == -1) {
+            perror("read");
+            return -1;
+        }
+        buf[bytes_read] = '\0';
+
+        char **tokens = tokenize(buf);
+        expr *curr, *evald;
+        while (tokens[0]) {
+            curr = read_from_tokens(tokens);
+            if (curr == NULL) {
+                printf("MAIN: ERROR: Parser\n");
+                return -1;
+            }
+            evald = eval(curr);
+            if (evald == NULL) {
+                printf("MAIN: ERROR: Eval\n");
+            } else if (evald->data) {
+                printf("%lu\n", (uint64_t) evald->data);
+            }
         }
     }
 
-    free_tokens(tokens);
-    // free_tree(curr);
-
-    printf("%lu\n", evald->data);
-
-    my_free(buf);
-    // free_tree(root);
-    free_tree(evald);
+    /* TODO: Free remaining memory allocations */
 }

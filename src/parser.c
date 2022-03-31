@@ -3,10 +3,24 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "ir.h"
+#include "parser.h"
 #include "utility.h"
 #include "config.h"
 #include "memory.h"
+
+char *unknown_type_str = "unknown";
+char *expr_type_string_map[EXPR_TYPE_ENUM_SIZE] = {
+    "symbol",
+    "number",
+    "cons"
+};
+
+char *type_str(expr_type tp) {
+    if (tp < 0 || tp > EXPR_TYPE_ENUM_SIZE) {
+        return unknown_type_str;
+    }
+    return expr_type_string_map[tp];
+}
 
 expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr) {
     expr *new = (expr *)my_malloc(sizeof(expr));
@@ -25,7 +39,7 @@ expr *expr_cons(expr* car, expr *cdr) {
 
 char *tokens_pop(char **tokens) {
     if (tokens[0] == NULL) {
-        printf("WARNING: No tokens to pop\n");
+        printf("PARSER: WARNING: No tokens to pop\n");
         return NULL;
     }
     char *token = my_malloc(MAX_TOKEN_LENGTH);
@@ -40,30 +54,17 @@ char *tokens_pop(char **tokens) {
 }
 
 /**
-   Create root node by continually reading from tokens
-*/
-/* expr *continually_read_from_tokens(char **tokens) { */
-/*     expr *first = NULL; */
-/*     expr *prev = NULL; */
-/*     expr *curr; */
-/*     while (tokens[0]) { */
-/*         curr = read_from_tokens(tokens); */
-/*         if (first == NULL) { */
-/*             first = curr; */
-/*         } */
-/*         if (prev) { */
-/*             prev->cdr = curr; */
-/*         } */
-/*         prev = curr; */
-/*     } */
-/*     return curr; */
-/* } */
+   Read one list from tokens.
 
-/**
-   Read one list from tokens
+   Returns a expr* tree on success, or NULL on error.
  */
 expr *read_from_tokens(char **tokens) {
     char *token = tokens_pop(tokens);
+
+    if (token == NULL) {
+        printf("PARSER: ERROR: Token was NULL\n");
+        return NULL;
+    }
 
     if (is_number(token)) {
         int num = atoi(token);
@@ -76,11 +77,15 @@ expr *read_from_tokens(char **tokens) {
         expr *first = NULL;
         expr *curr = NULL;
         expr *prev = NULL;
-        while (strcmp(")", tokens[0]) != 0) {
+        while (tokens[0] != NULL && strcmp(")", tokens[0]) != 0) {
             expr *new = read_from_tokens(tokens);
+            if (new == NULL) {
+                return NULL;
+            }
             if (!prev) {
                 if (new->type != SYMBOL) {
-                    printf("Got first entry in a list, but it is not a symbol\n");
+                    printf("PARSER: ERROR: First entry in a list was not a symbol: %d\n", new->type);
+                    return NULL;
                 }
             }
             curr = expr_cons(new, NULL);
@@ -90,10 +95,20 @@ expr *read_from_tokens(char **tokens) {
                 prev->cdr = curr;
             prev = curr;
         }
-        /* At this point, there is a ")" on tokens[], so we need to pop it */
+        /* At this points, there should be a ")" on tokens. If thats not the case, we have unmatched
+           parentheses. If it is the case, we need to pop it, then continue. */
+        if (tokens[0] == NULL) {
+            printf("PARSER: ERROR: Unmatched parentheses\n");
+            return NULL;
+        }
         my_free(tokens_pop(tokens));
         my_free(token);
         return first;
+    }
+
+    if (strcmp(")", token) == 0) {
+        printf("PARSER: ERROR: Unmatched closing parentheses\n");
+        return NULL;
     }
 
     /* If not a number or a parenthesis, then its a symbol */

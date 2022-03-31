@@ -1,7 +1,7 @@
 #ifndef BUILTINS_H_
 #define BUILTINS_H_
 
-#include "ir.h"
+#include "parser.h"
 
 int bi_add(expr *arg, expr **res);
 int bi_sub(expr *arg, expr **res);
