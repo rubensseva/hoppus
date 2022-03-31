@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <string.h>
 #include "utility.h"
 
 
@@ -10,4 +11,17 @@ int is_number(char *s) {
               return 0;
     }
     return 1;
+}
+
+int insert_char_in_str(char *str, int i, char c) {
+    int str_size = strlen(str);
+    if (i < 0 || i == str_size) {
+        return -1;
+    }
+    for (int j = str_size; j > i; j--) {
+        str[j] = str[j - 1];
+    }
+    str[str_size + 1] = '\0';
+    str[i] = c;
+    return 0;
 }

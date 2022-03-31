@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "parser.h"
 #include "utility.h"
 #include "config.h"
 #include "memory.h"
+#include "tokenize.h"
 
 char *unknown_type_str = "unknown";
 char *expr_type_string_map[EXPR_TYPE_ENUM_SIZE] = {
@@ -37,30 +40,19 @@ expr *expr_cons(expr* car, expr *cdr) {
     return expr_new(CONS, 0, car, cdr);
 }
 
-char *tokens_pop(char **tokens) {
-    if (tokens[0] == NULL) {
-        printf("PARSER: WARNING: No tokens to pop\n");
-        return NULL;
-    }
-    char *token = my_malloc(MAX_TOKEN_LENGTH);
-    strcpy(token, tokens[0]);
-    int count = 0;
-    while (tokens[count] != NULL && tokens[count + 1] != NULL) {
-        tokens[count] = tokens[count + 1];
-        count++;
-    }
-    tokens[count] = NULL;
-    return token;
-}
+
 
 /**
    Read one list from tokens.
 
-   Returns a expr* tree on success, or NULL on error.
- */
-expr *read_from_tokens(char **tokens) {
-    char *token = tokens_pop(tokens);
+   Parameters:
+       - tokens: A valid pointer to list of tokens, which this function will fill up.
+       - fd: The file descriptor used to fill up tokens
 
+   Returns an expr* tree on success, or NULL on error.
+ */
+expr *parse_tokens(char **tokens, int fd) {
+    char *token = tokens_pop(tokens, fd);
     if (token == NULL) {
         printf("PARSER: ERROR: Token was NULL\n");
         return NULL;
@@ -74,11 +66,9 @@ expr *read_from_tokens(char **tokens) {
     }
 
     if (strcmp("(", token) == 0) {
-        expr *first = NULL;
-        expr *curr = NULL;
-        expr *prev = NULL;
-        while (tokens[0] != NULL && strcmp(")", tokens[0]) != 0) {
-            expr *new = read_from_tokens(tokens);
+        expr *first = NULL, *curr = NULL, *prev = NULL;
+        while (tokens_peek(tokens, fd) == NULL || strcmp(")", tokens_peek(tokens, fd)) != 0) {
+            expr *new = parse_tokens(tokens, fd);
             if (new == NULL) {
                 return NULL;
             }
@@ -95,13 +85,8 @@ expr *read_from_tokens(char **tokens) {
                 prev->cdr = curr;
             prev = curr;
         }
-        /* At this points, there should be a ")" on tokens. If thats not the case, we have unmatched
-           parentheses. If it is the case, we need to pop it, then continue. */
-        if (tokens[0] == NULL) {
-            printf("PARSER: ERROR: Unmatched parentheses\n");
-            return NULL;
-        }
-        my_free(tokens_pop(tokens));
+        /* At this points, there should be a ")" on tokens, so lets pop it. */
+        my_free(tokens_pop(tokens, fd));
         my_free(token);
         return first;
     }

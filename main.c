@@ -11,8 +11,7 @@
 #include "memory.h"
 #include "symbol.h"
 #include "builtins.h"
-
-#define EXPR_STR_SIZE 1024
+#include "config.h"
 
 int main(int argc, char **argv) {
     if (argc > 2) {
@@ -43,32 +42,30 @@ int main(int argc, char **argv) {
         fd = 1;
     }
 
-    char buf[EXPR_STR_SIZE];
+    /* char buf[EXPR_STR_SIZE]; */
     while (1) {
         if (fd == 1)
             printf("$ ");
         fflush(stdout);
-        int bytes_read = read(fd, buf, EXPR_STR_SIZE);
-        if (bytes_read == -1) {
-            perror("read");
+        /* int bytes_read = read(fd, buf, EXPR_STR_SIZE); */
+        /* if (bytes_read == -1) { */
+        /*     perror("read"); */
+        /*     return -1; */
+        /* } */
+        /* buf[bytes_read] = '\0'; */
+
+        token_t *tokens = tokens_init();
+        expr *curr, *evald;
+        curr = parse_tokens(tokens, fd);
+        if (curr == NULL) {
+            printf("MAIN: ERROR: Parser\n");
             return -1;
         }
-        buf[bytes_read] = '\0';
-
-        char **tokens = tokenize(buf);
-        expr *curr, *evald;
-        while (tokens[0]) {
-            curr = read_from_tokens(tokens);
-            if (curr == NULL) {
-                printf("MAIN: ERROR: Parser\n");
-                return -1;
-            }
-            evald = eval(curr);
-            if (evald == NULL) {
-                printf("MAIN: ERROR: Eval\n");
-            } else if (evald->data) {
-                printf("%lu\n", (uint64_t) evald->data);
-            }
+        evald = eval(curr);
+        if (evald == NULL) {
+            printf("MAIN: ERROR: Eval\n");
+        } else if (evald->data) {
+            printf("%lu\n", (uint64_t) evald->data);
         }
     }
 

@@ -2,5 +2,6 @@
 #define UTILITY_H_
 
 int is_number(char *s);
+int insert_char_in_str(char *str, int i, char c);
 
 #endif // UTILITY_H_
