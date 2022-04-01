@@ -9,22 +9,25 @@
 #include "memory.h"
 #include "tokenize.h"
 
-token_t *read_tokens_from_file(int fd) {
+int read_tokens_from_file(int fd, token_t *dest) {
     char *buf = (char *) malloc(EXPR_STR_SIZE);
     int bytes_read = read(fd, buf, EXPR_STR_SIZE);
-    if (bytes_read == -1) {
+    if (bytes_read <= -1) {
         perror("read");
         printf("PARSER: ERROR: Reading from file\n");
-        return NULL;
+        return -1;
+    } else if (bytes_read == 0) {
+        printf("PARSER: EOF\n");
+        return EOF_CODE;
     }
     buf[bytes_read] = '\0';
 
-    token_t *new_tokens = tokenize(buf);
-    if (new_tokens == NULL || new_tokens[0] == NULL) {
-        printf("PARSER: ERROR: Unable to get additional tokens\n");
-        return NULL;
+    int res = tokenize(buf, dest);
+    if (res < 0) {
+        printf("PARSER: ERROR: Error when tokenizing string\n");
+        return res;
     }
-    return new_tokens;
+    return 0;
 }
 
 token_t *tokens_init() {
@@ -36,9 +39,9 @@ token_t *tokens_init() {
 }
 
 int tokens_add(token_t *tokens, token_t *new_tokens) {
-    for (int i = 0; i < MAX_TOKEN_LENGTH; i++) {
+    for (int i = 0; i < MAX_TOKENS; i++) {
         if (tokens[i] == NULL) {
-            for (int j = 0; j < MAX_TOKEN_LENGTH; j++) {
+            for (int j = 0; j < MAX_TOKENS; j++) {
                 if (new_tokens[j] == NULL) {
                     break;
                 }
@@ -50,45 +53,57 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
     return 0;
 }
 
-token_t tokens_pop(token_t *tokens, int fd) {
+int tokens_pop(token_t *tokens, int fd, token_t dest) {
     if (tokens == NULL) {
-        printf("PARSER: WARNING: Tokens was NULL when attempting to pop tokens\n");
-        return NULL;
+        printf("PARSER: ERROR: Tokens was NULL when attempting to pop tokens\n");
+        return -1;
     }
 
     if (tokens[0] == NULL) {
-        token_t *new_tokens = read_tokens_from_file(fd);
-        if (new_tokens == NULL) {
-            return NULL;
+        token_t *new_tokens = tokens_init();
+        int res = read_tokens_from_file(fd, new_tokens);
+        if (res < 0) {
+            printf("PARSER: ERROR: Reading tokens from file\n");
+            return res;
+        }
+        if (res == EOF_CODE) {
+            return EOF_CODE;
         }
         tokens_add(tokens, new_tokens);
     }
 
-    token_t token = (token_t) my_malloc(MAX_TOKEN_LENGTH);
-    strcpy(token, tokens[0]);
+    // token_t token = (token_t) my_malloc(MAX_TOKEN_LENGTH);
+    strcpy(dest, tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
         tokens[count] = tokens[count + 1];
         count++;
     }
     tokens[count] = NULL;
-    return token;
+
+    return 0;
 }
 
-token_t tokens_peek(token_t *tokens, int fd) {
+int tokens_peek(token_t *tokens, int fd, token_t dest) {
     if (tokens == NULL) {
-        printf("PARSER: WARNING: Tokens was NULL when attempting to peek tokens\n");
-        return NULL;
+        printf("PARSER: ERROR: Tokens was NULL when attempting to peek tokens\n");
+        return -1;
     }
 
     if (tokens[0] == NULL) {
-        token_t *new_tokens = read_tokens_from_file(fd);
-        if (new_tokens == NULL) {
-            return NULL;
+        token_t *new_tokens = tokens_init();
+        int res = read_tokens_from_file(fd, new_tokens);
+        if (res < 0) {
+            printf("PARSER: ERROR: Reading tokens from file\n");
+            return res;
+        }
+        if (res == EOF_CODE) {
+            return EOF_CODE;
         }
         tokens_add(tokens, new_tokens);
     }
-    return tokens[0];
+    strcpy(dest, tokens[0]);
+    return 0;
 }
 
 
@@ -102,7 +117,7 @@ void tokens_free(token_t *tokens) {
     my_free(tokens);
 }
 
-token_t *tokenize(char *src_code) {
+int tokenize(char *src_code, token_t *dest) {
     /* Strip newlines */
     int src_code_size = strlen(src_code);
     for (int i = 0; i < src_code_size; i++) {
@@ -122,17 +137,16 @@ token_t *tokenize(char *src_code) {
     }
 
     /* Tokenize */
-    token_t *tokens = tokens_init();
     int num_tokens = 0;
     token_t token = strtok(src_code, " ");
     while (token != NULL) {
         if (num_tokens >= MAX_TOKENS) {
             printf("ERROR: Too many tokens!\n");
-            return NULL;
+            return 01;
         }
-        tokens[num_tokens++] = token;
+        dest[num_tokens++] = token;
         token = strtok(NULL, " ");
     }
 
-    return tokens;
+    return 0;
 }

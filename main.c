@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
     symbol *car = symbol_builtin_create("car", bi_car);
     symbol *cdr = symbol_builtin_create("cdr", bi_cdr);
     symbol *progn = symbol_builtin_create("progn", bi_progn);
+    symbol *_if = symbol_builtin_create("if", bi_if);
 
     symbol_add(add);
     symbol_add(sub);
@@ -32,6 +33,7 @@ int main(int argc, char **argv) {
     symbol_add(car);
     symbol_add(cdr);
     symbol_add(progn);
+    symbol_add(_if);
 
     int fd;
     if (argc == 2) {
@@ -44,16 +46,20 @@ int main(int argc, char **argv) {
         fd = 1;
     }
 
+    token_t *tokens = tokens_init();
     while (1) {
         if (fd == 1)
             printf("$ ");
         fflush(stdout);
 
-        token_t *tokens = tokens_init();
         expr *curr, *evald;
-        curr = parse_tokens(tokens, fd);
-        if (curr == NULL) {
-            printf("MAIN: ERROR: Parser\n");
+        int res = parse_tokens(tokens, fd, &curr);
+        if (res < 0) {
+            printf("MAIN: ERROR: Parser: %d\n", res);
+            return -1;
+        }
+        if (res == EOF_CODE) {
+            printf("MAIN: Reached EOF\n");
             return -1;
         }
         evald = eval(curr);

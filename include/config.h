@@ -1,6 +1,9 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#define EOF_CODE 11
+#define EOF_WHILE_READING_EXPR_ERROR_CODE -11
+
 #define MAX_TOKEN_LENGTH 64
 #define MAX_TOKENS 1024
 

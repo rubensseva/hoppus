@@ -36,7 +36,7 @@ typedef struct expr_t {
 
 char *type_str(expr_type tp);
 
-expr *parse_tokens(char **tokens, int fd);
+int parse_tokens(char **tokens, int fd, expr **res);
 expr *continually_read_from_tokens(char **tokens);
 
 expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr);

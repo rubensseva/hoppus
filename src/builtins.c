@@ -121,3 +121,29 @@ int bi_progn(expr *arg, expr **res) {
     *res = _res;
     return 0;
 }
+
+int bi_if(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to progn\n");
+        return -1;
+    }
+    if (arg->car == NULL ||
+        arg->cdr == NULL || arg->cdr->car == NULL ||
+        arg->cdr->cdr == NULL || arg->cdr->cdr->car == NULL ||
+        arg->cdr->cdr->cdr != NULL) {
+        printf("BUILTIN: ERROR: \"if\" needs exactly three arguments\n");
+        return -1;
+    }
+    if (arg->car->type != NUMBER) {
+        printf("BUILTIN: ERROR: \"if\" currently only supports numbers\n");
+        return -1;
+    }
+
+    if (arg->car->data) {
+        *res = eval(arg->cdr->car);
+    } else {
+        *res = eval(arg->cdr->cdr->car);
+    }
+
+    return 0;
+}

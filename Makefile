@@ -5,7 +5,7 @@
 # @version 0.1
 
 CFLAGS = -g3
-CFLAGS += -fsanitize=address
+# CFLAGS += -fsanitize=address
 
 INCLUDE_DIR = include
 SOURCE_DIR = src
