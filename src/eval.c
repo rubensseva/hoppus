@@ -217,6 +217,42 @@ expr *free_tree(expr *e) {
     return NULL;
 }
 
+int print_expr_tree(expr *e){
+    switch(e->type) {
+        case NUMBER:
+            printf("NUMBER: %d", (int)e->data);
+            return 0;
+        case CHAR:
+            printf("CHAR: %c", (char)e->data);
+            return 0;
+        case SYMBOL:
+            printf("SYMBOL: %s", (char *)e->data);
+            return 0;
+        case CONS:;
+            expr *curr = e;
+            printf("CONS: (");
+            while (curr && curr->car) {
+                print_expr_tree(curr->car);
+                curr = curr->cdr;
+                if (curr && curr->car)
+                    printf(" . ");
+            }
+            printf(")");
+            return 0;
+        default:
+            printf("Got unknown expr type with printing\n");
+            return -1;
+    }
+}
+
+int print_expr(expr *e) {
+    printf("\n");
+    print_expr_tree(e);
+    printf("\n");
+}
+
+
+
 expr *eval(expr *e) {
     switch (e->type) {
         case NUMBER:
@@ -243,10 +279,12 @@ expr *eval(expr *e) {
                 printf("EVAL: ERROR: expr was NULL when evaluating cons cell \n");
                 return NULL;
             }
+            /* TODO: Search for the symbol in the symbol table, and check what symbol type it is.
+               Then you can differentiate between variables and functions */
             if (proc->car->type != SYMBOL) {
-                printf("EVAL: ERROR: expected car of cons cell to be a symbol, but it was of type %s\n",
+                printf("EVAL: WARNING: expected car of cons cell to be a symbol, but it was of type %s\n",
                        type_str(proc->car->type));
-                return NULL;
+                return proc;
             }
 
             /* If this is a defun, we should not evaluate the arguments */

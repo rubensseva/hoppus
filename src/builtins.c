@@ -150,3 +150,13 @@ int bi_if(expr *arg, expr **res) {
 
     return 0;
 }
+
+int bi_print(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to print\n");
+        return -1;
+    }
+    int print_res = print_expr(arg->car);
+    *res = arg->car;
+    return print_res;
+}

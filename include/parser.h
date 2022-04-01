@@ -20,10 +20,11 @@
       matches the implicit value of the enum type you just added (maybe make sure the other ones are
       also still correct)
 */
-#define EXPR_TYPE_ENUM_SIZE 3
+#define EXPR_TYPE_ENUM_SIZE 4
 typedef enum expr_type_t {
     SYMBOL,
     NUMBER,
+    CHAR,
     CONS,
 } expr_type;
 

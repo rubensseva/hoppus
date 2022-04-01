@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
     symbol *cdr = symbol_builtin_create("cdr", bi_cdr);
     symbol *progn = symbol_builtin_create("progn", bi_progn);
     symbol *_if = symbol_builtin_create("if", bi_if);
+    symbol *_print = symbol_builtin_create("print", bi_print);
 
     symbol_add(add);
     symbol_add(sub);
@@ -34,6 +35,7 @@ int main(int argc, char **argv) {
     symbol_add(cdr);
     symbol_add(progn);
     symbol_add(_if);
+    symbol_add(_print);
 
     int fd;
     if (argc == 2) {
@@ -65,8 +67,9 @@ int main(int argc, char **argv) {
         evald = eval(curr);
         if (evald == NULL) {
             printf("MAIN: ERROR: Eval\n");
-        } else if (evald->type == NUMBER) {
-            printf("%d\n", (int) evald->data);
+        } else {
+            printf("Return: \n");
+            print_expr(evald);
         }
     }
 

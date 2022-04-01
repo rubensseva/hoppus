@@ -10,5 +10,6 @@ int bi_car(expr *arg, expr **res);
 int bi_cdr(expr *arg, expr **res);
 int bi_progn(expr *arg, expr **res);
 int bi_if(expr *arg, expr **res);
+int bi_print(expr *arg, expr **res);
 
 #endif // BUILTINS_H_

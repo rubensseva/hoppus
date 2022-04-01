@@ -15,6 +15,7 @@ char *unknown_type_str = "unknown";
 char *expr_type_string_map[EXPR_TYPE_ENUM_SIZE] = {
     "symbol",
     "number",
+    "char",
     "cons"
 };
 
@@ -40,6 +41,34 @@ expr *expr_cons(expr* car, expr *cdr) {
     return expr_new(CONS, 0, car, cdr);
 }
 
+/**
+   Create a LISP string representation from a C string.
+
+   The string will be represented as a list, with cons cells,
+   where each cell has a char in its ->car field */
+expr *expr_from_str(char *str) {
+    expr *first = NULL, *prev = NULL;
+    unsigned int size = strlen(str);
+    int i;
+    /* Loop from 2nd element to next to last element, because
+       we need to skip the " signs at start and end of the string */
+    for(i = 1; i < size - 1; i++) {
+        expr *new_char = expr_new(CHAR, (uint64_t)str[i], NULL, NULL);
+        expr *new_cons = expr_cons(new_char, NULL);
+        if (first == NULL)
+            first = new_cons;
+        if (prev != NULL)
+            prev->cdr = new_cons;
+        prev = new_cons;
+    }
+    /* If empty string, return a single cons cell
+       Else, we append an empty cons cell at the end of the list
+       to signify the end of the string */
+    if (!first)
+        return expr_cons(NULL,NULL);
+    prev->cdr = expr_cons(NULL, NULL);
+    return first;
+}
 
 
 /**
@@ -65,6 +94,13 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     if (is_number(token)) {
         int num = atoi(token);
         expr *new_expr = expr_new(NUMBER, (uint64_t)num, NULL, NULL);
+        my_free(token);
+        *res = new_expr;
+        return 0;
+    }
+
+    if (is_string(token)) {
+        expr *new_expr = expr_from_str(token);
         my_free(token);
         *res = new_expr;
         return 0;
