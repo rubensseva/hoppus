@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
         evald = eval(curr);
         if (evald == NULL) {
             printf("MAIN: ERROR: Eval\n");
-        } else if (evald->data) {
-            printf("%lu\n", (uint64_t) evald->data);
+        } else if (evald->type == NUMBER) {
+            printf("%d\n", (int) evald->data);
         }
     }
 

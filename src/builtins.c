@@ -12,7 +12,7 @@ int bi_add(expr *arg, expr **res) {
         printf("BUILTIN: ERROR: Nothing to add \n");
         return -1;
     }
-    uint64_t acc = 0;
+    int acc = 0;
     while (arg) {
         if (arg->car == NULL) {
             printf("BUILTIN: ERROR: Argument to add had a car that was NULL\n");
@@ -23,11 +23,11 @@ int bi_add(expr *arg, expr **res) {
                    type_str(arg->car->type));
             return -1;
         }
-        acc += arg->car->data;
+        acc += (int)arg->car->data;
         arg = arg->cdr;
     }
 
-    expr *_res = expr_new(NUMBER, acc, NULL, NULL);
+    expr *_res = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
     *res = _res;
     return 0;
 }
@@ -45,10 +45,13 @@ int bi_sub(expr *arg, expr **res) {
                    type_str(arg->car->type));
             return -1;
         }
-        return arg->data * (-1);
+        int val = (int)arg->car->data * -1;
+        expr *_res = expr_new(NUMBER, val, NULL, NULL);
+        *res = _res;
+        return 0;
     }
 
-    uint64_t acc = arg->car->data;
+    int acc = (int)arg->car->data;
     arg = arg->cdr;
     while (arg) {
         if (arg->car == NULL) {
@@ -60,7 +63,7 @@ int bi_sub(expr *arg, expr **res) {
                    type_str(arg->car->type));
             return -1;
         }
-        acc -= arg->car->data;
+        acc -= (int)arg->car->data;
         arg = arg->cdr;
     }
 

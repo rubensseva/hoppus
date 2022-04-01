@@ -64,7 +64,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
 
     if (is_number(token)) {
         int num = atoi(token);
-        expr *new_expr = expr_new(NUMBER, num, NULL, NULL);
+        expr *new_expr = expr_new(NUMBER, (uint64_t)num, NULL, NULL);
         my_free(token);
         *res = new_expr;
         return 0;
@@ -120,7 +120,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     }
 
     /* If not a number or a parenthesis, then its a symbol */
-    expr *new_expr = expr_new(SYMBOL, (uint64_t) token, NULL, NULL);
+    expr *new_expr = expr_new(SYMBOL, (uint64_t)token, NULL, NULL);
     *res = new_expr;
     return 0;
 }
