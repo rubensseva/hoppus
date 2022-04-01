@@ -51,8 +51,8 @@ expr *expr_cons(expr* car, expr *cdr) {
 
    Returns an expr* tree on success, or NULL on error.
  */
-expr *parse_tokens(char **tokens, int fd) {
-    char *token = tokens_pop(tokens, fd);
+expr *parse_tokens(token_t *tokens, int fd) {
+    token_t token = tokens_pop(tokens, fd);
     if (token == NULL) {
         printf("PARSER: ERROR: Token was NULL\n");
         return NULL;
@@ -72,15 +72,14 @@ expr *parse_tokens(char **tokens, int fd) {
             if (new == NULL) {
                 return NULL;
             }
-            if (!prev) {
+            curr = expr_cons(new, NULL);
+            if (!first) {
                 if (new->type != SYMBOL) {
                     printf("PARSER: ERROR: First entry in a list was not a symbol: %d\n", new->type);
                     return NULL;
                 }
-            }
-            curr = expr_cons(new, NULL);
-            if (!first)
                 first = curr;
+            }
             if (prev)
                 prev->cdr = curr;
             prev = curr;

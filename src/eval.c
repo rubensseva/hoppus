@@ -2,13 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "eval.h"
 #include "parser.h"
 #include "symbol.h"
 #include "config.h"
 #include "memory.h"
 #include "builtins.h"
-
-expr *eval(expr *e);
 
 
 /**
@@ -144,53 +143,50 @@ int define(expr *arg, expr **res) {
                    of the arguments in sym.
 */
 expr *function_invocation(symbol *sym, expr *invocation_values) {
-    /* The two defun args (the list of arguments, and list of function logic) is
-        in the data field of the defun symbol */
+    /* The arguments to the defun invocation that defined this function */
     expr *defun_args = sym->e;
-    /* The function arguments for the defun is contained in the ->data field in
-       the first defun_args entry */
-    expr *defun_function_args = defun_args->car;
-    /* The name of the defun is in the first function argument */
-    expr *defun_name = defun_args->car->car;
-    /* The function logic is contained in the second defun arguments */
-    expr *defun_function_logic = defun_args->cdr;
+    /* The function arguments to the funtcion, first entry is the function name */
+    expr *function_args = defun_args->car;
+    expr *name = defun_args->car->car;
+    /* The forms representing the function logic */
+    expr *function_logic = defun_args->cdr;
 
     /* Go to the next function arg to skip the function name */
-    expr *curr_defun_function_arg = defun_function_args->cdr;
-    expr *curr_invocation_value = invocation_values;
-    while (curr_invocation_value || curr_defun_function_arg) {
-        if (!curr_invocation_value || !curr_defun_function_arg) {
+    expr *curr_arg = function_args->cdr;
+    expr *curr_val = invocation_values;
+    while (curr_val || curr_arg) {
+        if (!curr_val || !curr_arg) {
             printf("ERROR: Mismatch between defun and given function arguments for function: %s\n",
-                    (char *)defun_name->data);
+                    (char *)name->data);
             return NULL;
         }
         /* The value of the symbol is in the args for the current
             procedure being handled. This value can be anything, so we
             need to evaluate. */
-        expr *new_e = eval(curr_invocation_value->car);
-        char *name = (char *)curr_defun_function_arg->car->data;
-        symbol *new_symbol = symbol_create(name, VARIABLE, new_e);
-        symbol_add(new_symbol);
-        curr_defun_function_arg = curr_defun_function_arg->cdr;
-        curr_invocation_value = curr_invocation_value->cdr;
+        expr *new_e = eval(curr_val->car);
+        char *sym_name = (char *)curr_arg->car->data;
+        symbol *new_sym = symbol_create(sym_name, VARIABLE, new_e);
+        symbol_add(new_sym);
+        curr_arg = curr_arg->cdr;
+        curr_val = curr_val->cdr;
     }
-    /* After all the symbols are added, evaluate.
+    /* After all the symbols are added, evaluate the function logic.
        There might be several lists of function logic, the return
        value will be the last of these */
-    expr *curr_defun_function_logic = defun_function_logic;
+    expr *curr_function_logic = function_logic;
     expr *res;
-    while (curr_defun_function_logic) {
-        res = eval(curr_defun_function_logic->car);
-        curr_defun_function_logic = curr_defun_function_logic->cdr;
+    while (curr_function_logic) {
+        res = eval(curr_function_logic->car);
+        curr_function_logic = curr_function_logic->cdr;
     }
     /* After the function is evaluated, remove the symbols */
-    curr_defun_function_arg = defun_function_args->cdr;
-    while (curr_defun_function_arg) {
-        if (symbol_remove_name((char *)curr_defun_function_arg->car->data) == -1) {
+    curr_arg = function_args->cdr;
+    while (curr_arg) {
+        if (symbol_remove_name((char *)curr_arg->car->data) == -1) {
             printf("WARNING: Unable to remove sumbol %s\n",
-                   (char *)curr_defun_function_arg->car->data);
+                   (char *)curr_arg->car->data);
         }
-        curr_defun_function_arg = curr_defun_function_arg->cdr;
+        curr_arg = curr_arg->cdr;
     }
 
     return res;
@@ -202,12 +198,8 @@ expr *free_tree(expr *e) {
             my_free(e);
             break;
         case SYMBOL:;
-            /* symbol *sym = symbol_find((char *)e->data); */
-            /* if (sym != NULL) { */
-            /*     my_free(sym); */
-            /* } */
-            /* The data field contains a string, the name of the symbol, so we need to
-               my_free that as well */
+            /* TODO: Consider finding the symbol in the symbol table and
+               freeing it */
             my_free((char *)e->data);
             my_free(e);
             break;
@@ -246,11 +238,7 @@ expr *eval(expr *e) {
             return e;
         }
         case CONS:;
-            expr *proc = e;
-            expr *fun = proc->car;
-            expr *arg = e->cdr;
-            expr *res;
-
+            expr *proc = e, *fun = proc->car, *arg = e->cdr, *res;
             if (proc == NULL || proc->car == NULL) {
                 printf("EVAL: ERROR: expr was NULL when evaluating cons cell \n");
                 return NULL;
@@ -267,7 +255,6 @@ expr *eval(expr *e) {
                     printf("EVAL: ERROR: Defun\n");
                     return NULL;
                 }
-                /* TODO: Maybe need to free args here? */
                 return res;
             }
             /* If this is a define, we should only evaluate one of the arguments */
@@ -276,16 +263,12 @@ expr *eval(expr *e) {
                     printf("EVAL: ERROR: Define\n");
                     return NULL;
                 }
-                /* TODO: Maybe need to free args here? */
                 return res;
             }
 
             /* Evaluate all arguments, and build a new list of those arguments */
             expr *curr_arg = arg, *curr_eval = NULL, *first_cons = NULL, *prev_cons = NULL;
             while (curr_arg) {
-                /* TODO: arg->car should maybe be freed here, but we
-                   cant free it if arg->car is for example a number, since then
-                   arg->car = eval(arg->car) */
                 curr_eval = eval(curr_arg->car);
                 expr *new_cons = expr_cons(curr_eval, NULL);
                 if (first_cons == NULL)
@@ -311,13 +294,6 @@ expr *eval(expr *e) {
                     printf("EVAL: ERROR: Cant use variable %s as a function\n", (char*)fun->data);
                     return NULL;
                 }
-            }
-
-            expr *free_arg = first_cons;
-            while (free_arg) {
-                expr *tmp = free_arg;
-                free_arg = free_arg->cdr;
-                /* free_tree(tmp); */
             }
 
             return res;

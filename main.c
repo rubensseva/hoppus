@@ -24,12 +24,14 @@ int main(int argc, char **argv) {
     symbol *cons = symbol_builtin_create("cons", bi_cons);
     symbol *car = symbol_builtin_create("car", bi_car);
     symbol *cdr = symbol_builtin_create("cdr", bi_cdr);
+    symbol *progn = symbol_builtin_create("progn", bi_progn);
 
     symbol_add(add);
     symbol_add(sub);
     symbol_add(cons);
     symbol_add(car);
     symbol_add(cdr);
+    symbol_add(progn);
 
     int fd;
     if (argc == 2) {
@@ -42,17 +44,10 @@ int main(int argc, char **argv) {
         fd = 1;
     }
 
-    /* char buf[EXPR_STR_SIZE]; */
     while (1) {
         if (fd == 1)
             printf("$ ");
         fflush(stdout);
-        /* int bytes_read = read(fd, buf, EXPR_STR_SIZE); */
-        /* if (bytes_read == -1) { */
-        /*     perror("read"); */
-        /*     return -1; */
-        /* } */
-        /* buf[bytes_read] = '\0'; */
 
         token_t *tokens = tokens_init();
         expr *curr, *evald;

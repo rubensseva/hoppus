@@ -3,6 +3,7 @@
 
 #include "builtins.h"
 #include "parser.h"
+#include "eval.h"
 
 
 int bi_add(expr *arg, expr **res) {
@@ -70,7 +71,6 @@ int bi_sub(expr *arg, expr **res) {
 
 int bi_cons(expr *arg, expr **res) {
     if (arg == NULL || arg->cdr == NULL || arg->cdr->cdr != NULL) {
-        /* TODO: Consider returning 0? */
         printf("BUILTIN: ERROR: Cons accepts exactly two arguments \n");
         return -1;
     }
@@ -82,7 +82,6 @@ int bi_cons(expr *arg, expr **res) {
 
 int bi_car(expr *arg, expr **res) {
     if (arg == NULL) {
-        /* TODO: Consider returning 0? */
         printf("BUILTIN: ERROR: Nothing to car \n");
         return -1;
     }
@@ -97,7 +96,6 @@ int bi_car(expr *arg, expr **res) {
 
 int bi_cdr(expr *arg, expr **res) {
     if (arg == NULL) {
-        /* TODO: Consider returning 0? */
         printf("BUILTIN: ERROR: Nothing to cdr \n");
         return -1;
     }
@@ -107,5 +105,19 @@ int bi_cdr(expr *arg, expr **res) {
         return -1;
     }
     *res = arg->cdr;
+    return 0;
+}
+
+int bi_progn(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to progn\n");
+        return -1;
+    }
+    expr *curr_arg = arg, *_res;
+    while (curr_arg) {
+        _res = eval(curr_arg->car);
+        curr_arg = curr_arg->cdr;
+    }
+    *res = _res;
     return 0;
 }
