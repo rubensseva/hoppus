@@ -71,7 +71,7 @@ int expr_is_equal(expr *e1, expr *e2) {
         case CHAR:
         case BOOLEAN:
             if (!(e2->type == NUMBER || e2->type == CHAR || e2->type == BOOLEAN)) {
-                printf("EXPR: ERROR: Can only compare number, char or boolean with number, char or boolean\n");
+                printf("EXPR: ERROR: Equal can only compare number, char or boolean with number, char or boolean\n");
                 return -1;
             }
             return (int)e1->data == (int)e2->data;
@@ -84,6 +84,11 @@ int expr_is_equal(expr *e1, expr *e2) {
             int cmp_eq = strcmp((char *)e1->data, (char *)e2->data);
             return cmp_eq ? 0 : 1;
         case CONS:;
+            if (e2->type != CONS) {
+                printf("EXPR: ERROR: Trying to compare cons cell with something else\n");
+                return -1;
+            }
+
             if (list_length(e1) != list_length(e2))
                 return 0;
             expr *curr1 = e1, *curr2 = e2;
@@ -93,6 +98,47 @@ int expr_is_equal(expr *e1, expr *e2) {
 
         default:
             printf("EXPR: ERROR: Got unknown type when checking if true or false\n");
+            return -1;
+    }
+}
+
+/**
+  Check if an expression is true or false.
+
+  If gt_or_lt is true, calculate gt, otherwise lt
+*/
+int expr_gt_lt_equal(expr *e1, expr *e2, int gt_or_lt) {
+    if (e1 == NULL || e2 == NULL)
+        return e1 == e2;
+
+    if (e2->type == SYMBOL) {
+        printf("EXPR: ERROR: Cant use gt/lt on symbol\n");
+        return -1;
+    }
+    if (e2->type == CONS) {
+        printf("EXPR: ERROR: Cant use gt/lt on cons\n");
+        return -1;
+    }
+
+    switch (e1->type) {
+        case NUMBER:
+        case CHAR:
+        case BOOLEAN:
+            if (!(e2->type == NUMBER || e2->type == CHAR || e2->type == BOOLEAN)) {
+                printf("EXPR: ERROR: gt/lt can only compare number, char or boolean with number, char or boolean\n");
+                return -1;
+            }
+            if (gt_or_lt)
+                return (int)e1->data > (int)e2->data;
+            return (int)e1->data < (int)e2->data;
+        case SYMBOL:
+            printf("EXPR: ERROR: Cant use gt/lt on symbol\n");
+            return -1;
+        case CONS:;
+            printf("EXPR: ERROR: Cant use gt/lt on cons\n");
+            return -1;
+        default:
+            printf("EXPR: ERROR: gt/lt got unknown type when checking if true or false\n");
             return -1;
     }
 }

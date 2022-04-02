@@ -43,5 +43,6 @@ expr *expr_cons(expr* car, expr *cdr);
 
 int expr_is_true(expr *e);
 int expr_is_equal(expr *e1, expr *e2);
+int expr_gt_lt_equal(expr *e1, expr *e2, int is_gt);
 
 #endif // EXPR_H_

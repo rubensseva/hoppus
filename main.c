@@ -29,7 +29,9 @@ int main(int argc, char **argv) {
     symbol *progn = symbol_builtin_create("progn", bi_progn, 0);
     symbol *_if = symbol_builtin_create("if", bi_if, 1);
     symbol *_print = symbol_builtin_create("print", bi_print, 0);
-    symbol *equal = symbol_builtin_create("equal", bi_equal, 0);
+    symbol *equal = symbol_builtin_create("eq", bi_equal, 0);
+    symbol *_gt = symbol_builtin_create("gt", bi_gt, 0);
+    symbol *_lt = symbol_builtin_create("lt", bi_lt, 0);
 
     symbol_add(defun);
     symbol_add(define);
@@ -42,6 +44,8 @@ int main(int argc, char **argv) {
     symbol_add(_if);
     symbol_add(_print);
     symbol_add(equal);
+    symbol_add(_gt);
+    symbol_add(_lt);
 
     int fd;
     if (argc == 2) {

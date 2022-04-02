@@ -294,3 +294,37 @@ int bi_equal(expr *arg, expr **res) {
     *res = new_expr;
     return 0;
 }
+
+int bi_gt(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to gt\n");
+        return -1;
+    }
+    int arg_length = list_length(arg);
+    if (arg_length != 2) {
+        printf("BUILTIN: ERROR: gt needs exactly two arguments\n");
+        return -1;
+    }
+
+    int val = expr_gt_lt_equal(arg->car, arg->cdr->car, 1);
+    expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *res = new_expr;
+    return 0;
+}
+
+int bi_lt(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to gt\n");
+        return -1;
+    }
+    int arg_length = list_length(arg);
+    if (arg_length != 2) {
+        printf("BUILTIN: ERROR: gt needs exactly two arguments\n");
+        return -1;
+    }
+
+    int val = expr_gt_lt_equal(arg->car, arg->cdr->car, 0);
+    expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *res = new_expr;
+    return 0;
+}
