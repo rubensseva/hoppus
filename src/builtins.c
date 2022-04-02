@@ -328,3 +328,59 @@ int bi_lt(expr *arg, expr **res) {
     *res = new_expr;
     return 0;
 }
+
+int bi_and(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to equal\n");
+        return -1;
+    }
+    int val, arg_length = list_length(arg);
+    if (arg_length == 0) {
+        val = 0;
+    } else {
+        val = 1;
+        expr *curr = arg;
+        for_each(curr) {
+            val = expr_is_true(eval(curr->car));
+            if (val == -1) {
+                printf("BUILTIN: ERROR: \"and\" builtin got error when checking if expr is true\n");
+                return -1;
+            }
+            if (val == 0) {
+                break;
+            }
+        }
+    }
+
+    expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *res = new_expr;
+    return 0;
+}
+
+int bi_or(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to equal\n");
+        return -1;
+    }
+    int val, arg_length = list_length(arg);
+    if (arg_length == 0) {
+        val = 0;
+    } else {
+        val = 0;
+        expr *curr = arg;
+        for_each(curr) {
+            val = expr_is_true(eval(curr->car));
+            if (val == -1) {
+                printf("BUILTIN: ERROR: \"or\" builtin got error when checking if expr is true\n");
+                return -1;
+            }
+            if (val == 1) {
+                break;
+            }
+        }
+    }
+
+    expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *res = new_expr;
+    return 0;
+}

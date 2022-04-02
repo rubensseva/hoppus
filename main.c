@@ -32,6 +32,8 @@ int main(int argc, char **argv) {
     symbol *equal = symbol_builtin_create("eq", bi_equal, 0);
     symbol *_gt = symbol_builtin_create("gt", bi_gt, 0);
     symbol *_lt = symbol_builtin_create("lt", bi_lt, 0);
+    symbol *_and = symbol_builtin_create("and", bi_and, 1);
+    symbol *_or = symbol_builtin_create("or", bi_or, 1);
 
     symbol_add(defun);
     symbol_add(define);
@@ -46,6 +48,8 @@ int main(int argc, char **argv) {
     symbol_add(equal);
     symbol_add(_gt);
     symbol_add(_lt);
+    symbol_add(_and);
+    symbol_add(_or);
 
     int fd;
     if (argc == 2) {

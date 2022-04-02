@@ -16,5 +16,7 @@ int bi_print(expr *arg, expr **res);
 int bi_equal(expr *arg, expr **res);
 int bi_gt(expr *arg, expr **res);
 int bi_lt(expr *arg, expr **res);
+int bi_and(expr *arg, expr **res);
+int bi_or(expr *arg, expr **res);
 
 #endif // BUILTINS_H_
