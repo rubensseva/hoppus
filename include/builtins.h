@@ -3,6 +3,8 @@
 
 #include "parser.h"
 
+int bi_defun(expr *arg, expr **res);
+int bi_define(expr *arg, expr **res);
 int bi_add(expr *arg, expr **res);
 int bi_sub(expr *arg, expr **res);
 int bi_cons(expr *arg, expr **res);

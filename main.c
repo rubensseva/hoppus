@@ -19,15 +19,19 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    symbol *add = symbol_builtin_create("+", bi_add);
-    symbol *sub = symbol_builtin_create("-", bi_sub);
-    symbol *cons = symbol_builtin_create("cons", bi_cons);
-    symbol *car = symbol_builtin_create("car", bi_car);
-    symbol *cdr = symbol_builtin_create("cdr", bi_cdr);
-    symbol *progn = symbol_builtin_create("progn", bi_progn);
-    symbol *_if = symbol_builtin_create("if", bi_if);
-    symbol *_print = symbol_builtin_create("print", bi_print);
+    symbol *defun = symbol_builtin_create("defun", bi_defun, 1);
+    symbol *define = symbol_builtin_create("define", bi_define, 1);
+    symbol *add = symbol_builtin_create("+", bi_add, 0);
+    symbol *sub = symbol_builtin_create("-", bi_sub, 0);
+    symbol *cons = symbol_builtin_create("cons", bi_cons, 0);
+    symbol *car = symbol_builtin_create("car", bi_car, 0);
+    symbol *cdr = symbol_builtin_create("cdr", bi_cdr, 0);
+    symbol *progn = symbol_builtin_create("progn", bi_progn, 0);
+    symbol *_if = symbol_builtin_create("if", bi_if, 1);
+    symbol *_print = symbol_builtin_create("print", bi_print, 0);
 
+    symbol_add(defun);
+    symbol_add(define);
     symbol_add(add);
     symbol_add(sub);
     symbol_add(cons);
