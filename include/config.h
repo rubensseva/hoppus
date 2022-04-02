@@ -1,6 +1,10 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+/*
+  Configuration variables/constants go here
+*/
+
 #define EOF_CODE 11
 #define EOF_WHILE_READING_EXPR_ERROR_CODE -11
 

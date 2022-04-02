@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "eval.h"
 #include "list.h"
+#include "expr.h"
 
 
 int bi_add(expr *arg, expr **res) {
@@ -143,7 +144,7 @@ int bi_if(expr *arg, expr **res) {
         return -1;
     }
 
-    if (arg->car->data) {
+    if (expr_is_true(arg->car)) {
         *res = eval(arg->cdr->car);
     } else {
         *res = eval(arg->cdr->cdr->car);

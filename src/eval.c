@@ -4,6 +4,7 @@
 
 #include "eval.h"
 #include "parser.h"
+#include "expr.h"
 #include "symbol.h"
 #include "config.h"
 #include "memory.h"
@@ -248,6 +249,13 @@ int print_expr_tree(expr *e){
             print_expr_tree(e->cdr);
             printf(")");
             return 0;
+        case BOOLEAN:
+            if (e->data) {
+                printf("true");
+            } else {
+                printf("false");
+            }
+            return 0;
         default:
             printf("Got unknown expr type with printing\n");
             return -1;
@@ -266,6 +274,8 @@ int print_expr(expr *e) {
 expr *eval(expr *e) {
     switch (e->type) {
         case NUMBER:
+        case CHAR:
+        case BOOLEAN:
             return e;
         case SYMBOL:;
         {

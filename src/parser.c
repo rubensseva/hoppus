@@ -5,41 +5,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "expr.h"
 #include "parser.h"
 #include "utility.h"
 #include "config.h"
+#include "constants.h"
 #include "memory.h"
 #include "tokenize.h"
 
-char *unknown_type_str = "unknown";
-char *expr_type_string_map[EXPR_TYPE_ENUM_SIZE] = {
-    "symbol",
-    "number",
-    "char",
-    "cons"
-};
-
-char *type_str(expr_type tp) {
-    if (tp < 0 || tp > EXPR_TYPE_ENUM_SIZE) {
-        return unknown_type_str;
-    }
-    return expr_type_string_map[tp];
-}
-
-expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr) {
-    expr *new = (expr *)my_malloc(sizeof(expr));
-    new->type = type;
-    new->data = data;
-    new->car = car;
-    new->cdr = cdr;
-    return new;
-}
-expr *expr_copy(expr* src) {
-    return expr_new(src->type, src->data, src->car, src->cdr);
-}
-expr *expr_cons(expr* car, expr *cdr) {
-    return expr_new(CONS, 0, car, cdr);
-}
 
 /**
    Create a LISP string representation from a C string.
@@ -94,6 +67,19 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     if (is_number(token)) {
         int num = atoi(token);
         expr *new_expr = expr_new(NUMBER, (uint64_t)num, NULL, NULL);
+        my_free(token);
+        *res = new_expr;
+        return 0;
+    }
+
+    if (is_boolean(token)) {
+        int val;
+        if (strcmp(token, BOOL_STR_T) == 0) {
+            val = 1;
+        } else {
+            val = 0;
+        }
+        expr *new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
         my_free(token);
         *res = new_expr;
         return 0;

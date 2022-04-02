@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "utility.h"
+#include "constants.h"
 
 
 /* Taken from https://www.codegrepper.com/code-examples/c/c+isnumber */
@@ -15,6 +16,13 @@ int is_number(char *s) {
         }
     }
     return 1;
+}
+
+int is_boolean(char *s) {
+    if (strcmp(s, BOOL_STR_T) == 0 || strcmp(s, BOOL_STR_F) == 0) {
+        return 1;
+    }
+    return 0;
 }
 
 int is_string(char *s) {
