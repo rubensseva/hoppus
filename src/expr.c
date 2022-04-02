@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "expr.h"
 #include "memory.h"
+#include "list.h"
+
 
 char *unknown_type_str = "unknown";
 char *expr_type_string_map[EXPR_TYPE_ENUM_SIZE] = {
@@ -38,6 +41,9 @@ expr *expr_cons(expr* car, expr *cdr) {
   Check if an expression is true or false
 */
 int expr_is_true(expr *e) {
+    if (e == NULL)
+        return 0;
+
     switch (e->type) {
         case NUMBER:
         case CHAR:
@@ -50,5 +56,43 @@ int expr_is_true(expr *e) {
         default:
             printf("EXPR: ERROR: Got unknown type when checking if true or false\n");
             return 0;
+    }
+}
+
+/**
+  Check if an expression is true or false
+*/
+int expr_is_equal(expr *e1, expr *e2) {
+    if (e1 == NULL || e2 == NULL)
+        return e1 == e2;
+
+    switch (e1->type) {
+        case NUMBER:
+        case CHAR:
+        case BOOLEAN:
+            if (!(e2->type == NUMBER || e2->type == CHAR || e2->type == BOOLEAN)) {
+                printf("EXPR: ERROR: Can only compare number, char or boolean with number, char or boolean\n");
+                return -1;
+            }
+            return (int)e1->data == (int)e2->data;
+        case SYMBOL:
+            if (e2->type != SYMBOL) {
+                printf("EXPR: ERROR: Trying to compare symbol with something else\n");
+                return -1;
+            }
+            /* TODO: This is stupid, find another way. Even if the name is the same the scope might be different */
+            int cmp_eq = strcmp((char *)e1->data, (char *)e2->data);
+            return cmp_eq ? 0 : 1;
+        case CONS:;
+            if (list_length(e1) != list_length(e2))
+                return 0;
+            expr *curr1 = e1, *curr2 = e2;
+            if (expr_is_equal(curr1->car, curr2->car) == 0)
+                return 0;
+            return expr_is_equal(curr1->cdr, curr2->cdr);
+
+        default:
+            printf("EXPR: ERROR: Got unknown type when checking if true or false\n");
+            return -1;
     }
 }

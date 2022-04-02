@@ -257,3 +257,40 @@ int bi_print(expr *arg, expr **res) {
     *res = arg->car;
     return print_res;
 }
+
+int bi_equal(expr *arg, expr **res) {
+    if (arg == NULL) {
+        printf("BUILTIN: ERROR: Nothing to equal\n");
+        return -1;
+    }
+    int val, arg_length = list_length(arg);
+    if (arg_length == 0) {
+        val = 0;
+    } else if (arg_length == 1) {
+        val = 1;
+    } else {
+        val = 1;
+        expr *prev = NULL, *curr = arg;
+        while(!list_end(curr)) {
+            if (!prev) {
+                prev = curr;
+                curr = curr->cdr;
+                continue;
+            }
+            val = expr_is_equal(prev->car, curr->car);
+            if (val == -1) {
+                printf("BUILTIN: ERROR: Error when checking for equality\n");
+                return -1;
+            }
+            if (val == 0) {
+                break;
+            }
+            prev = curr;
+            curr = curr->cdr;
+        }
+    }
+
+    expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *res = new_expr;
+    return 0;
+}
