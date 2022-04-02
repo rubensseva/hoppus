@@ -4,6 +4,7 @@
 #include "builtins.h"
 #include "parser.h"
 #include "eval.h"
+#include "list.h"
 
 
 int bi_add(expr *arg, expr **res) {
@@ -13,11 +14,7 @@ int bi_add(expr *arg, expr **res) {
         return -1;
     }
     int acc = 0;
-    while (arg) {
-        if (arg->car == NULL) {
-            printf("BUILTIN: ERROR: Argument to add had a car that was NULL\n");
-            return -1;
-        }
+    while (!list_end(arg)) {
         if (arg->car->type != NUMBER) {
             printf("BUILTIN: ERROR: Add can only handle numbers but got %s\n",
                    type_str(arg->car->type));
@@ -53,7 +50,7 @@ int bi_sub(expr *arg, expr **res) {
 
     int acc = (int)arg->car->data;
     arg = arg->cdr;
-    while (arg) {
+    while (!list_end(arg)) {
         if (arg->car == NULL) {
             printf("BUILTIN: ERROR: Argument to sub had a car that was NULL\n");
             return -1;
@@ -93,7 +90,10 @@ int bi_car(expr *arg, expr **res) {
                type_str(arg->car->type));
         return -1;
     }
-    *res = arg->car;
+    /* Car is the first argument to the car builtin, and since
+       the first argument is a cons cell, we need the car of that
+       as well */
+    *res = arg->car->car;
     return 0;
 }
 
@@ -107,7 +107,10 @@ int bi_cdr(expr *arg, expr **res) {
                type_str(arg->car->type));
         return -1;
     }
-    *res = arg->cdr;
+    /* Car is the first argument to the car builtin, and since
+       the first argument is a cons cell, we need the cdr of that
+       as well */
+    *res = arg->car->cdr;
     return 0;
 }
 
@@ -117,7 +120,7 @@ int bi_progn(expr *arg, expr **res) {
         return -1;
     }
     expr *curr_arg = arg, *_res;
-    while (curr_arg) {
+    while (!list_end(curr_arg)) {
         _res = eval(curr_arg->car);
         curr_arg = curr_arg->cdr;
     }
@@ -130,11 +133,9 @@ int bi_if(expr *arg, expr **res) {
         printf("BUILTIN: ERROR: Nothing to progn\n");
         return -1;
     }
-    if (arg->car == NULL ||
-        arg->cdr == NULL || arg->cdr->car == NULL ||
-        arg->cdr->cdr == NULL || arg->cdr->cdr->car == NULL ||
-        arg->cdr->cdr->cdr != NULL) {
-        printf("BUILTIN: ERROR: \"if\" needs exactly three arguments\n");
+    unsigned int arg_count = list_length(arg);
+    if (arg_count != 3) {
+        printf("BUILTIN: ERROR: \"if\" needs exactly three arguments, but got %d \n", arg_count);
         return -1;
     }
     if (arg->car->type != NUMBER) {

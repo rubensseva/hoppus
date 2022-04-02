@@ -8,6 +8,7 @@
 #include "config.h"
 #include "memory.h"
 #include "tokenize.h"
+#include "lib/string1.h"
 
 int read_tokens_from_file(int fd, token_t *dest) {
     char *buf = (char *) malloc(EXPR_STR_SIZE);
@@ -119,16 +120,21 @@ void tokens_free(token_t *tokens) {
 
 int tokenize(char *src_code, token_t *dest) {
     /* Strip newlines */
-    int src_code_size = strlen(src_code);
+    int src_code_size = strlen(src_code), is_in_str = 0;
     for (int i = 0; i < src_code_size; i++) {
-        if (src_code[i] == '\n') {
+        if (src_code[i] == '"')
+            is_in_str = !is_in_str;
+        if (src_code[i] == '\n' && !is_in_str) {
             src_code[i] = ' ';
         }
     }
 
     /* Pad parentheses */
+    is_in_str = 0;
     for (int i = 0, j = 0; i < strlen(src_code); i++) {
-        if (src_code[i] == ')' || src_code[i] == '(') {
+        if (src_code[i] == '"')
+            is_in_str = !is_in_str;
+        if (src_code[i] == ')' || src_code[i] == '(' && !is_in_str) {
             insert_char_in_str(src_code, i + 1, ' ');
             if (insert_char_in_str(src_code, i, ' ') == 0) {
                 i++;
@@ -136,16 +142,19 @@ int tokenize(char *src_code, token_t *dest) {
         }
     }
 
+    /* Trim */
+    src_code = trim1(src_code, ' ');
+
     /* Tokenize */
     int num_tokens = 0;
-    token_t token = strtok(src_code, " ");
+    token_t token = strtok1(src_code, " ");
     while (token != NULL) {
         if (num_tokens >= MAX_TOKENS) {
             printf("ERROR: Too many tokens!\n");
             return 01;
         }
         dest[num_tokens++] = token;
-        token = strtok(NULL, " ");
+        token = strtok1(NULL, " ");
     }
 
     return 0;

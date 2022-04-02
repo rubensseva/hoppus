@@ -8,6 +8,7 @@
 #include "config.h"
 #include "memory.h"
 #include "builtins.h"
+#include "list.h"
 
 
 /**
@@ -42,7 +43,7 @@ int defun(expr *arg, expr **res) {
     }
 
     expr *curr_arg = arg->car;
-    while (curr_arg) {
+    while (!list_end(curr_arg)) {
         if (curr_arg->car->type != SYMBOL) {
             printf("EVAL: ERROR: Expected all arguments to defun to be symbols, but found one that was of type %s\n",
                    type_str(curr_arg->car->type));
@@ -77,8 +78,13 @@ int defun(expr *arg, expr **res) {
    to be evaluated.
 */
 int define(expr *arg, expr **res) {
-    if (arg == NULL || arg->cdr == NULL || arg->cdr->car == NULL || arg->cdr->cdr != NULL) {
-        printf("EVAL: ERROR: Define needs exactly two arguments\n");
+    if (arg == NULL) {
+        printf("EVAL: ERROR: Nothing to define\n");
+        return -1;
+    }
+    unsigned int arg_count = list_length(arg);
+    if (arg_count != 2) {
+        printf("EVAL: ERROR: Define needs exactly two arguments, but got %d\n", arg_count);
         return -1;
     }
 
@@ -154,8 +160,8 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
     /* Go to the next function arg to skip the function name */
     expr *curr_arg = function_args->cdr;
     expr *curr_val = invocation_values;
-    while (curr_val || curr_arg) {
-        if (!curr_val || !curr_arg) {
+    while (!list_end(curr_val) || !list_end(curr_arg)) {
+        if (list_end(curr_val) || list_end(curr_arg)) {
             printf("ERROR: Mismatch between defun and given function arguments for function: %s\n",
                     (char *)name->data);
             return NULL;
@@ -175,13 +181,13 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
        value will be the last of these */
     expr *curr_function_logic = function_logic;
     expr *res;
-    while (curr_function_logic) {
+    while (!list_end(curr_function_logic)) {
         res = eval(curr_function_logic->car);
         curr_function_logic = curr_function_logic->cdr;
     }
     /* After the function is evaluated, remove the symbols */
     curr_arg = function_args->cdr;
-    while (curr_arg) {
+    while (!list_end(curr_arg)) {
         if (symbol_remove_name((char *)curr_arg->car->data) == -1) {
             printf("WARNING: Unable to remove sumbol %s\n",
                    (char *)curr_arg->car->data);
@@ -218,25 +224,28 @@ expr *free_tree(expr *e) {
 }
 
 int print_expr_tree(expr *e){
+    if (e == NULL) {
+        printf("nil");
+        return 0;
+    }
     switch(e->type) {
         case NUMBER:
-            printf("NUMBER: %d", (int)e->data);
+            printf("%d", (int)e->data);
             return 0;
         case CHAR:
-            printf("CHAR: %c", (char)e->data);
+            printf("'%c'", (char)e->data);
             return 0;
         case SYMBOL:
-            printf("SYMBOL: %s", (char *)e->data);
+            printf("%s", (char *)e->data);
             return 0;
         case CONS:;
-            expr *curr = e;
-            printf("CONS: (");
-            while (curr && curr->car) {
-                print_expr_tree(curr->car);
-                curr = curr->cdr;
-                if (curr && curr->car)
-                    printf(" . ");
-            }
+            printf("(");
+            /* We could use list_end() here, but in order for this
+               to work for all kinds of cons cells, we need only check
+               for curr */
+            print_expr_tree(e->car);
+            printf(" ");
+            print_expr_tree(e->cdr);
             printf(")");
             return 0;
         default:
@@ -249,6 +258,7 @@ int print_expr(expr *e) {
     printf("\n");
     print_expr_tree(e);
     printf("\n");
+    return 0;
 }
 
 
@@ -282,8 +292,6 @@ expr *eval(expr *e) {
             /* TODO: Search for the symbol in the symbol table, and check what symbol type it is.
                Then you can differentiate between variables and functions */
             if (proc->car->type != SYMBOL) {
-                printf("EVAL: WARNING: expected car of cons cell to be a symbol, but it was of type %s\n",
-                       type_str(proc->car->type));
                 return proc;
             }
 
@@ -306,7 +314,7 @@ expr *eval(expr *e) {
 
             /* Evaluate all arguments, and build a new list of those arguments */
             expr *curr_arg = arg, *curr_eval = NULL, *first_cons = NULL, *prev_cons = NULL;
-            while (curr_arg) {
+            while (!list_end(curr_arg)) {
                 curr_eval = eval(curr_arg->car);
                 expr *new_cons = expr_cons(curr_eval, NULL);
                 if (first_cons == NULL)
