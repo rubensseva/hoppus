@@ -51,25 +51,26 @@
                    of the arguments in sym.
        res: Output
 */
-int function_invocation(symbol *sym, expr *invocation_values, expr **res) {
-    /* The arguments to the defun invocation that defined this function */
-    expr *defun_args = sym->e;
-    /* The function arguments to the funtcion, first entry is the function name */
-    expr *function_args = defun_args->car;
-    expr *name = defun_args->car->car;
+int function_invocation(symbol *sym, expr *args, expr **res) {
+    /* The parameters to the defun invocation that defined this function */
+    expr *defun_params = sym->e;
+    /* The parameters that the function that should be invoked, first entry
+       is the function name */
+    expr *function_params = defun_params->car;
+    expr *name = defun_params->car->car;
     /* The forms representing the function logic */
-    expr *function_logic = defun_args->cdr;
+    expr *forms = defun_params->cdr;
 
-    /* Go to the next function arg to skip the function name */
-    expr *curr_arg = function_args->cdr;
-    expr *curr_val = invocation_values;
+    /* Go to the next function param to skip the function name */
+    expr *curr_param = function_params->cdr;
+    expr *curr_arg = args;
     /* Would preferably use the for_each() macro here, but since
        we need to iterate through two lists, we need a custom loop */
-    /* TODO: Consider using getting the size once, then iterating,
-       to avoid continually calculating list end */
-    while (!list_end(curr_val) || !list_end(curr_arg)) {
-        if (list_end(curr_val) || list_end(curr_arg)) {
-            printf("ERROR: Mismatch between defun and given function arguments for function: %s\n",
+    /* TODO: Consider getting the size once, then iterating, to
+       avoid continually calculating list end */
+    while (!list_end(curr_arg) || !list_end(curr_param)) {
+        if (list_end(curr_arg) || list_end(curr_param)) {
+            printf("ERROR: Mismatch between defun params and given function arguments for function: %s\n",
                     (char *)name->data);
             return -1;
         }
@@ -77,39 +78,39 @@ int function_invocation(symbol *sym, expr *invocation_values, expr **res) {
             procedure being handled. This value can be anything, so we
             need to evaluate. */
         expr *new_e = NULL;
-        int eval_res = eval(curr_val->car, &new_e);
+        int eval_res = eval(curr_arg->car, &new_e);
         if (eval_res < 0) {
             printf("EVAL: ERROR: Function invocation error when evaluating arguments for symbols \n");
             return eval_res;
         }
-        char *sym_name = (char *)curr_arg->car->data;
+        char *sym_name = (char *)curr_param->car->data;
         symbol *new_sym = symbol_create(sym_name, VARIABLE, new_e);
         symbol_add(new_sym);
+        curr_param = curr_param->cdr;
         curr_arg = curr_arg->cdr;
-        curr_val = curr_val->cdr;
     }
     /* After all the symbols are added, evaluate the function logic.
        There might be several lists of function logic, the return
        value will be the last of these */
-    expr *curr_function_logic = function_logic;
-    while (!list_end(curr_function_logic)) {
-        int eval_res = eval(curr_function_logic->car, res);
+    expr *curr_form = forms;
+    while (!list_end(curr_form)) {
+        int eval_res = eval(curr_form->car, res);
         if (eval_res < 0) {
             printf("EVAL: ERROR: Function invocation error when invoking function \n");
             return eval_res;
         }
-        curr_function_logic = curr_function_logic->cdr;
+        curr_form = curr_form->cdr;
     }
     /* After the function is evaluated, remove the symbols */
-    curr_arg = function_args->cdr;
-    while (!list_end(curr_arg)) {
-        int sym_res = symbol_remove_name((char *)curr_arg->car->data);
+    curr_param = function_params->cdr;
+    while (!list_end(curr_param)) {
+        int sym_res = symbol_remove_name((char *)curr_param->car->data);
         if (sym_res < 0) {
             printf("WARNING: Unable to remove sumbol %s\n",
-                   (char *)curr_arg->car->data);
+                   (char *)curr_param->car->data);
             return sym_res;
         }
-        curr_arg = curr_arg->cdr;
+        curr_param = curr_param->cdr;
     }
     return 0;
 }
