@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
     symbol *_lt = symbol_builtin_create("lt", bi_lt, 0);
     symbol *_and = symbol_builtin_create("and", bi_and, 1);
     symbol *_or = symbol_builtin_create("or", bi_or, 1);
+    symbol *quote = symbol_builtin_create("quote", bi_quote, 1);
 
     symbol_add(defun);
     symbol_add(define);
@@ -50,6 +51,7 @@ int main(int argc, char **argv) {
     symbol_add(_lt);
     symbol_add(_and);
     symbol_add(_or);
+    symbol_add(quote);
 
     int fd;
     if (argc == 2) {
@@ -85,7 +87,6 @@ int main(int argc, char **argv) {
         if (eval_res < 0) {
             printf("MAIN: ERROR: Eval: %d\n", eval_res);
         } else {
-            printf("Return: \n");
             print_expr(evald);
         }
     }

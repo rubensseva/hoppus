@@ -396,3 +396,13 @@ int bi_or(expr *arg, expr **res) {
     *res = new_expr;
     return 0;
 }
+
+int bi_quote(expr *arg, expr **res) {
+    unsigned int arg_length = list_length(arg);
+    if (arg_length != 1) {
+        printf("BUILTIN: ERROR: quote only accepts exactly one argument, but got %d\n", arg_length);
+        return -1;
+    }
+    *res = arg->car;
+    return 0;
+}

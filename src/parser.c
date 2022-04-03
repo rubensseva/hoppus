@@ -118,10 +118,8 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
             }
             curr = expr_cons(new, NULL);
             if (!first) {
-                if (new->type != SYMBOL) {
-                    printf("PARSER: ERROR: First entry in a list was not a symbol: %d\n", new->type);
-                    return -1;
-                }
+                if (new->type != SYMBOL)
+                    printf("PARSER: WARNING: First entry in a list was not a symbol: %d\n", new->type);
                 first = curr;
             }
             if (prev)
