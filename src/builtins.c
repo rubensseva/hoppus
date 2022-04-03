@@ -60,7 +60,7 @@ int bi_defun(expr *arg, expr **res) {
     expr *curr_arg = arg->car;
     for_each(curr_arg) {
         if (curr_arg->car->type != SYMBOL) {
-            printf("EVAL: ERROR: Expected all arguments to defun to be symbols, but found one that was of type %s\n",
+            printf("EVAL: ERROR: defun expects all arguments to be symbols, but found one that was of type %s\n",
                    type_str(curr_arg->car->type));
             return -1;
         }
@@ -404,5 +404,32 @@ int bi_quote(expr *arg, expr **res) {
         return -1;
     }
     *res = arg->car;
+    return 0;
+}
+
+int bi_defmacro(expr *arg, expr **res) {
+    unsigned int arg_length = list_length(arg);
+    if (arg_length != 2) {
+        printf("BUILTIN: ERROR: defmacro only accepts exactly one argument, but got %d\n", arg_length);
+        return -1;
+    }
+
+    expr *curr_arg = arg->car;
+    for_each(curr_arg) {
+        if (curr_arg->car->type != SYMBOL) {
+            printf("EVAL: ERROR: defmacro expects all arguments to be symbols, but found one that was of type %s\n",
+                   type_str(curr_arg->car->type));
+            return -1;
+        }
+    }
+
+    char *buf = my_malloc(MAX_TOKEN_LENGTH);
+    char *macro_name = (char *)(arg->car->car->data);
+    strcpy(buf, macro_name);
+
+    symbol *new_sym = symbol_create(buf, MACRO, arg);
+
+    symbol_add(new_sym);
+    *res = arg;
     return 0;
 }

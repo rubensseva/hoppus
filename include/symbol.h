@@ -7,8 +7,9 @@ typedef int builtin_fn_t(expr *arg, expr **res);
 
 typedef enum symbol_type_t {
     FUNCTION,
+    MACRO,
     BUILTIN,
-    VARIABLE
+    VARIABLE,
 } symbol_type;
 
 typedef struct symbol_t {

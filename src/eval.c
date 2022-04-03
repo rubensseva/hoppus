@@ -114,30 +114,6 @@ int function_invocation(symbol *sym, expr *invocation_values, expr **res) {
     return 0;
 }
 
-expr *free_tree(expr *e) {
-    switch (e->type) {
-        case NUMBER:
-            my_free(e);
-            break;
-        case SYMBOL:;
-            /* TODO: Consider finding the symbol in the symbol table and
-               freeing it */
-            my_free((char *)e->data);
-            my_free(e);
-            break;
-        case CONS:;
-            if (e->cdr)
-                free_tree(e->cdr);
-            if (e->car)
-                free_tree(e->car);
-            my_free(e);
-            break;
-        default:
-            printf("EVAL: WARNING: Unknown type when freeing an expr tree\n");
-            return NULL;
-    }
-    return NULL;
-}
 
 int print_expr_tree(expr *e){
     if (e == NULL) {
@@ -185,7 +161,6 @@ int print_expr(expr *e) {
 }
 
 
-
 int eval(expr *e, expr **res) {
     if (e == NULL) {
         printf("EVAL: WARNING: Eval got NULL, returning NULL\n");
@@ -224,33 +199,47 @@ int eval(expr *e, expr **res) {
                 printf("EVAL: ERROR: expr was NULL when evaluating cons cell \n");
                 return -1;
             }
-
             if (proc->car->type != SYMBOL) {
                 *res = proc;
                 return 0;
-            } else {
-                /* Here we can invoce special operators, which should not have their arguments evaluated */
-                sym = symbol_find((char *)(fun->data));
-                if (sym == NULL) {
-                    printf("EVAL: ERROR: Trying invoke function, but symbol was null\n");
+            }
+            /* Here we can invoce special operators, which should not have their arguments evaluated */
+            sym = symbol_find((char *)(fun->data));
+            if (sym == NULL) {
+                printf("EVAL: ERROR: Trying invoke function, but symbol was null\n");
+                return -1;
+            }
+            if (sym->type == VARIABLE) {
+                printf("EVAL: ERROR: Cannot use variable %s as function\n", (char *)sym->e->car->data);
+                return -1;
+            }
+            if (sym->type == MACRO) {
+                expr *macro_expand;
+                int func_inv_res = function_invocation(sym, arg, &macro_expand);
+                if (func_inv_res < 0) {
+                    printf("ERROR: EVAL: Got error when expanding macro %d\n", func_inv_res);
+                    return func_inv_res;
+                }
+                expr *evald;
+                int eval_res = eval(macro_expand, &evald);
+                if (eval_res < 0) {
+                    printf("ERROR: EVAL: Got error when evaluating expanded macro %d\n", eval_res);
+                    return eval_res;
+                }
+                *res = evald;
+                return 0;
+            }
+            if (sym->is_special_operator) {
+                if (sym->type != BUILTIN) {
+                    printf("EVAL: ERROR: Attempting to exec special operator, but the symbol was not of type builtin\n");
                     return -1;
                 }
-                if (sym->type == VARIABLE) {
-                    printf("EVAL: ERROR: Cannot use variable %s as function\n", (char *)sym->e->car->data);
+                int bi_res = sym->builtin_fn(arg, res);
+                if (bi_res == -1) {
+                    printf("EVAL: ERROR: Builtin function encountered error\n");
                     return -1;
                 }
-                if (sym->is_special_operator) {
-                    if (sym->type != BUILTIN) {
-                        printf("EVAL: ERROR: Attempting to exec special operator, but the symbol was not of type builtin\n");
-                        return -1;
-                    }
-                    int bi_res = sym->builtin_fn(arg, res);
-                    if (bi_res == -1) {
-                        printf("EVAL: ERROR: Builtin function encountered error\n");
-                        return -1;
-                    }
-                    return 0;
-                }
+                return 0;
             }
 
             /* Evaluate all arguments, and build a new list of those arguments */
