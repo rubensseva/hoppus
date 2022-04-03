@@ -36,6 +36,13 @@ int is_string(char *s) {
     return 1;
 }
 
+int is_nil(char *s) {
+    if (strcmp(s, NIL_STR) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 int insert_char_in_str(char *str, int i, char c) {
     int str_size = strlen(str);
     if (i < 0 || i == str_size)

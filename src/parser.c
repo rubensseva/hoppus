@@ -91,6 +91,11 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         return 0;
     }
 
+    if (is_nil(token)) {
+        *res = NULL;
+        return 0;
+    }
+
     if (strcmp("(", token) == 0) {
         expr *first = NULL, *curr = NULL, *prev = NULL;
         while (1) {

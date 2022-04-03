@@ -9,4 +9,6 @@
 #define BOOL_STR_T "true"
 #define BOOL_STR_F "false"
 
+#define NIL_STR "nil"
+
 #endif // CONSTANTS_H_
