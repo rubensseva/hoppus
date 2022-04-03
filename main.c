@@ -64,23 +64,26 @@ int main(int argc, char **argv) {
 
     token_t *tokens = tokens_init();
     while (1) {
-        if (fd == 1)
+        if (fd == 1) {
             printf("$ ");
-        fflush(stdout);
+            fflush(stdout);
+        }
 
-        expr *curr, *evald;
-        int res = parse_tokens(tokens, fd, &curr);
-        if (res < 0) {
-            printf("MAIN: ERROR: Parser: %d\n", res);
+        expr *parsed;
+        int parse_res = parse_tokens(tokens, fd, &parsed);
+        if (parse_res < 0) {
+            printf("MAIN: ERROR: Parser: %d\n", parse_res);
             return -1;
         }
-        if (res == EOF_CODE) {
+        if (parse_res == EOF_CODE) {
             printf("MAIN: Reached EOF\n");
             return -1;
         }
-        evald = eval(curr);
-        if (evald == NULL) {
-            printf("MAIN: ERROR: Eval\n");
+
+        expr *evald;
+        int eval_res = eval(parsed, &evald);
+        if (eval_res < 0) {
+            printf("MAIN: ERROR: Eval: %d\n", eval_res);
         } else {
             printf("Return: \n");
             print_expr(evald);

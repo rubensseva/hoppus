@@ -9,6 +9,6 @@
 
 expr *free_tree(expr *e);
 int print_expr(expr *e);
-expr *eval(expr *e);
+int eval(expr *e, expr **res);
 
 #endif // EVAL_H_
