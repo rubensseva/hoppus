@@ -12,6 +12,20 @@
 #include "config.h"
 
 /**
+   Here are all the builtin functions. Some of them are also special operators,
+   meaning that their arguments are not evaluated.
+
+   Parameters:
+   - expr *arg: a list containing the arguments. It is a "proper" lisp list in the
+           sense that it is built up of cons cells.
+   - expr **res: output argument
+
+   Return value:
+      -1 on error, 0 on success.
+*/
+
+
+/**
    Example defun: (defun (add x y) (+ x y)), here (add x y) is
    the first argument to the defun and (+ x y) is the second argument
    to the defun. The first argument (add x y) contains the name of the
@@ -43,13 +57,12 @@ int bi_defun(expr *arg, expr **res) {
     }
 
     expr *curr_arg = arg->car;
-    while (!list_end(curr_arg)) {
+    for_each(curr_arg) {
         if (curr_arg->car->type != SYMBOL) {
             printf("EVAL: ERROR: Expected all arguments to defun to be symbols, but found one that was of type %s\n",
                    type_str(curr_arg->car->type));
             return -1;
         }
-        curr_arg = curr_arg->cdr;
     }
 
     char *buf = my_malloc(MAX_TOKEN_LENGTH);
@@ -114,14 +127,14 @@ int bi_add(expr *arg, expr **res) {
         return -1;
     }
     int acc = 0;
-    while (!list_end(arg)) {
-        if (arg->car->type != NUMBER) {
+    expr *curr = arg;
+    for_each(curr) {
+        if (curr->car->type != NUMBER) {
             printf("BUILTIN: ERROR: Add can only handle numbers but got %s\n",
-                   type_str(arg->car->type));
+                   type_str(curr->car->type));
             return -1;
         }
-        acc += (int)arg->car->data;
-        arg = arg->cdr;
+        acc += (int)curr->car->data;
     }
 
     expr *_res = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
@@ -149,19 +162,18 @@ int bi_sub(expr *arg, expr **res) {
     }
 
     int acc = (int)arg->car->data;
-    arg = arg->cdr;
-    while (!list_end(arg)) {
-        if (arg->car == NULL) {
+    expr *curr = arg->cdr;
+    for_each(curr) {
+        if (curr->car == NULL) {
             printf("BUILTIN: ERROR: Argument to sub had a car that was NULL\n");
             return -1;
         }
-        if (arg->car->type != NUMBER) {
+        if (curr->car->type != NUMBER) {
             printf("BUILTIN: ERROR: Sub can only handle numbers but got %s\n",
-                   type_str(arg->car->type));
+                   type_str(curr->car->type));
             return -1;
         }
-        acc -= (int)arg->car->data;
-        arg = arg->cdr;
+        acc -= (int)curr->car->data;
     }
 
     expr *_res = expr_new(NUMBER, acc, NULL, NULL);
@@ -271,10 +283,9 @@ int bi_equal(expr *arg, expr **res) {
     } else {
         val = 1;
         expr *prev = NULL, *curr = arg;
-        while(!list_end(curr)) {
+        for_each(curr) {
             if (!prev) {
                 prev = curr;
-                curr = curr->cdr;
                 continue;
             }
             val = expr_is_equal(prev->car, curr->car);
@@ -286,7 +297,6 @@ int bi_equal(expr *arg, expr **res) {
                 break;
             }
             prev = curr;
-            curr = curr->cdr;
         }
     }
 

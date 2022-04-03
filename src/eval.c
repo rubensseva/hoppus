@@ -62,6 +62,10 @@ expr *function_invocation(symbol *sym, expr *invocation_values) {
     /* Go to the next function arg to skip the function name */
     expr *curr_arg = function_args->cdr;
     expr *curr_val = invocation_values;
+    /* Would preferably use the for_each() macro here, but since
+       we need to iterate through two lists, we need a custom loop */
+    /* TODO: Consider using getting the size once, then iterating,
+       to avoid continually calculating list end */
     while (!list_end(curr_val) || !list_end(curr_arg)) {
         if (list_end(curr_val) || list_end(curr_arg)) {
             printf("ERROR: Mismatch between defun and given function arguments for function: %s\n",
@@ -230,16 +234,19 @@ expr *eval(expr *e) {
             }
 
             /* Evaluate all arguments, and build a new list of those arguments */
-            expr *curr_arg = arg, *curr_eval = NULL, *first_cons = NULL, *prev_cons = NULL;
-            while (!list_end(curr_arg)) {
-                curr_eval = eval(curr_arg->car);
+            expr *curr_arg = arg, *first_cons = NULL, *prev_cons = NULL;
+            for_each(curr_arg) {
+                expr *curr_eval = eval(curr_arg->car);
                 expr *new_cons = expr_cons(curr_eval, NULL);
                 if (first_cons == NULL)
                     first_cons = new_cons;
                 if (prev_cons != NULL)
                     prev_cons->cdr = new_cons;
                 prev_cons = new_cons;
-                curr_arg = curr_arg->cdr;
+            }
+            if (first_cons == NULL) {
+                printf("EVAL: ERROR: List of evaluated argument is NULL, something went wrong\n");
+                return NULL;
             }
 
             /* Invoke the builtin or lisp function. We already found the symbol
