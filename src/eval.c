@@ -244,10 +244,6 @@ expr *eval(expr *e) {
                     prev_cons->cdr = new_cons;
                 prev_cons = new_cons;
             }
-            if (first_cons == NULL) {
-                printf("EVAL: ERROR: List of evaluated argument is NULL, something went wrong\n");
-                return NULL;
-            }
 
             /* Invoke the builtin or lisp function. We already found the symbol
                earlier when checking for special operators. */

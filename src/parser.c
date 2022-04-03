@@ -38,8 +38,7 @@ expr *expr_from_str(char *str) {
        Else, we append an empty cons cell at the end of the list
        to signify the end of the string */
     if (!first)
-        return expr_cons(NULL,NULL);
-    prev->cdr = expr_cons(NULL, NULL);
+        return NULL;
     return first;
 }
 

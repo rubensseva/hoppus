@@ -51,8 +51,9 @@
 
 */
 int bi_defun(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("EVAL: ERROR: Got NULL argument for defun \n");
+    unsigned int arg_count = list_length(arg);
+    if (arg_count < 2) {
+        printf("EVAL: ERROR: defun needs exactly two arguments, but got %d\n", arg_count);
         return -1;
     }
 
@@ -91,13 +92,9 @@ int bi_defun(expr *arg, expr **res) {
    to be evaluated.
 */
 int bi_define(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("EVAL: ERROR: Nothing to define\n");
-        return -1;
-    }
     unsigned int arg_count = list_length(arg);
     if (arg_count != 2) {
-        printf("EVAL: ERROR: Define needs exactly two arguments, but got %d\n", arg_count);
+        printf("EVAL: ERROR: define needs exactly two arguments, but got %d\n", arg_count);
         return -1;
     }
 
@@ -121,22 +118,16 @@ int bi_define(expr *arg, expr **res) {
 }
 
 int bi_add(expr *arg, expr **res) {
-    if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("BUILTIN: ERROR: Nothing to add \n");
-        return -1;
-    }
     int acc = 0;
     expr *curr = arg;
     for_each(curr) {
         if (curr->car->type != NUMBER) {
-            printf("BUILTIN: ERROR: Add can only handle numbers but got %s\n",
+            printf("BUILTIN: ERROR: add can only handle numbers but got %s\n",
                    type_str(curr->car->type));
             return -1;
         }
         acc += (int)curr->car->data;
     }
-
     expr *_res = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
     *res = _res;
     return 0;
@@ -144,14 +135,14 @@ int bi_add(expr *arg, expr **res) {
 
 int bi_sub(expr *arg, expr **res) {
     if (arg == NULL) {
-        /* TODO: Consider returning 0? */
-        printf("BUILTIN: ERROR: Nothing to sub \n");
-        return -1;
+        expr *_res = expr_new(NUMBER, 0, NULL, NULL);
+        *res = _res;
+        return 0;
     }
     /* If only one argument, return the negative of that argument */
     if (arg->cdr == NULL) {
         if (arg->car->type != NUMBER) {
-            printf("BUILTIN: ERROR: Sub can only handle numbers but got %s\n",
+            printf("BUILTIN: ERROR: sub can only handle numbers but got %s\n",
                    type_str(arg->car->type));
             return -1;
         }
@@ -169,7 +160,7 @@ int bi_sub(expr *arg, expr **res) {
             return -1;
         }
         if (curr->car->type != NUMBER) {
-            printf("BUILTIN: ERROR: Sub can only handle numbers but got %s\n",
+            printf("BUILTIN: ERROR: sub can only handle numbers but got %s\n",
                    type_str(curr->car->type));
             return -1;
         }
@@ -182,8 +173,9 @@ int bi_sub(expr *arg, expr **res) {
 }
 
 int bi_cons(expr *arg, expr **res) {
-    if (arg == NULL || arg->cdr == NULL || arg->cdr->cdr != NULL) {
-        printf("BUILTIN: ERROR: Cons accepts exactly two arguments \n");
+    unsigned int size = list_length(arg);
+    if (size != 2) {
+        printf("BUILTIN: ERROR: cons accepts exactly two arguments, but got %d\n", size);
         return -1;
     }
 
@@ -194,11 +186,12 @@ int bi_cons(expr *arg, expr **res) {
 
 int bi_car(expr *arg, expr **res) {
     if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to car \n");
-        return -1;
+        printf("BUILTIN: WARNING: car got NULL as argument, returning NULL\n");
+        *res = NULL;
+        return 0;
     }
     if (arg->car->type != CONS) {
-        printf("BUILTIN: ERROR: Car can only handle numbers but got %s\n",
+        printf("BUILTIN: ERROR: car can only handle numbers but got %s\n",
                type_str(arg->car->type));
         return -1;
     }
@@ -211,8 +204,9 @@ int bi_car(expr *arg, expr **res) {
 
 int bi_cdr(expr *arg, expr **res) {
     if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to cdr \n");
-        return -1;
+        printf("BUILTIN: WARNING: cdr got NULL as argument, returning NULL\n");
+        *res = NULL;
+        return 0;
     }
     if (arg->car->type != CONS) {
         printf("BUILTIN: ERROR: Cdr can only handle numbers but got %s\n",
@@ -228,8 +222,9 @@ int bi_cdr(expr *arg, expr **res) {
 
 int bi_progn(expr *arg, expr **res) {
     if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to progn\n");
-        return -1;
+        printf("BUILTIN: WARNING: progn got NULL as argument, returning NULL\n");
+        *res = NULL;
+        return 0;
     }
     expr *curr_arg = arg, *_res;
     while (!list_end(curr_arg)) {
@@ -241,10 +236,6 @@ int bi_progn(expr *arg, expr **res) {
 }
 
 int bi_if(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to progn\n");
-        return -1;
-    }
     unsigned int arg_count = list_length(arg);
     if (arg_count != 3) {
         printf("BUILTIN: ERROR: \"if\" needs exactly three arguments, but got %d \n", arg_count);
@@ -261,20 +252,12 @@ int bi_if(expr *arg, expr **res) {
 }
 
 int bi_print(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to print\n");
-        return -1;
-    }
-    int print_res = print_expr(arg->car);
+    int print_res = print_expr(arg);
     *res = arg->car;
     return print_res;
 }
 
 int bi_equal(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to equal\n");
-        return -1;
-    }
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -306,10 +289,6 @@ int bi_equal(expr *arg, expr **res) {
 }
 
 int bi_gt(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to gt\n");
-        return -1;
-    }
     int arg_length = list_length(arg);
     if (arg_length != 2) {
         printf("BUILTIN: ERROR: gt needs exactly two arguments\n");
@@ -323,13 +302,9 @@ int bi_gt(expr *arg, expr **res) {
 }
 
 int bi_lt(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to gt\n");
-        return -1;
-    }
     int arg_length = list_length(arg);
     if (arg_length != 2) {
-        printf("BUILTIN: ERROR: gt needs exactly two arguments\n");
+        printf("BUILTIN: ERROR: lt needs exactly two arguments\n");
         return -1;
     }
 
@@ -340,10 +315,6 @@ int bi_lt(expr *arg, expr **res) {
 }
 
 int bi_and(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to equal\n");
-        return -1;
-    }
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -368,10 +339,6 @@ int bi_and(expr *arg, expr **res) {
 }
 
 int bi_or(expr *arg, expr **res) {
-    if (arg == NULL) {
-        printf("BUILTIN: ERROR: Nothing to equal\n");
-        return -1;
-    }
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;

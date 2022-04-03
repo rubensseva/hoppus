@@ -2,8 +2,11 @@
 
 #include "eval.h"
 
+/**
+   When iterating through the list, a NULL pointer signifies the end
+   of the list */
 int list_end(expr *e) {
-    return !(e && e->car);
+    return e == NULL;
 }
 
 unsigned int list_length(expr *e) {
