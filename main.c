@@ -99,7 +99,7 @@ int REPL_loop(int fd) {
             return -1;
         }
         if (parse_res == EOF_CODE) {
-            printf("INFO: MAIN: Reached EOF\n");
+            printf("INFO: MAIN: EOF\n");
             return 0;
         }
 
@@ -114,6 +114,7 @@ int REPL_loop(int fd) {
 }
 
 int main(int argc, char **argv) {
+    printf("MAIN: INFO: Welcome to ukernel lisp!\n");
     int ret_code;
     if (argc > 2) {
         printf("USAGE: %s <filename>\n", argv[0]);
@@ -121,12 +122,14 @@ int main(int argc, char **argv) {
     }
 
     create_builtins();
+    printf("MAIN: INFO: builtins created\n");
 
     ret_code = load_standard_library();
     if (ret_code < 0) {
         printf("ERROR: MAIN: Loading standard library: %d\n", ret_code);
         return -1;
     }
+    printf("MAIN: INFO: standard library loaded\n");
 
     int fd;
     if (argc == 2) {
@@ -139,6 +142,7 @@ int main(int argc, char **argv) {
         fd = 1;
     }
 
+    printf("MAIN: INFO: starting REPL loop\n");
     ret_code = REPL_loop(fd);
     if (ret_code < 0) {
         printf("ERROR: MAIN: Eval error: %d\n", ret_code);

@@ -18,7 +18,7 @@ int read_tokens_from_file(int fd, token_t *dest) {
         printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: read() returned error\n");
         return -1;
     } else if (bytes_read == 0) {
-        printf("PARSER: EOF\n");
+        printf("INFO: PARSER: EOF\n");
         return EOF_CODE;
     }
     buf[bytes_read] = '\0';

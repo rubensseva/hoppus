@@ -118,6 +118,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
                 return ret_code;
             }
             if (ret_code == EOF_CODE) {
+                printf("ERROR: PARSER: Got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
             }
             if (strcmp(")", peeked_token) == 0) {
