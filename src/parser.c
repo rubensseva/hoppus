@@ -53,14 +53,27 @@ expr *expr_from_str(char *str) {
    Returns an expr* tree on success, or NULL on error.
  */
 int parse_tokens(token_t *tokens, int fd, expr **res) {
+    int ret_code;
     token_t token = (token_t) my_malloc(MAX_TOKEN_LENGTH);
-    int pop_res = tokens_pop(tokens, fd, token);
-    if (pop_res < 0) {
+    ret_code = tokens_pop(tokens, fd, token);
+    if (ret_code < 0) {
         printf("PARSER: ERROR: Error when popping tokens\n");
-        return pop_res;
+        return ret_code;
     }
-    if (pop_res == EOF_CODE) {
+    if (ret_code == EOF_CODE) {
         return EOF_CODE;
+    }
+
+    if (strcmp(token, "'")  == 0) {
+        expr *parsed_quote;
+        ret_code = parse_tokens(tokens, fd, &parsed_quote);
+        if (ret_code < 0) {
+            printf("ERROR: PARSER: Parsing quoted tokens\n");
+            return ret_code;
+        }
+        *res = expr_cons(expr_new(SYMBOL, (uint64_t)"quote", NULL, NULL),
+                         expr_cons(parsed_quote, NULL));
+        return 0;
     }
 
     if (is_number(token)) {
@@ -100,11 +113,11 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         expr *first = NULL, *curr = NULL, *prev = NULL;
         while (1) {
             token_t peeked_token = (token_t) malloc(MAX_TOKEN_LENGTH);
-            int peek_res = tokens_peek(tokens, fd, peeked_token);
-            if (peek_res < 0) {
-                return peek_res;
+            ret_code = tokens_peek(tokens, fd, peeked_token);
+            if (ret_code < 0) {
+                return ret_code;
             }
-            if (peek_res == EOF_CODE) {
+            if (ret_code == EOF_CODE) {
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
             }
             if (strcmp(")", peeked_token) == 0) {
@@ -112,14 +125,15 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
             }
 
             expr *new;
-            int parse_res = parse_tokens(tokens, fd, &new);
-            if (parse_res < 0) {
-                return parse_res;
+            ret_code = parse_tokens(tokens, fd, &new);
+            if (ret_code < 0) {
+                printf("ERROR: PARSER: Parsing tokens inside a list\n");
+                return ret_code;
             }
             curr = expr_cons(new, NULL);
             if (!first) {
                 if (new->type != SYMBOL)
-                    printf("PARSER: WARNING: First entry in a list was not a symbol: %d\n", new->type);
+                    printf("WARNING: PARSER: First entry in a list was not a symbol: %d\n", new->type);
                 first = curr;
             }
             if (prev)
@@ -129,9 +143,10 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         /* At this points, there should be a ")" on tokens, so lets pop it. */
         /* TODO: Maybe we could just use the stack here? */
         token_t closing_paren = (token_t) malloc(MAX_TOKEN_LENGTH);
-        int pop_res = tokens_pop(tokens, fd, closing_paren);
-        if (pop_res < 0) {
-            return pop_res;
+        ret_code = tokens_pop(tokens, fd, closing_paren);
+        if (ret_code < 0) {
+            printf("ERROR: PARSER: Popping closing parentheses\n");
+            return ret_code;
         }
         my_free(closing_paren);
         *res = first;
@@ -139,7 +154,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     }
 
     if (strcmp(")", token) == 0) {
-        printf("PARSER: ERROR: Unmatched closing parentheses\n");
+        printf("ERROR: PARSER: Unmatched closing parentheses\n");
         return -1;
     }
 
