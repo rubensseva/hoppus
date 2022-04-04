@@ -122,14 +122,14 @@ int main(int argc, char **argv) {
     }
 
     create_builtins();
-    printf("MAIN: INFO: builtins created\n");
+    printf("INFO: MAIN: builtins created\n");
 
     ret_code = load_standard_library();
     if (ret_code < 0) {
         printf("ERROR: MAIN: Loading standard library: %d\n", ret_code);
         return -1;
     }
-    printf("MAIN: INFO: standard library loaded\n");
+    printf("INFO: MAIN: standard library loaded\n");
 
     int fd;
     if (argc == 2) {
@@ -142,13 +142,14 @@ int main(int argc, char **argv) {
         fd = 1;
     }
 
-    printf("MAIN: INFO: starting REPL loop\n");
+    printf("INFO: MAIN: starting REPL loop\n");
     ret_code = REPL_loop(fd);
     if (ret_code < 0) {
         printf("ERROR: MAIN: Eval error: %d\n", ret_code);
         return -1;
     }
     /* TODO: Free remaining memory allocations */
-    printf("INFO: MAIN: Bye...: %d\n", ret_code);
-    return 0;
+    printf("INFO: MAIN: Exiting with code: %d\n", ret_code);
+    printf("INFO: MAIN: Bye...\n");
+    return ret_code;
 }
