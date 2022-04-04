@@ -47,16 +47,15 @@ int add_param_symbols(expr *params, expr *args) {
             curr_rest_argument = NULL;
         }
 
-        /* TODO: Shouldnt the args already be evaluated at this point? */
-        expr *new_e = NULL;
-        int eval_res = eval(curr_arg->car, &new_e);
-        if (eval_res < 0) {
-            printf("EVAL: ERROR: Function invocation error when evaluating arguments for symbols\n");
-            return eval_res;
-        }
+        /* expr *new_e = NULL; */
+        /* int eval_res = eval(curr_arg->car, &new_e); */
+        /* if (eval_res < 0) { */
+        /*     printf("EVAL: ERROR: Function invocation error when evaluating arguments for symbols\n"); */
+        /*     return eval_res; */
+        /* } */
 
         if (is_rest) {
-            expr *new_cons = expr_cons(new_e, NULL);
+            expr *new_cons = expr_cons(curr_arg->car, NULL);
             if (rest_arguments == NULL) {
                 curr_rest_argument = new_cons;
                 rest_arguments = curr_rest_argument;
@@ -66,7 +65,7 @@ int add_param_symbols(expr *params, expr *args) {
             }
         } else {
             char *sym_name = (char *)curr_param->car->data;
-            symbol *new_sym = symbol_create(sym_name, VARIABLE, new_e);
+            symbol *new_sym = symbol_create(sym_name, VARIABLE, curr_arg->car);
             symbol_add(new_sym);
             curr_param = curr_param->cdr;
         }
@@ -230,7 +229,7 @@ int eval(expr *e, expr **res) {
                 *res = sym->e;
                 return 0;
             }
-            printf("EVAL: WARNING: Found symbol with no value: %s. There is probably something wrong.\n",
+            printf("WARNING: EVAL: Found symbol with no value: %s. There is probably something wrong.\n",
                    (char *)e->data);
             *res = e;
             return 0;
@@ -239,7 +238,7 @@ int eval(expr *e, expr **res) {
             expr *proc = e, *fun = proc->car, *arg = e->cdr;
             symbol *sym;
             if (proc == NULL || proc->car == NULL) {
-                printf("EVAL: ERROR: expr was NULL when evaluating cons cell \n");
+                printf("ERROR: EVAL: expr was NULL when evaluating cons cell \n");
                 return -1;
             }
             if (proc->car->type != SYMBOL) {
@@ -249,11 +248,12 @@ int eval(expr *e, expr **res) {
             /* Here we can invoce special operators, which should not have their arguments evaluated */
             sym = symbol_find((char *)(fun->data));
             if (sym == NULL) {
-                printf("EVAL: ERROR: Trying invoke function, but symbol was null\n");
+                printf("ERROR: EVAL: Trying to invoke function, but couldnt find symbol %s\n",
+                       (char *)(fun->data));
                 return -1;
             }
             if (sym->type == VARIABLE) {
-                printf("EVAL: ERROR: Cannot use variable %s as function\n", (char *)sym->e->car->data);
+                printf("ERROR: EVAL: Cannot use variable %s as function\n", (char *)sym->e->car->data);
                 return -1;
             }
             if (sym->type == MACRO) {
@@ -274,12 +274,12 @@ int eval(expr *e, expr **res) {
             }
             if (sym->is_special_operator) {
                 if (sym->type != BUILTIN) {
-                    printf("EVAL: ERROR: Attempting to exec special operator, but the symbol was not of type builtin\n");
+                    printf("ERROR: EVAL: Attempting to exec special operator, but the symbol was not of type builtin\n");
                     return -1;
                 }
                 int bi_res = sym->builtin_fn(arg, res);
                 if (bi_res == -1) {
-                    printf("EVAL: ERROR: Builtin function encountered error\n");
+                    printf("ERROR: EVAL: Builtin function encountered error\n");
                     return -1;
                 }
                 return 0;
@@ -291,7 +291,7 @@ int eval(expr *e, expr **res) {
                 expr *curr_eval;
                 int eval_res = eval(curr_arg->car, &curr_eval);
                 if (eval_res < 0) {
-                    printf("EVAL: ERROR: Got error when evaluating arguments\n");
+                    printf("ERROR: EVAL: Got error when evaluating arguments\n");
                     return eval_res;
                 }
                 expr *new_cons = expr_cons(curr_eval, NULL);
@@ -307,7 +307,7 @@ int eval(expr *e, expr **res) {
             if (sym->type == BUILTIN) {
                 int bi_res = sym->builtin_fn(first_cons, res);
                 if (bi_res == -1) {
-                    printf("EVAL: ERROR: Builtin function encountered error\n");
+                    printf("ERROR: EVAL: Builtin function encountered error\n");
                     return -1;
                 }
                 return 0;
@@ -315,16 +315,16 @@ int eval(expr *e, expr **res) {
             if (sym->type == FUNCTION) {
                 int func_inv_res = function_invocation(sym, first_cons, res);
                 if (func_inv_res < 0) {
-                    printf("EVAL: ERROR: Got error when invocing function %d\n", func_inv_res);
+                    printf("ERROR: EVAL: Got error when invocing function %d\n", func_inv_res);
                     return func_inv_res;
                 }
             } else if (sym->type == VARIABLE) {
-                printf("EVAL: ERROR: Cant use variable %s as a function\n", (char*)fun->data);
+                printf("ERROR: EVAL: Cant use variable %s as a function\n", (char*)fun->data);
                 return -1;
             }
             return 0;
         default:
-            printf("EVAL: ERROR: Got unknown type: %d\n", e->type);
+            printf("ERROR: EVAL: Got unknown type: %d\n", e->type);
             return -1;
     }
 }

@@ -449,3 +449,27 @@ int bi_defmacro(expr *arg, expr **res) {
     *res = arg;
     return 0;
 }
+
+int bi_macroexpand(expr *arg, expr **res) {
+    unsigned int arg_length = list_length(arg);
+    if (arg_length != 1) {
+        printf("ERROR: BUILTIN: MACROEXPAND: macroexpand only accepts exactly one argument, but got %d\n", arg_length);
+        return -1;
+    }
+
+    symbol *sym = symbol_find((char *) arg->car->car->data);
+    if (sym == NULL) {
+        printf("ERROR: BUILTIN: MACROEXPAND: Couldnt find macro %s\n", (char *) arg->car->data);
+        return -1;
+    }
+
+    expr *macro_expand;
+    int func_inv_res = function_invocation(sym, arg->car->cdr, &macro_expand);
+    if (func_inv_res < 0) {
+        printf("ERROR: BUILTIN: MACROEXPAND: Got error when expanding macro %d\n", func_inv_res);
+        return func_inv_res;
+    }
+
+    *res = macro_expand;
+    return 0;
+}

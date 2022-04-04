@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
     symbol *_or = symbol_builtin_create("or", bi_or, 1);
     symbol *quote = symbol_builtin_create("quote", bi_quote, 1);
     symbol *defmacro = symbol_builtin_create("defmacro", bi_defmacro, 1);
+    symbol *macroexpand = symbol_builtin_create("macroexpand", bi_macroexpand, 1);
 
     symbol_add(defun);
     symbol_add(define);
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
     symbol_add(_or);
     symbol_add(quote);
     symbol_add(defmacro);
+    symbol_add(macroexpand);
 
     int fd;
     if (argc == 2) {
