@@ -52,7 +52,7 @@ int expr_is_true(expr *e) {
         case SYMBOL:
             return 1;
         case CONS:
-            return (e->car && e->cdr);
+            return 1;
         default:
             printf("EXPR: ERROR: Got unknown type when checking if true or false\n");
             return 0;

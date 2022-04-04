@@ -12,13 +12,9 @@
 #include "symbol.h"
 #include "builtins.h"
 #include "config.h"
+#include "lisp_lib.h"
 
-int main(int argc, char **argv) {
-    if (argc > 2) {
-        printf("USAGE: %s <filename>\n", argv[0]);
-        return -1;
-    }
-
+void create_builtins() {
     symbol *defun = symbol_builtin_create("defun", bi_defun, 1);
     symbol *define = symbol_builtin_create("define", bi_define, 1);
     symbol *add = symbol_builtin_create("+", bi_add, 0);
@@ -56,6 +52,81 @@ int main(int argc, char **argv) {
     symbol_add(quote);
     symbol_add(defmacro);
     symbol_add(macroexpand);
+}
+
+int load_standard_library() {
+    /* Load standard library */
+    for (int i = 0; i < (sizeof(lib_strs) / sizeof(char *)); i++) {
+        token_t *tokens = tokens_init();
+        char *copy = malloc(EXPR_STR_SIZE);
+        strcpy(copy, (char *)lib_strs[i]);
+        int res = tokenize(copy, tokens);
+        if (res < 0) {
+            printf("ERROR: MAIN: Tokenizing standard library string %s\n", (char *)lib_strs[0]);
+            return res;
+        }
+
+        expr *parsed;
+        int parse_res = parse_tokens(tokens, 0, &parsed);
+        if (parse_res < 0) {
+            printf("ERROR: MAIN: Parsing standard library tokens %s\n", (char *) lib_strs[0]);
+            return parse_res;
+        }
+
+        expr *evald;
+        int eval_res = eval(parsed, &evald);
+        if (eval_res < 0) {
+            printf("ERROR: MAIN: Evaluating standard library forms: %s\n", (char *) lib_strs[0]);
+            return eval_res;
+        }
+        free(copy);
+    }
+    return 0;
+}
+
+int REPL_loop(int fd) {
+    token_t *tokens = tokens_init();
+    while (1) {
+        if (fd == 1) {
+            printf("$ ");
+            fflush(stdout);
+        }
+
+        expr *parsed;
+        int parse_res = parse_tokens(tokens, fd, &parsed);
+        if (parse_res < 0) {
+            printf("ERROR: MAIN: Parsing tokens: %d\n", parse_res);
+            return -1;
+        }
+        if (parse_res == EOF_CODE) {
+            printf("INFO: MAIN: Reached EOF\n");
+            return 0;
+        }
+
+        expr *evald;
+        int eval_res = eval(parsed, &evald);
+        if (eval_res < 0) {
+            printf("ERROR: MAIN: Evaluating forms: %d\n", eval_res);
+        } else {
+            print_expr(evald);
+        }
+    }
+}
+
+int main(int argc, char **argv) {
+    int ret_code;
+    if (argc > 2) {
+        printf("USAGE: %s <filename>\n", argv[0]);
+        return -1;
+    }
+
+    create_builtins();
+
+    ret_code = load_standard_library();
+    if (ret_code < 0) {
+        printf("ERROR: MAIN: Loading standard library: %d\n", ret_code);
+        return -1;
+    }
 
     int fd;
     if (argc == 2) {
@@ -68,32 +139,12 @@ int main(int argc, char **argv) {
         fd = 1;
     }
 
-    token_t *tokens = tokens_init();
-    while (1) {
-        if (fd == 1) {
-            printf("$ ");
-            fflush(stdout);
-        }
-
-        expr *parsed;
-        int parse_res = parse_tokens(tokens, fd, &parsed);
-        if (parse_res < 0) {
-            printf("MAIN: ERROR: Parser: %d\n", parse_res);
-            return -1;
-        }
-        if (parse_res == EOF_CODE) {
-            printf("MAIN: Reached EOF\n");
-            return -1;
-        }
-
-        expr *evald;
-        int eval_res = eval(parsed, &evald);
-        if (eval_res < 0) {
-            printf("MAIN: ERROR: Eval: %d\n", eval_res);
-        } else {
-            print_expr(evald);
-        }
+    ret_code = REPL_loop(fd);
+    if (ret_code < 0) {
+        printf("ERROR: MAIN: Eval error: %d\n", ret_code);
+        return -1;
     }
-
     /* TODO: Free remaining memory allocations */
+    printf("INFO: MAIN: Bye...: %d\n", ret_code);
+    return 0;
 }

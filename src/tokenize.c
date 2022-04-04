@@ -56,15 +56,19 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
 
 int tokens_pop(token_t *tokens, int fd, token_t dest) {
     if (tokens == NULL) {
-        printf("PARSER: ERROR: Tokens was NULL when attempting to pop tokens\n");
+        printf("ERROR: PARSER: TOKENS_POP: Tokens was NULL when attempting to pop tokens\n");
         return -1;
     }
 
     if (tokens[0] == NULL) {
+        if (fd == -1) {
+            printf("ERROR: PARSER: TOKENS_POP: Trying to read more tokens, but fd is -1\n");
+            return -1;
+        }
         token_t *new_tokens = tokens_init();
         int res = read_tokens_from_file(fd, new_tokens);
         if (res < 0) {
-            printf("PARSER: ERROR: Reading tokens from file\n");
+            printf("ERROR: PARSER: TOKENS_POP: Reading tokens from file\n");
             return res;
         }
         if (res == EOF_CODE) {
