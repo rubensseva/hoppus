@@ -11,4 +11,6 @@
 
 #define NIL_STR "nil"
 
+#define REST_ARGUMENTS_STR "&rest"
+
 #endif // CONSTANTS_H_

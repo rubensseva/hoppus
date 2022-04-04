@@ -10,6 +10,7 @@
 #include "symbol.h"
 #include "memory.h"
 #include "config.h"
+#include "constants.h"
 
 /**
    Here are all the builtin functions. Some of them are also special operators,
@@ -63,6 +64,13 @@ int bi_defun(expr *arg, expr **res) {
             printf("EVAL: ERROR: defun expects all arguments to be symbols, but found one that was of type %s\n",
                    type_str(curr_arg->car->type));
             return -1;
+        }
+
+        if (strcmp((char *)curr_arg->car->data, REST_ARGUMENTS_STR) == 0) {
+            if (curr_arg->cdr == NULL) {
+                printf("EVAL: ERROR: Defun expects a symbol after &rest keyword, but got nothing\n");
+                return -1;
+            }
         }
     }
 
@@ -195,8 +203,12 @@ int bi_car(expr *arg, expr **res) {
         *res = NULL;
         return 0;
     }
+    if (arg->car == NULL) {
+        printf("BUILTIN: ERROR: car got an argument with no car field.\n");
+        return -1;
+    }
     if (arg->car->type != CONS) {
-        printf("BUILTIN: ERROR: car can only handle numbers but got %s\n",
+        printf("BUILTIN: ERROR: car can only handle cons but got %s\n",
                type_str(arg->car->type));
         return -1;
     }
@@ -212,6 +224,10 @@ int bi_cdr(expr *arg, expr **res) {
         printf("BUILTIN: WARNING: cdr got NULL as argument, returning NULL\n");
         *res = NULL;
         return 0;
+    }
+    if (arg->car == NULL) {
+        printf("BUILTIN: ERROR: cdr got an argument with no car field.\n");
+        return -1;
     }
     if (arg->car->type != CONS) {
         printf("BUILTIN: ERROR: Cdr can only handle numbers but got %s\n",
