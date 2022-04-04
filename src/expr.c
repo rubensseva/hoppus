@@ -54,7 +54,7 @@ int expr_is_true(expr *e) {
         case CONS:
             return 1;
         default:
-            printf("EXPR: ERROR: Got unknown type when checking if true or false\n");
+            printf("ERROR: EXPR: EXPR_IS_TRUE: Got unknown type\n");
             return 0;
     }
 }
@@ -71,13 +71,13 @@ int expr_is_equal(expr *e1, expr *e2) {
         case CHAR:
         case BOOLEAN:
             if (!(e2->type == NUMBER || e2->type == CHAR || e2->type == BOOLEAN)) {
-                printf("EXPR: ERROR: Equal can only compare number, char or boolean with number, char or boolean\n");
+                printf("ERROR: EXPR: EXPR_IS_EQUAL: equal can only compare number, char or boolean with number, char or boolean\n");
                 return -1;
             }
             return (int)e1->data == (int)e2->data;
         case SYMBOL:
             if (e2->type != SYMBOL) {
-                printf("EXPR: ERROR: Trying to compare symbol with something else\n");
+                printf("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare symbol with something else\n");
                 return -1;
             }
             /* TODO: This is stupid, find another way. Even if the name is the same the scope might be different */
@@ -85,7 +85,7 @@ int expr_is_equal(expr *e1, expr *e2) {
             return cmp_eq ? 0 : 1;
         case CONS:;
             if (e2->type != CONS) {
-                printf("EXPR: ERROR: Trying to compare cons cell with something else\n");
+                printf("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare cons cell with something else\n");
                 return -1;
             }
 
@@ -97,7 +97,7 @@ int expr_is_equal(expr *e1, expr *e2) {
             return expr_is_equal(curr1->cdr, curr2->cdr);
 
         default:
-            printf("EXPR: ERROR: Got unknown type when checking if true or false\n");
+            printf("ERROR: EXPR: EXPR_IS_EQUAL: got unknown type when checking if true or false\n");
             return -1;
     }
 }
@@ -112,11 +112,11 @@ int expr_gt_lt_equal(expr *e1, expr *e2, int gt_or_lt) {
         return e1 == e2;
 
     if (e2->type == SYMBOL) {
-        printf("EXPR: ERROR: Cant use gt/lt on symbol\n");
+        printf("ERROR: EXPR: GT/LT: cant use gt/lt on symbol\n");
         return -1;
     }
     if (e2->type == CONS) {
-        printf("EXPR: ERROR: Cant use gt/lt on cons\n");
+        printf("ERROR: EXPR: GT/LT: cant use gt/lt on cons\n");
         return -1;
     }
 
@@ -125,20 +125,20 @@ int expr_gt_lt_equal(expr *e1, expr *e2, int gt_or_lt) {
         case CHAR:
         case BOOLEAN:
             if (!(e2->type == NUMBER || e2->type == CHAR || e2->type == BOOLEAN)) {
-                printf("EXPR: ERROR: gt/lt can only compare number, char or boolean with number, char or boolean\n");
+                printf("ERROR: EXPR: GT/LT: can only compare number, char or boolean with number, char or boolean\n");
                 return -1;
             }
             if (gt_or_lt)
                 return (int)e1->data > (int)e2->data;
             return (int)e1->data < (int)e2->data;
         case SYMBOL:
-            printf("EXPR: ERROR: Cant use gt/lt on symbol\n");
+            printf("ERROR: EXPR: GT/LT: cant use gt/lt on symbol\n");
             return -1;
         case CONS:;
-            printf("EXPR: ERROR: Cant use gt/lt on cons\n");
+            printf("ERROR: EXPR: GT/LT: cant use gt/lt on cons\n");
             return -1;
         default:
-            printf("EXPR: ERROR: gt/lt got unknown type when checking if true or false\n");
+            printf("ERROR: EXPR: GT/LT: got unknown type when checking if true or false\n");
             return -1;
     }
 }

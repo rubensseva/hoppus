@@ -27,7 +27,7 @@ symbol *symbol_builtin_create(char *name, builtin_fn_t *fn, int is_special_opera
 
 void symbol_add(symbol *s) {
     if (n_symbol >= MAX_SYMBOLS - 1) {
-        printf("ERROR: Too many symbols\n");
+        printf("ERROR: SYMBOL: Too many symbols\n");
     } else {
         symbols[n_symbol++] = s;
     }

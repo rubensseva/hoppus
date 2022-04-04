@@ -32,13 +32,13 @@ int add_param_symbols(expr *params, expr *args) {
     /* TODO: Simplify the boolean logic here */
     while ((!is_rest && !list_end(curr_param)) || !list_end(curr_arg)) {
         if ((!is_rest && list_end(curr_param)) || list_end(curr_arg)) {
-            printf("ERROR: Mismatch between number of args and params\n");
+            printf("ERROR: EVAL: ADD_PARAM_SYMBOLS: Mismatch between number of args and params\n");
             return -1;
         }
 
         if (!is_rest && strcmp((char *)curr_param->car->data, REST_ARGUMENTS_STR) == 0) {
             if (curr_param->cdr == NULL) {
-                printf("EVAL: ERROR: Found &rest keyword, but no argument after it\n");
+                printf("ERROR: EVAL: ADD_PARAM_SYMBOLS: Found &rest keyword, but no argument after it\n");
                 return -1;
             }
             is_rest = 1;
@@ -87,7 +87,7 @@ int remove_param_symbols(expr *params) {
         }
         int sym_res = symbol_remove_name((char *)curr_param->car->data);
         if (sym_res < 0) {
-            printf("WARNING: Unable to remove symbol %s\n",
+            printf("WARNING: EVAL: Unable to remove symbol %s\n",
                 (char *)curr_param->car->data);
             return sym_res;
         }
@@ -146,7 +146,7 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
     while (!list_end(curr_form)) {
         int eval_res = eval(curr_form->car, out);
         if (eval_res < 0) {
-            printf("EVAL: ERROR: Function invocation error when invoking function \n");
+            printf("ERROR: EVAL: FUNCTION_INVOKATION: error when evaluating function forms\n");
             return eval_res;
         }
         curr_form = curr_form->cdr;
@@ -190,7 +190,7 @@ int print_expr_tree(expr *e){
             }
             return 0;
         default:
-            printf("Got unknown expr type with printing\n");
+            printf("ERROR: EVAL: PRINT: Got unknown expr type\n");
             return -1;
     }
 }
@@ -205,7 +205,7 @@ int print_expr(expr *e) {
 
 int eval(expr *e, expr **res) {
     if (e == NULL) {
-        printf("EVAL: WARNING: Eval got NULL, returning NULL\n");
+        printf("WARNING: EVAL: Eval got NULL, returning NULL\n");
         *res = NULL;
         return 0;
     }

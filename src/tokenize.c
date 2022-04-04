@@ -15,7 +15,7 @@ int read_tokens_from_file(int fd, token_t *dest) {
     int bytes_read = read(fd, buf, EXPR_STR_SIZE);
     if (bytes_read <= -1) {
         perror("read");
-        printf("PARSER: ERROR: Reading from file\n");
+        printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: read() returned error\n");
         return -1;
     } else if (bytes_read == 0) {
         printf("PARSER: EOF\n");
@@ -25,7 +25,7 @@ int read_tokens_from_file(int fd, token_t *dest) {
 
     int res = tokenize(buf, dest);
     if (res < 0) {
-        printf("PARSER: ERROR: Error when tokenizing string\n");
+        printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
         return res;
     }
     return 0;
@@ -56,19 +56,19 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
 
 int tokens_pop(token_t *tokens, int fd, token_t dest) {
     if (tokens == NULL) {
-        printf("ERROR: PARSER: TOKENS_POP: Tokens was NULL when attempting to pop tokens\n");
+        printf("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
         return -1;
     }
 
     if (tokens[0] == NULL) {
         if (fd == -1) {
-            printf("ERROR: PARSER: TOKENS_POP: Trying to read more tokens, but fd is -1\n");
+            printf("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
             return -1;
         }
         token_t *new_tokens = tokens_init();
         int res = read_tokens_from_file(fd, new_tokens);
         if (res < 0) {
-            printf("ERROR: PARSER: TOKENS_POP: Reading tokens from file\n");
+            printf("ERROR: TOKENIZER: TOKENS_POP: reading tokens from file\n");
             return res;
         }
         if (res == EOF_CODE) {
@@ -91,7 +91,7 @@ int tokens_pop(token_t *tokens, int fd, token_t dest) {
 
 int tokens_peek(token_t *tokens, int fd, token_t dest) {
     if (tokens == NULL) {
-        printf("PARSER: ERROR: Tokens was NULL when attempting to peek tokens\n");
+        printf("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
         return -1;
     }
 
@@ -99,7 +99,7 @@ int tokens_peek(token_t *tokens, int fd, token_t dest) {
         token_t *new_tokens = tokens_init();
         int res = read_tokens_from_file(fd, new_tokens);
         if (res < 0) {
-            printf("PARSER: ERROR: Reading tokens from file\n");
+            printf("ERROR: TOKENIZER: TOKENS_PEEK: Reading tokens from file\n");
             return res;
         }
         if (res == EOF_CODE) {
@@ -167,7 +167,7 @@ int tokenize(char *src_code, token_t *dest) {
     token_t token = strtok1(src_code, " ");
     while (token != NULL) {
         if (num_tokens >= MAX_TOKENS) {
-            printf("ERROR: Too many tokens!\n");
+            printf("ERROR: TOKENIZER: TOKENIZE: Too many tokens!\n");
             return 01;
         }
         dest[num_tokens++] = token;

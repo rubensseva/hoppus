@@ -54,21 +54,21 @@
 int bi_defun(expr *arg, expr **res) {
     unsigned int arg_count = list_length(arg);
     if (arg_count < 2) {
-        printf("EVAL: ERROR: defun needs exactly two arguments, but got %d\n", arg_count);
+        printf("ERROR: BUILTIN: DEFUN: need exactly two arguments, but got %d\n", arg_count);
         return -1;
     }
 
     expr *curr_arg = arg->car;
     for_each(curr_arg) {
         if (curr_arg->car->type != SYMBOL) {
-            printf("EVAL: ERROR: defun expects all arguments to be symbols, but found one that was of type %s\n",
+            printf("ERROR: BUILTIN: DEFUN: expect all arguments to be symbols, but found one that was of type %s\n",
                    type_str(curr_arg->car->type));
             return -1;
         }
 
         if (strcmp((char *)curr_arg->car->data, REST_ARGUMENTS_STR) == 0) {
             if (curr_arg->cdr == NULL) {
-                printf("EVAL: ERROR: Defun expects a symbol after &rest keyword, but got nothing\n");
+                printf("ERROR: BUILTIN: DEFUN: expect a symbol after &rest keyword, but got nothing\n");
                 return -1;
             }
         }
@@ -102,12 +102,12 @@ int bi_defun(expr *arg, expr **res) {
 int bi_define(expr *arg, expr **res) {
     unsigned int arg_count = list_length(arg);
     if (arg_count != 2) {
-        printf("EVAL: ERROR: define needs exactly two arguments, but got %d\n", arg_count);
+        printf("ERROR: BUILTIN: DEFINE: need exactly two arguments, but got %d\n", arg_count);
         return -1;
     }
 
     if (arg->car->type != SYMBOL) {
-        printf("EVAL: ERROR: The first argument to define must be a symbol, but got %s\n",
+        printf("ERROR: BUILTIN: DEFINE: the first argument to define must be a symbol, but got %s\n",
                type_str(arg->car->type));
         return -1;
     }
@@ -116,7 +116,7 @@ int bi_define(expr *arg, expr **res) {
     expr *evaluated_arg;
     int eval_res = eval(arg->cdr->car, &evaluated_arg);
     if (eval_res < 0) {
-        printf("BUILTIN: ERROR: define got error when evaluating the second argument: %d\n", eval_res);
+        printf("ERROR: BUILTIN: DEFINE: got error when evaluating the second argument: %d\n", eval_res);
         return eval_res;
     }
 
@@ -135,7 +135,7 @@ int bi_add(expr *arg, expr **res) {
     expr *curr = arg;
     for_each(curr) {
         if (curr->car->type != NUMBER) {
-            printf("BUILTIN: ERROR: add can only handle numbers but got %s\n",
+            printf("ERROR: BUILTIN: ADD: can only handle numbers but got %s\n",
                    type_str(curr->car->type));
             return -1;
         }
@@ -147,37 +147,30 @@ int bi_add(expr *arg, expr **res) {
 }
 
 int bi_sub(expr *arg, expr **res) {
-    if (arg == NULL) {
-        expr *_res = expr_new(NUMBER, 0, NULL, NULL);
-        *res = _res;
-        return 0;
-    }
-    /* If only one argument, return the negative of that argument */
-    if (arg->cdr == NULL) {
-        if (arg->car->type != NUMBER) {
-            printf("BUILTIN: ERROR: sub can only handle numbers but got %s\n",
-                   type_str(arg->car->type));
-            return -1;
-        }
-        int val = (int)arg->car->data * -1;
-        expr *_res = expr_new(NUMBER, val, NULL, NULL);
-        *res = _res;
-        return 0;
-    }
-
-    int acc = (int)arg->car->data;
-    expr *curr = arg->cdr;
+    expr *curr = arg;
     for_each(curr) {
         if (curr->car == NULL) {
-            printf("BUILTIN: ERROR: Argument to sub had a car that was NULL\n");
+            printf("ERROR: BUILTIN: SUB: Argument to sub had a car that was NULL\n");
             return -1;
         }
         if (curr->car->type != NUMBER) {
-            printf("BUILTIN: ERROR: sub can only handle numbers but got %s\n",
+            printf("ERROR: BUILTIN: SUB: can only handle numbers but got %s\n",
                    type_str(curr->car->type));
             return -1;
         }
-        acc -= (int)curr->car->data;
+    }
+
+    int acc = 0, arg_length = list_length(arg);
+    if (arg_length == 0) {
+        acc = 0;
+    } else if (arg_length == 1) {
+        acc = (int)arg->car->data * -1;
+    } else {
+        acc = (int)arg->car->data;
+        expr *curr = arg->cdr;
+        for_each(curr) {
+            acc -= (int)curr->car->data;
+        }
     }
 
     expr *_res = expr_new(NUMBER, acc, NULL, NULL);
@@ -188,7 +181,7 @@ int bi_sub(expr *arg, expr **res) {
 int bi_cons(expr *arg, expr **res) {
     unsigned int size = list_length(arg);
     if (size != 2) {
-        printf("BUILTIN: ERROR: cons accepts exactly two arguments, but got %d\n", size);
+        printf("ERROR: BUILTIN: CONS: need exactly two arguments, but got %d\n", size);
         return -1;
     }
 
@@ -199,16 +192,16 @@ int bi_cons(expr *arg, expr **res) {
 
 int bi_car(expr *arg, expr **res) {
     if (arg == NULL) {
-        printf("BUILTIN: WARNING: car got NULL as argument, returning NULL\n");
+        printf("WARNING: BUILTIN: CAR: got NULL as argument, returning NULL\n");
         *res = NULL;
         return 0;
     }
     if (arg->car == NULL) {
-        printf("BUILTIN: ERROR: car got an argument with no car field.\n");
+        printf("ERROR: BUILTIN: CAR: got an argument with no car field.\n");
         return -1;
     }
     if (arg->car->type != CONS) {
-        printf("BUILTIN: ERROR: car can only handle cons but got %s\n",
+        printf("ERROR: BUILTIN: CAR: can only handle cons but got %s\n",
                type_str(arg->car->type));
         return -1;
     }
@@ -221,29 +214,26 @@ int bi_car(expr *arg, expr **res) {
 
 int bi_cdr(expr *arg, expr **res) {
     if (arg == NULL) {
-        printf("BUILTIN: WARNING: cdr got NULL as argument, returning NULL\n");
+        printf("WARNING: BUILTIN: CDR: got NULL as argument, returning NULL\n");
         *res = NULL;
         return 0;
     }
     if (arg->car == NULL) {
-        printf("BUILTIN: ERROR: cdr got an argument with no car field.\n");
+        printf("ERROR: BUILTIN: CDR: got an argument with no car field.\n");
         return -1;
     }
     if (arg->car->type != CONS) {
-        printf("BUILTIN: ERROR: Cdr can only handle numbers but got %s\n",
+        printf("ERROR: BUILTIN: CDR: can only handle numbers but got %s\n",
                type_str(arg->car->type));
         return -1;
     }
-    /* Car is the first argument to the car builtin, and since
-       the first argument is a cons cell, we need the cdr of that
-       as well */
     *res = arg->car->cdr;
     return 0;
 }
 
 int bi_progn(expr *arg, expr **res) {
     if (arg == NULL) {
-        printf("BUILTIN: WARNING: progn got NULL as argument, returning NULL\n");
+        printf("WARNING: BUILTIN: PROGN: got NULL as argument, returning NULL\n");
         *res = NULL;
         return 0;
     }
@@ -251,7 +241,7 @@ int bi_progn(expr *arg, expr **res) {
     while (!list_end(curr_arg)) {
         int eval_res = eval(curr_arg->car, &_res);
         if (eval_res < 0) {
-            printf("BUILTIN: ERROR: Progn got error when evaluating an expression\n");
+            printf("ERROR: BUILTIN: PROGN: got error when evaluating an expression\n");
             return eval_res;
         }
         curr_arg = curr_arg->cdr;
@@ -263,26 +253,26 @@ int bi_progn(expr *arg, expr **res) {
 int bi_if(expr *arg, expr **res) {
     unsigned int arg_count = list_length(arg);
     if (arg_count != 3) {
-        printf("BUILTIN: ERROR: \"if\" needs exactly three arguments, but got %d \n", arg_count);
+        printf("ERROR: BUILTIN: IF: needs exactly three arguments, but got %d \n", arg_count);
         return -1;
     }
 
     expr *_eval;
     int eval_res = eval(arg->car, &_eval);
     if (eval_res < 0) {
-        printf("BUILTIN: ERROR: \"if\" got error when evaluating first argument\n");
+        printf("ERROR: BUILTIN: IF: got error when evaluating first argument\n");
         return eval_res;
     }
     if (expr_is_true(_eval)) {
         int eval_res = eval(arg->cdr->car, res);
         if (eval_res < 0) {
-            printf("BUILTIN: ERROR: \"if\" got error when evaluating second argument\n");
+            printf("ERROR: BUILTIN: IF: got error when evaluating second argument\n");
             return eval_res;
         }
     } else {
         int eval_res = eval(arg->cdr->cdr->car, res);
         if (eval_res < 0) {
-            printf("BUILTIN: ERROR: \"if\" got error when evaluating third argument\n");
+            printf("ERROR: BUILTIN: IF: got error when evaluating third argument\n");
             return eval_res;
         }
     }
@@ -312,7 +302,7 @@ int bi_equal(expr *arg, expr **res) {
             }
             val = expr_is_equal(prev->car, curr->car);
             if (val == -1) {
-                printf("BUILTIN: ERROR: Error when checking for equality\n");
+                printf("ERROR: BUILTIN: EQUAL: error when checking for equality\n");
                 return -1;
             }
             if (val == 0) {
@@ -330,7 +320,7 @@ int bi_equal(expr *arg, expr **res) {
 int bi_gt(expr *arg, expr **res) {
     int arg_length = list_length(arg);
     if (arg_length != 2) {
-        printf("BUILTIN: ERROR: gt needs exactly two arguments\n");
+        printf("ERROR: BUILTIN: GT: needs exactly two arguments\n");
         return -1;
     }
 
@@ -343,7 +333,7 @@ int bi_gt(expr *arg, expr **res) {
 int bi_lt(expr *arg, expr **res) {
     int arg_length = list_length(arg);
     if (arg_length != 2) {
-        printf("BUILTIN: ERROR: lt needs exactly two arguments\n");
+        printf("ERROR: BUILTIN: LT: needs exactly two arguments\n");
         return -1;
     }
 
@@ -364,12 +354,12 @@ int bi_and(expr *arg, expr **res) {
             expr *_eval;
             int eval_res = eval(curr->car, &_eval);
             if (eval_res < 0) {
-                printf("BUILTIN: ERROR: \"and\" builtin got error when evaluating expression\n");
+                printf("ERROR: BUILTIN: AND: builtin got error when evaluating expression\n");
                 return eval_res;
             }
             val = expr_is_true(_eval);
             if (val == -1) {
-                printf("BUILTIN: ERROR: \"and\" builtin got error when checking if expr is true\n");
+                printf("ERROR: BUILTIN: AND: builtin got error when checking if expr is true\n");
                 return -1;
             }
             if (val == 0) {
@@ -394,12 +384,12 @@ int bi_or(expr *arg, expr **res) {
             expr *_eval;
             int eval_res = eval(curr->car, &_eval);
             if (eval_res < 0) {
-                printf("BUILTIN: ERROR: \"or\" builtin got error when evaluating expression\n");
+                printf("ERROR: BUILTIN: OR: builtin got error when evaluating expression\n");
                 return -1;
             }
             val = expr_is_true(_eval);
             if (val == -1) {
-                printf("BUILTIN: ERROR: \"or\" builtin got error when checking if expr is true\n");
+                printf("ERROR: BUILTIN: OR: builtin got error when checking if expr is true\n");
                 return -1;
             }
             if (val == 1) {
@@ -416,7 +406,7 @@ int bi_or(expr *arg, expr **res) {
 int bi_quote(expr *arg, expr **res) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
-        printf("BUILTIN: ERROR: quote only accepts exactly one argument, but got %d\n", arg_length);
+        printf("ERROR: BUILTIN: QUOTE: only accepts exactly one argument, but got %d\n", arg_length);
         return -1;
     }
     *res = arg->car;
@@ -426,14 +416,14 @@ int bi_quote(expr *arg, expr **res) {
 int bi_defmacro(expr *arg, expr **res) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 2) {
-        printf("BUILTIN: ERROR: defmacro only accepts exactly one argument, but got %d\n", arg_length);
+        printf("ERROR: BUILTIN: DEFMACRO: only accepts exactly one argument, but got %d\n", arg_length);
         return -1;
     }
 
     expr *curr_arg = arg->car;
     for_each(curr_arg) {
         if (curr_arg->car->type != SYMBOL) {
-            printf("EVAL: ERROR: defmacro expects all arguments to be symbols, but found one that was of type %s\n",
+            printf("ERROR: BUILTIN: DEFMACRO: expects all arguments to be symbols, but found one that was of type %s\n",
                    type_str(curr_arg->car->type));
             return -1;
         }
@@ -453,7 +443,7 @@ int bi_defmacro(expr *arg, expr **res) {
 int bi_macroexpand(expr *arg, expr **res) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
-        printf("ERROR: BUILTIN: MACROEXPAND: macroexpand only accepts exactly one argument, but got %d\n", arg_length);
+        printf("ERROR: BUILTIN: MACROEXPAND: only accepts exactly one argument, but got %d\n", arg_length);
         return -1;
     }
 

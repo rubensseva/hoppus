@@ -57,7 +57,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     token_t token = (token_t) my_malloc(MAX_TOKEN_LENGTH);
     ret_code = tokens_pop(tokens, fd, token);
     if (ret_code < 0) {
-        printf("PARSER: ERROR: Error when popping tokens\n");
+        printf("ERROR: PARSER: popping tokens\n");
         return ret_code;
     }
     if (ret_code == EOF_CODE) {
