@@ -12,6 +12,7 @@
 #include "symbol.h"
 #include "builtins.h"
 #include "config.h"
+#include "constants.h"
 #include "lisp_lib.h"
 
 void create_builtins() {
@@ -30,9 +31,11 @@ void create_builtins() {
     symbol *_lt = symbol_builtin_create("lt", bi_lt, 0);
     symbol *_and = symbol_builtin_create("and", bi_and, 1);
     symbol *_or = symbol_builtin_create("or", bi_or, 1);
-    symbol *quote = symbol_builtin_create("quote", bi_quote, 1);
+    symbol *quote = symbol_builtin_create(QUOTE_STR, bi_quote, 1);
     symbol *defmacro = symbol_builtin_create("defmacro", bi_defmacro, 1);
     symbol *macroexpand = symbol_builtin_create("macroexpand", bi_macroexpand, 1);
+    symbol *quasiquote = symbol_builtin_create("quasiquote", bi_quasiquote, 1);
+    symbol *comma = symbol_builtin_create("comma", bi_comma, 1);
 
     symbol_add(defun);
     symbol_add(define);
@@ -52,6 +55,8 @@ void create_builtins() {
     symbol_add(quote);
     symbol_add(defmacro);
     symbol_add(macroexpand);
+    symbol_add(quasiquote);
+    symbol_add(comma);
 }
 
 int load_standard_library() {
@@ -114,7 +119,7 @@ int REPL_loop(int fd) {
 }
 
 int main(int argc, char **argv) {
-    printf("MAIN: INFO: Welcome to ukernel lisp!\n");
+    printf("INFO: MAIN: Welcome to ukernel lisp!\n");
     int ret_code;
     if (argc > 2) {
         printf("USAGE: %s <filename>\n", argv[0]);

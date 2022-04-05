@@ -6,6 +6,13 @@
   be part of the config go here.
 */
 
+#define QUOTE_STR "quote"
+#define QUOTE_SHORT_STR "'"
+#define QUASIQUOTE_STR "quasiquote"
+#define QUASIQUOTE_SHORT_STR "`"
+#define COMMA_STR "comma"
+#define COMMA_SHORT_STR ","
+
 #define BOOL_STR_T "true"
 #define BOOL_STR_F "false"
 

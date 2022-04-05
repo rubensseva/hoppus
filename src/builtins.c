@@ -238,6 +238,7 @@ int bi_progn(expr *arg, expr **res) {
         return 0;
     }
     expr *curr_arg = arg, *_res;
+    /* TODO: Probably can use the for_each macro here? */
     while (!list_end(curr_arg)) {
         int eval_res = eval(curr_arg->car, &_res);
         if (eval_res < 0) {
@@ -407,6 +408,40 @@ int bi_quote(expr *arg, expr **res) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
         printf("ERROR: BUILTIN: QUOTE: only accepts exactly one argument, but got %d\n", arg_length);
+        return -1;
+    }
+    *res = arg->car;
+    return 0;
+}
+
+int bi_quasiquote(expr *arg, expr **res) {
+    unsigned int arg_length = list_length(arg);
+    if (arg_length != 1) {
+        printf("ERROR: BUILTIN: QUASIQUOTE: only accepts exactly one argument, but got %d\n", arg_length);
+        return -1;
+    }
+    int ret_code = quasiquote_eval(&arg);
+    if (ret_code < 0) {
+        printf("ERROR: BUILTIN: QUASIQUOTE: running quasiquote eval\n");
+        return 0;
+    }
+    *res = arg->car;
+    return 0;
+}
+
+int bi_comma(expr *arg, expr **res) {
+    unsigned int arg_length = list_length(arg);
+    if (arg_length != 1) {
+        printf("ERROR: BUILTIN: COMMA: only accepts exactly one argument, but got %d\n", arg_length);
+        return -1;
+    }
+    *res = arg->car;
+    return 0;
+}
+int bi_comma_at(expr *arg, expr **res) {
+    unsigned int arg_length = list_length(arg);
+    if (arg_length != 1) {
+        printf("ERROR: BUILTIN: COMMA_AT: only accepts exactly one argument, but got %d\n", arg_length);
         return -1;
     }
     *res = arg->car;

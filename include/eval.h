@@ -8,6 +8,7 @@
 #include "parser.h"
 #include "symbol.h"
 
+int quasiquote_eval(expr **arg);
 int function_invocation(symbol *sym, expr *args, expr **out);
 expr *free_tree(expr *e);
 int print_expr(expr *e);

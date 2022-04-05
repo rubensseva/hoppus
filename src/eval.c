@@ -13,6 +13,48 @@
 #include "list.h"
 
 
+int quasiquote_eval(expr **arg) {
+    if (arg == NULL || *arg == NULL)
+        return 0;
+    int ret_code;
+    switch((*arg)->type) {
+        case NUMBER:
+        case CHAR:
+        case BOOLEAN:
+        case SYMBOL:;
+            return 0;
+        case CONS:;
+            if ((*arg)->car && (*arg)->car->type == SYMBOL) {
+                symbol *sym = symbol_find((char *)((*arg)->car->data));
+                if (sym && strcmp(sym->name, COMMA_STR) == 0) {
+                    expr *tmp;
+                    ret_code = eval((*arg)->cdr->car, &tmp);
+                    if (ret_code < 0) {
+                        printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
+                        return ret_code;
+                    }
+                    (*arg) = tmp;
+                    return 0;
+                }
+            }
+            ret_code = quasiquote_eval(&((*arg)->car));
+            if (ret_code < 0) {
+                printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
+                return ret_code;
+            }
+            ret_code = quasiquote_eval(&((*arg)->cdr));
+            if (ret_code < 0) {
+                printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
+                return ret_code;
+            }
+            return 0;
+        default:
+            printf("ERROR: BUILTIN: QUASIQUOTE_EVAL: got unknown type\n");
+            return -1;
+    }
+
+}
+
 
 /**
    Add parameters as symbols, with matching args.
@@ -23,7 +65,6 @@
 int add_param_symbols(expr *params, expr *args) {
     expr *curr_arg = args, *curr_param = params,
         *rest_param = NULL, *rest_arguments = NULL, *curr_rest_argument = NULL;
-    symbol *rest_symbol = NULL;
     int is_rest = 0;
     /* Would preferably use the for_each() macro here, but since
        we need to iterate through two lists, we need a custom loop */
@@ -46,13 +87,6 @@ int add_param_symbols(expr *params, expr *args) {
             rest_arguments = NULL;
             curr_rest_argument = NULL;
         }
-
-        /* expr *new_e = NULL; */
-        /* int eval_res = eval(curr_arg->car, &new_e); */
-        /* if (eval_res < 0) { */
-        /*     printf("EVAL: ERROR: Function invocation error when evaluating arguments for symbols\n"); */
-        /*     return eval_res; */
-        /* } */
 
         if (is_rest) {
             expr *new_cons = expr_cons(curr_arg->car, NULL);
@@ -253,7 +287,7 @@ int eval(expr *e, expr **res) {
                 return -1;
             }
             if (sym->type == VARIABLE) {
-                printf("ERROR: EVAL: Cannot use variable %s as function\n", (char *)sym->e->car->data);
+                printf("ERROR: EVAL: Cannot use variable %s as function\n", sym->name);
                 return -1;
             }
             if (sym->type == MACRO) {

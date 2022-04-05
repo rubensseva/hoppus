@@ -64,14 +64,38 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         return EOF_CODE;
     }
 
-    if (strcmp(token, "'")  == 0) {
+    if (strcmp(token, QUOTE_SHORT_STR)  == 0) {
         expr *parsed_quote;
         ret_code = parse_tokens(tokens, fd, &parsed_quote);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing quoted tokens\n");
             return ret_code;
         }
-        *res = expr_cons(expr_new(SYMBOL, (uint64_t)"quote", NULL, NULL),
+        *res = expr_cons(expr_new(SYMBOL, (uint64_t)QUOTE_STR, NULL, NULL),
+                         expr_cons(parsed_quote, NULL));
+        return 0;
+    }
+
+    if (strcmp(token, QUASIQUOTE_SHORT_STR) == 0) {
+        expr *parsed_quote;
+        ret_code = parse_tokens(tokens, fd, &parsed_quote);
+        if (ret_code < 0) {
+            printf("ERROR: PARSER: Parsing quasiquoted tokens\n");
+            return ret_code;
+        }
+        *res = expr_cons(expr_new(SYMBOL, (uint64_t)QUASIQUOTE_STR, NULL, NULL),
+                         expr_cons(parsed_quote, NULL));
+        return 0;
+    }
+
+    if (strcmp(token, COMMA_SHORT_STR) == 0) {
+        expr *parsed_quote;
+        ret_code = parse_tokens(tokens, fd, &parsed_quote);
+        if (ret_code < 0) {
+            printf("ERROR: PARSER: Parsing comma'd tokens\n");
+            return ret_code;
+        }
+        *res = expr_cons(expr_new(SYMBOL, (uint64_t)COMMA_STR, NULL, NULL),
                          expr_cons(parsed_quote, NULL));
         return 0;
     }

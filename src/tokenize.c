@@ -159,6 +159,32 @@ int tokenize(char *src_code, token_t *dest) {
         }
     }
 
+    /* Pad quasiquotes */
+    is_in_str = 0;
+    for (int i = 0, j = 0; i < strlen(src_code); i++) {
+        if (src_code[i] == '"')
+            is_in_str = !is_in_str;
+        if (src_code[i] == '`') {
+            insert_char_in_str(src_code, i + 1, ' ');
+            if (insert_char_in_str(src_code, i, ' ') == 0) {
+                i++;
+            }
+        }
+    }
+
+    /* Pad commas */
+    is_in_str = 0;
+    for (int i = 0, j = 0; i < strlen(src_code); i++) {
+        if (src_code[i] == '"')
+            is_in_str = !is_in_str;
+        if (src_code[i] == ',') {
+            insert_char_in_str(src_code, i + 1, ' ');
+            if (insert_char_in_str(src_code, i, ' ') == 0) {
+                i++;
+            }
+        }
+    }
+
     /* Trim */
     src_code = trim1(src_code, ' ');
 
