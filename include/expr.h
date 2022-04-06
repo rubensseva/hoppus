@@ -40,6 +40,7 @@ char *type_str(expr_type tp);
 
 expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr);
 expr *expr_cons(expr* car, expr *cdr);
+int expr_copy(expr *e, expr **out);
 
 int expr_is_true(expr *e);
 int expr_is_equal(expr *e1, expr *e2);

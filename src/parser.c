@@ -65,38 +65,50 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     }
 
     if (strcmp(token, QUOTE_SHORT_STR)  == 0) {
-        expr *parsed_quote;
-        ret_code = parse_tokens(tokens, fd, &parsed_quote);
+        expr *parsed;
+        ret_code = parse_tokens(tokens, fd, &parsed);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing quoted tokens\n");
             return ret_code;
         }
         *res = expr_cons(expr_new(SYMBOL, (uint64_t)QUOTE_STR, NULL, NULL),
-                         expr_cons(parsed_quote, NULL));
+                         expr_cons(parsed, NULL));
         return 0;
     }
 
     if (strcmp(token, QUASIQUOTE_SHORT_STR) == 0) {
-        expr *parsed_quote;
-        ret_code = parse_tokens(tokens, fd, &parsed_quote);
+        expr *parsed;
+        ret_code = parse_tokens(tokens, fd, &parsed);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing quasiquoted tokens\n");
             return ret_code;
         }
         *res = expr_cons(expr_new(SYMBOL, (uint64_t)QUASIQUOTE_STR, NULL, NULL),
-                         expr_cons(parsed_quote, NULL));
+                         expr_cons(parsed, NULL));
         return 0;
     }
 
     if (strcmp(token, COMMA_SHORT_STR) == 0) {
-        expr *parsed_quote;
-        ret_code = parse_tokens(tokens, fd, &parsed_quote);
+        expr *parsed;
+        ret_code = parse_tokens(tokens, fd, &parsed);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing comma'd tokens\n");
             return ret_code;
         }
         *res = expr_cons(expr_new(SYMBOL, (uint64_t)COMMA_STR, NULL, NULL),
-                         expr_cons(parsed_quote, NULL));
+                         expr_cons(parsed, NULL));
+        return 0;
+    }
+
+    if (strcmp(token, COMMA_AT_SHORT_STR) == 0) {
+        expr *parsed;
+        ret_code = parse_tokens(tokens, fd, &parsed);
+        if (ret_code < 0) {
+            printf("ERROR: PARSER: Parsing comma'd tokens\n");
+            return ret_code;
+        }
+        *res = expr_cons(expr_new(SYMBOL, (uint64_t)COMMA_AT_STR, NULL, NULL),
+                         expr_cons(parsed, NULL));
         return 0;
     }
 

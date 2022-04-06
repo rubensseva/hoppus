@@ -36,6 +36,7 @@ void create_builtins() {
     symbol *macroexpand = symbol_builtin_create("macroexpand", bi_macroexpand, 1);
     symbol *quasiquote = symbol_builtin_create("quasiquote", bi_quasiquote, 1);
     symbol *comma = symbol_builtin_create("comma", bi_comma, 1);
+    symbol *comma_at = symbol_builtin_create("comma-at", bi_comma_at, 1);
 
     symbol_add(defun);
     symbol_add(define);
@@ -57,6 +58,7 @@ void create_builtins() {
     symbol_add(macroexpand);
     symbol_add(quasiquote);
     symbol_add(comma);
+    symbol_add(comma_at);
 }
 
 int load_standard_library() {

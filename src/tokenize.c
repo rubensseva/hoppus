@@ -172,15 +172,32 @@ int tokenize(char *src_code, token_t *dest) {
         }
     }
 
-    /* Pad commas */
+    /* Pad comma-at's */
     is_in_str = 0;
-    for (int i = 0, j = 0; i < strlen(src_code); i++) {
+    int found_comma_at = 0;
+    for (int i = 0, j = 0; i < strlen(src_code) - 1; i++) {
         if (src_code[i] == '"')
             is_in_str = !is_in_str;
-        if (src_code[i] == ',') {
-            insert_char_in_str(src_code, i + 1, ' ');
+        if (src_code[i] == ',' && src_code[i + 1] == '@') {
+            found_comma_at = 1;
+            insert_char_in_str(src_code, i + 2, ' ');
             if (insert_char_in_str(src_code, i, ' ') == 0) {
                 i++;
+            }
+        }
+    }
+
+    if (!found_comma_at) {
+        /* Pad commas */
+        is_in_str = 0;
+        for (int i = 0, j = 0; i < strlen(src_code); i++) {
+            if (src_code[i] == '"')
+                is_in_str = !is_in_str;
+            if (src_code[i] == ',') {
+                insert_char_in_str(src_code, i + 1, ' ');
+                if (insert_char_in_str(src_code, i, ' ') == 0) {
+                    i++;
+                }
             }
         }
     }

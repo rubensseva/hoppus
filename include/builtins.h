@@ -23,5 +23,6 @@ int bi_defmacro(expr *arg, expr **res);
 int bi_macroexpand(expr *arg, expr **res);
 int bi_quasiquote(expr *arg, expr **res);
 int bi_comma(expr *arg, expr **res);
+int bi_comma_at(expr *arg, expr **res);
 
 #endif // BUILTINS_H_

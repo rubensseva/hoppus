@@ -30,11 +30,48 @@ expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr) {
     new->cdr = cdr;
     return new;
 }
-expr *expr_copy(expr* src) {
-    return expr_new(src->type, src->data, src->car, src->cdr);
-}
 expr *expr_cons(expr* car, expr *cdr) {
     return expr_new(CONS, 0, car, cdr);
+}
+
+int expr_copy(expr* e, expr **out) {
+    if (e == NULL) {
+        *out = NULL;
+        return 0;
+    }
+    switch (e->type) {
+        case NUMBER:
+        case CHAR:
+        case BOOLEAN:
+            *out = expr_new(e->type, e->data, NULL, NULL);
+            return 0;
+        case SYMBOL:;
+            char *data = malloc(strlen((char *)e->data));
+            if (data == NULL) {
+                printf("ERROR: EXPR: COPY: malloc error \n");
+                return -1;
+            }
+            strcpy(data, (char *)e->data);
+            *out = expr_new(e->type, (uint64_t)data, NULL, NULL);
+            return 0;
+        case CONS:;
+            expr *car, *cdr;
+            int cpy_res = expr_copy(e->car, &car);
+            if (cpy_res < 0) {
+                printf("ERROR: EXPR: COPY: error for car field of cons cell\n");
+                return cpy_res;
+            }
+            cpy_res = expr_copy(e->cdr, &cdr);
+            if (cpy_res < 0) {
+                printf("ERROR: EXPR: COPY: error for cdr field of cons cell\n");
+                return cpy_res;
+            }
+            *out = expr_cons(car, cdr);
+            return 0;
+        default:
+            printf("ERROR: EXPR: COPY: unknown type\n");
+            return -1;
+    }
 }
 
 /**

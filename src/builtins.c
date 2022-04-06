@@ -415,37 +415,40 @@ int bi_quote(expr *arg, expr **res) {
 }
 
 int bi_quasiquote(expr *arg, expr **res) {
+    int ret_code;
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
         printf("ERROR: BUILTIN: QUASIQUOTE: only accepts exactly one argument, but got %d\n", arg_length);
         return -1;
     }
-    int ret_code = quasiquote_eval(&arg);
+    expr *copy;
+    ret_code = expr_copy(arg->car, &copy);
+    if (ret_code < 0) {
+        printf("ERROR: BUILTIN: QUASIQUOTE: copying expression\n");
+        return ret_code;
+    }
+    ret_code = quasiquote_eval(&copy);
     if (ret_code < 0) {
         printf("ERROR: BUILTIN: QUASIQUOTE: running quasiquote eval\n");
         return 0;
     }
-    *res = arg->car;
+    *res = copy;
     return 0;
 }
 
+/** If this builtin is triggered as part of normal evaluation, something is wrong.
+   All comma signs should be within a quasiquote, and will be handled by quasitquote
+   without evaluating the comma symbol itself */
 int bi_comma(expr *arg, expr **res) {
-    unsigned int arg_length = list_length(arg);
-    if (arg_length != 1) {
-        printf("ERROR: BUILTIN: COMMA: only accepts exactly one argument, but got %d\n", arg_length);
-        return -1;
-    }
-    *res = arg->car;
-    return 0;
+    printf("ERROR: BUILTIN: COMMA: encountered comma outside quasiquote\n");
+    return -1;
 }
+/** If this builtin is triggered as part of normal evaluation, something is wrong.
+   All comma-at signs should be within a quasiquote, and will be handled by quasitquote
+   without evaluating the comma-at symbol itself */
 int bi_comma_at(expr *arg, expr **res) {
-    unsigned int arg_length = list_length(arg);
-    if (arg_length != 1) {
-        printf("ERROR: BUILTIN: COMMA_AT: only accepts exactly one argument, but got %d\n", arg_length);
-        return -1;
-    }
-    *res = arg->car;
-    return 0;
+    printf("ERROR: BUILTIN: COMMA-at: encountered comma-at outside quasiquote\n");
+    return -1;
 }
 
 int bi_defmacro(expr *arg, expr **res) {

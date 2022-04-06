@@ -12,6 +12,8 @@
 #define QUASIQUOTE_SHORT_STR "`"
 #define COMMA_STR "comma"
 #define COMMA_SHORT_STR ","
+#define COMMA_AT_STR "comma-at"
+#define COMMA_AT_SHORT_STR ",@"
 
 #define BOOL_STR_T "true"
 #define BOOL_STR_F "false"

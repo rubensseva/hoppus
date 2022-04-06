@@ -16,5 +16,6 @@
 
 int list_end(expr *e);
 unsigned int list_length(expr *e);
+int list_splice(expr *list, expr* spliced);
 
 #endif // LIST_H_

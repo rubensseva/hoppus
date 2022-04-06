@@ -24,16 +24,32 @@ int quasiquote_eval(expr **arg) {
         case SYMBOL:;
             return 0;
         case CONS:;
-            if ((*arg)->car && (*arg)->car->type == SYMBOL) {
-                symbol *sym = symbol_find((char *)((*arg)->car->data));
+            if ((*arg)->car && (*arg)->car->car && (*arg)->car->car->type == SYMBOL) {
+                symbol *sym = symbol_find((char *)((*arg)->car->car->data));
                 if (sym && strcmp(sym->name, COMMA_STR) == 0) {
-                    expr *tmp;
-                    ret_code = eval((*arg)->cdr->car, &tmp);
+                    expr *evald;
+                    ret_code = eval((*arg)->car->cdr->car, &evald);
                     if (ret_code < 0) {
                         printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
                         return ret_code;
                     }
-                    (*arg) = tmp;
+                    (*arg)->car = evald;
+                    return 0;
+                }
+                if (sym && strcmp(sym->name, COMMA_AT_STR) == 0) {
+                    expr *evald;
+                    ret_code = eval((*arg)->car->cdr->car, &evald);
+                    if (ret_code < 0) {
+                        printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
+                        return ret_code;
+                    }
+
+                    /* Splice */
+                    expr *old_cdr = (*arg)->cdr;
+                    (*arg) = evald;
+                    while (!list_end(evald->cdr)) {evald = evald->cdr;};
+                    evald->cdr = old_cdr;
+
                     return 0;
                 }
             }
@@ -260,11 +276,16 @@ int eval(expr *e, expr **res) {
                     *res = e;
                     return 0;
                 }
-                *res = sym->e;
+                expr *copy;
+                int ret_code = expr_copy(sym->e, &copy);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: Error when copying symbol");
+                    return ret_code;
+                }
+                *res = copy;
                 return 0;
             }
-            printf("WARNING: EVAL: Found symbol with no value: %s. There is probably something wrong.\n",
-                   (char *)e->data);
+            printf("WARNING: EVAL: Couldnt find symbol: %s\n", (char *)e->data);
             *res = e;
             return 0;
         }
