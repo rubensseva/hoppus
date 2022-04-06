@@ -19,6 +19,6 @@ LIB_SOURCES = $(shell find $(LIB_SOURCE_DIR) -name "*.c")
 LIB_INCLUDES = $(shell find $(LIB_INCLUDE_DIR) -name "*.h")
 
 build/ukernel_lisp.out: main.c $(SOURCES) $(INCLUDES) $(LIB_SOURCES) $(LIB_INCLUDES)
-	gcc $(CFLAGS) main.c $(SOURCES) $(LIB_SOURCES) -Iinclude -o build/ukernel_lisp.out
+	gcc $(CFLAGS) $^ -Iinclude -o $@
 
 # end
