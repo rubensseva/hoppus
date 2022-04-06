@@ -74,9 +74,6 @@ int expr_copy(expr* e, expr **out) {
     }
 }
 
-/**
-  Check if an expression is true or false
-*/
 int expr_is_true(expr *e) {
     if (e == NULL)
         return 0;
@@ -96,9 +93,6 @@ int expr_is_true(expr *e) {
     }
 }
 
-/**
-  Check if an expression is true or false
-*/
 int expr_is_equal(expr *e1, expr *e2) {
     if (e1 == NULL || e2 == NULL)
         return e1 == e2;
@@ -140,11 +134,9 @@ int expr_is_equal(expr *e1, expr *e2) {
 }
 
 /**
-  Check if an expression is true or false.
-
   If gt_or_lt is true, calculate gt, otherwise lt
 */
-int expr_gt_lt_equal(expr *e1, expr *e2, int gt_or_lt) {
+int expr_gt_lt(expr *e1, expr *e2, int gt_or_lt) {
     if (e1 == NULL || e2 == NULL)
         return e1 == e2;
 

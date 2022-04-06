@@ -13,52 +13,59 @@
 #include "list.h"
 
 
-int quasiquote_eval(expr **arg) {
-    if (arg == NULL || *arg == NULL)
+/** @brief Scans an expression tree for comma or comma-at signs, then takes
+    appropriate action. It leaves other types of expression untouched.
+
+    @param e The expression tree to scan. It also acts as output and will
+    be modified in-place.
+    @return Status code
+*/
+int quasiquote_eval(expr **e) {
+    if (e == NULL || *e == NULL)
         return 0;
     int ret_code;
-    switch((*arg)->type) {
+    switch((*e)->type) {
         case NUMBER:
         case CHAR:
         case BOOLEAN:
         case SYMBOL:;
             return 0;
         case CONS:;
-            if ((*arg)->car && (*arg)->car->car && (*arg)->car->car->type == SYMBOL) {
-                symbol *sym = symbol_find((char *)((*arg)->car->car->data));
+            if ((*e)->car && (*e)->car->car && (*e)->car->car->type == SYMBOL) {
+                symbol *sym = symbol_find((char *)((*e)->car->car->data));
                 if (sym && strcmp(sym->name, COMMA_STR) == 0) {
                     expr *evald;
-                    ret_code = eval((*arg)->car->cdr->car, &evald);
+                    ret_code = eval((*e)->car->cdr->car, &evald);
                     if (ret_code < 0) {
                         printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
                         return ret_code;
                     }
-                    (*arg)->car = evald;
+                    (*e)->car = evald;
                     return 0;
                 }
                 if (sym && strcmp(sym->name, COMMA_AT_STR) == 0) {
                     expr *evald;
-                    ret_code = eval((*arg)->car->cdr->car, &evald);
+                    ret_code = eval((*e)->car->cdr->car, &evald);
                     if (ret_code < 0) {
                         printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
                         return ret_code;
                     }
 
                     /* Splice */
-                    expr *old_cdr = (*arg)->cdr;
-                    (*arg) = evald;
+                    expr *old_cdr = (*e)->cdr;
+                    *e = evald;
                     while (!list_end(evald->cdr)) {evald = evald->cdr;};
                     evald->cdr = old_cdr;
 
                     return 0;
                 }
             }
-            ret_code = quasiquote_eval(&((*arg)->car));
+            ret_code = quasiquote_eval(&((*e)->car));
             if (ret_code < 0) {
                 printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
                 return ret_code;
             }
-            ret_code = quasiquote_eval(&((*arg)->cdr));
+            ret_code = quasiquote_eval(&((*e)->cdr));
             if (ret_code < 0) {
                 printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
                 return ret_code;
@@ -73,10 +80,14 @@ int quasiquote_eval(expr **arg) {
 
 
 /**
-   Add parameters as symbols, with matching args.
+   @brief Adds a list of parameters as symbols
 
-   args and params must be lists where each element in params has a corresponding
-   element in args.
+   The "params" and "args" parameters are lists that should match entry for entry,
+   unless a &rest parameter is involved.
+
+   @param args List of arguments, the values the symbols
+   @param params List of parameters, the names of the symbols
+   @return Status code
 */
 int add_param_symbols(expr *params, expr *args) {
     expr *curr_arg = args, *curr_param = params,
@@ -146,43 +157,12 @@ int remove_param_symbols(expr *params) {
 }
 
 /**
-   Handles an invocation of a function.
+   @brief Handles an invocation of a function.
 
-   This function a little complex by the fact that we are dealing with two
-   types of arguments, the arguments to the call to defun when the function was
-   defined, and the arguments to this specific invocation of the function.
-
-   When the function is defined with a call to defun, there are two arguments,
-   where both of these arguments are lists. The first argument is a list of names, where
-   the first entry in this list is the function name, and the rest is the names of
-   the function arguments. The second argument to defun is a list which describes the
-   function logic to be evaluated when the function should be invoked.
-
-   The other type of arguments are the values passed to the function at the time
-   of its invocation. These are values that should be bound to the corresponding
-   symbol names
-
-
-      1.      2.       3.
-   (defun (add x y) (+ x y))
-
-     4.  5.
-   (add 1 2)
-
-   1: The call to defun
-   2: The first argument to defun, a list containing the name of the function and the name of the
-       function arguments
-   3: The second argument to defun, a list describing the function logic.
-   4: An invocation of the "add" function, as defined in the above defun.
-   5: The function arguments to the invocation of "add".
-
-
-   Parameters:
-       sym: The symbol that represents the defun to be invoced.
-       invocation: Linked list of expression containing data for this invocation. The
-                   length of the arguments in this linked list must match the length
-                   of the arguments in sym.
-       res: Output
+   @param sym The symbol that represents the defun to be invoked. It contains
+   the function forms to be executed, and the parameters of the function.
+   @param args The arguments to this invokation
+   @return status code
 */
 int function_invocation(symbol *sym, expr *args, expr **out) {
     expr *defun_params = sym->e;

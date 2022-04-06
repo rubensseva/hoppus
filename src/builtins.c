@@ -325,7 +325,7 @@ int bi_gt(expr *arg, expr **res) {
         return -1;
     }
 
-    int val = expr_gt_lt_equal(arg->car, arg->cdr->car, 1);
+    int val = expr_gt_lt(arg->car, arg->cdr->car, 1);
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
     *res = new_expr;
     return 0;
@@ -338,7 +338,7 @@ int bi_lt(expr *arg, expr **res) {
         return -1;
     }
 
-    int val = expr_gt_lt_equal(arg->car, arg->cdr->car, 0);
+    int val = expr_gt_lt(arg->car, arg->cdr->car, 0);
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
     *res = new_expr;
     return 0;

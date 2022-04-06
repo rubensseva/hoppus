@@ -18,17 +18,3 @@ unsigned int list_length(expr *e) {
     return count;
 }
 
-/** Splice "spliced" right after the first entry in "list" */
-int list_splice(expr *list, expr* spliced) {
-    if (list->type != CONS || spliced->type != CONS) {
-        printf("ERROR: LIST: When splicing lists, both arguments must be cons cells");
-        return -1;
-    }
-    expr *old_cdr = list->cdr;
-    list->cdr = spliced;
-    expr *curr = spliced;
-    while (!list_end(curr->cdr))
-        curr = curr->cdr;
-    curr->cdr = old_cdr;
-    return 0;
-}
