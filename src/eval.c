@@ -233,17 +233,17 @@ int print_expr(expr *e) {
 }
 
 
-int eval(expr *e, expr **res) {
+int eval(expr *e, expr **out) {
     if (e == NULL) {
         printf("WARNING: EVAL: Eval got NULL, returning NULL\n");
-        *res = NULL;
+        *out = NULL;
         return 0;
     }
     switch (e->type) {
         case NUMBER:
         case CHAR:
         case BOOLEAN:
-            *res = e;
+            *out = e;
             return 0;
         case SYMBOL:;
         {
@@ -253,7 +253,7 @@ int eval(expr *e, expr **res) {
                    dont care about the expression. So lets just return the
                    given expression in that case. */
                 if (sym->type == BUILTIN) {
-                    *res = e;
+                    *out = e;
                     return 0;
                 }
                 expr *copy;
@@ -262,11 +262,11 @@ int eval(expr *e, expr **res) {
                     printf("ERROR: EVAL: Error when copying symbol");
                     return ret_code;
                 }
-                *res = copy;
+                *out = copy;
                 return 0;
             }
             printf("WARNING: EVAL: Couldnt find symbol: %s\n", (char *)e->data);
-            *res = e;
+            *out = e;
             return 0;
         }
         case CONS:;
@@ -277,7 +277,7 @@ int eval(expr *e, expr **res) {
                 return -1;
             }
             if (proc->car->type != SYMBOL) {
-                *res = proc;
+                *out = proc;
                 return 0;
             }
             /* Here we can invoce special operators, which should not have their arguments evaluated */
@@ -304,7 +304,7 @@ int eval(expr *e, expr **res) {
                     printf("ERROR: EVAL: Got error when evaluating expanded macro %d\n", eval_res);
                     return eval_res;
                 }
-                *res = evald;
+                *out = evald;
                 return 0;
             }
             if (sym->is_special_operator) {
@@ -312,7 +312,7 @@ int eval(expr *e, expr **res) {
                     printf("ERROR: EVAL: Attempting to exec special operator, but the symbol was not of type builtin\n");
                     return -1;
                 }
-                int bi_res = sym->builtin_fn(arg, res);
+                int bi_res = sym->builtin_fn(arg, out);
                 if (bi_res == -1) {
                     printf("ERROR: EVAL: Builtin function encountered error\n");
                     return -1;
@@ -340,7 +340,7 @@ int eval(expr *e, expr **res) {
             /* Invoke the builtin or lisp function. We already found the symbol
                earlier when checking for special operators. */
             if (sym->type == BUILTIN) {
-                int bi_res = sym->builtin_fn(first_cons, res);
+                int bi_res = sym->builtin_fn(first_cons, out);
                 if (bi_res == -1) {
                     printf("ERROR: EVAL: Builtin function encountered error\n");
                     return -1;
@@ -348,7 +348,7 @@ int eval(expr *e, expr **res) {
                 return 0;
             }
             if (sym->type == FUNCTION) {
-                int func_inv_res = function_invocation(sym, first_cons, res);
+                int func_inv_res = function_invocation(sym, first_cons, out);
                 if (func_inv_res < 0) {
                     printf("ERROR: EVAL: Got error when invocing function %d\n", func_inv_res);
                     return func_inv_res;
