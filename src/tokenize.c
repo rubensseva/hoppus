@@ -77,7 +77,6 @@ int tokens_pop(token_t *tokens, int fd, token_t dest) {
         tokens_add(tokens, new_tokens);
     }
 
-    // token_t token = (token_t) my_malloc(TOKEN_STR_MAX_LEN);
     strcpy(dest, tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
@@ -122,6 +121,33 @@ void tokens_free(token_t *tokens) {
     my_free(tokens);
 }
 
+
+int pad_str(char *str, char *pad) {
+    int is_in_str = 0;
+    unsigned int pad_len = strlen(pad);
+    /* We want to recompute the string length each iteration, since the
+       act of padding the string might increase its size */
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] == '"')
+            is_in_str = !is_in_str;
+
+        int pad_match = 1;
+        for (int j = 0; j < pad_len && j + i < strlen(str); j++) {
+            if (str[i + j] != pad[j]) {
+                pad_match = 0;
+                break;
+            }
+        }
+        if (pad_match) {
+            insert_char_in_str(str, i + pad_len, ' ');
+            if (insert_char_in_str(str, i, ' ') == 0) {
+                i++;
+            }
+        }
+    }
+    return 0;
+}
+
 int tokenize(char *src_code, token_t *dest) {
     /* Strip newlines */
     int src_code_size = strlen(src_code), is_in_str = 0;
@@ -133,76 +159,25 @@ int tokenize(char *src_code, token_t *dest) {
         }
     }
 
-    /* Pad parentheses */
-    is_in_str = 0;
-    for (int i = 0, j = 0; i < strlen(src_code); i++) {
-        if (src_code[i] == '"')
-            is_in_str = !is_in_str;
-        if (src_code[i] == ')' || src_code[i] == '(' && !is_in_str) {
-            insert_char_in_str(src_code, i + 1, ' ');
-            if (insert_char_in_str(src_code, i, ' ') == 0) {
-                i++;
-            }
-        }
-    }
+    pad_str(src_code, ")");
+    pad_str(src_code, "(");
+    pad_str(src_code, "'");
+    pad_str(src_code, "`");
+    pad_str(src_code, ",@");
 
-    /* Pad quotes */
+    /* Pad commas, but not comma-ats */
     is_in_str = 0;
-    for (int i = 0, j = 0; i < strlen(src_code); i++) {
-        if (src_code[i] == '"')
-            is_in_str = !is_in_str;
-        if (src_code[i] == '\'') {
-            insert_char_in_str(src_code, i + 1, ' ');
-            if (insert_char_in_str(src_code, i, ' ') == 0) {
-                i++;
-            }
-        }
-    }
-
-    /* Pad quasiquotes */
-    is_in_str = 0;
-    for (int i = 0, j = 0; i < strlen(src_code); i++) {
-        if (src_code[i] == '"')
-            is_in_str = !is_in_str;
-        if (src_code[i] == '`') {
-            insert_char_in_str(src_code, i + 1, ' ');
-            if (insert_char_in_str(src_code, i, ' ') == 0) {
-                i++;
-            }
-        }
-    }
-
-    /* Pad comma-at's */
-    is_in_str = 0;
-    int found_comma_at = 0;
     for (int i = 0, j = 0; i < strlen(src_code) - 1; i++) {
         if (src_code[i] == '"')
             is_in_str = !is_in_str;
-        if (src_code[i] == ',' && src_code[i + 1] == '@') {
-            found_comma_at = 1;
-            insert_char_in_str(src_code, i + 2, ' ');
+        if (src_code[i] == ',' && src_code[i + 1] != '@') {
+            insert_char_in_str(src_code, i + 1, ' ');
             if (insert_char_in_str(src_code, i, ' ') == 0) {
                 i++;
             }
         }
     }
 
-    if (!found_comma_at) {
-        /* Pad commas */
-        is_in_str = 0;
-        for (int i = 0, j = 0; i < strlen(src_code); i++) {
-            if (src_code[i] == '"')
-                is_in_str = !is_in_str;
-            if (src_code[i] == ',') {
-                insert_char_in_str(src_code, i + 1, ' ');
-                if (insert_char_in_str(src_code, i, ' ') == 0) {
-                    i++;
-                }
-            }
-        }
-    }
-
-    /* Trim */
     src_code = trim1(src_code, ' ');
 
     /* Tokenize */
