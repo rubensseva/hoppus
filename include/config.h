@@ -14,4 +14,6 @@
 #define MAX_SYMBOLS 1024
 #define EXPR_STR_SIZE 1024
 
+#define LISP_STR_MAX_SIZE 4096
+
 #endif // CONFIG_H_

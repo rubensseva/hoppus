@@ -282,9 +282,16 @@ int bi_if(expr *arg, expr **res) {
 }
 
 int bi_print(expr *arg, expr **res) {
-    int print_res = expr_print(arg);
+    expr *curr = arg;
+    for_each(curr) {
+        int print_res = expr_print(curr->car);
+        if (print_res < 0) {
+            printf("ERROR: BUILTIN: PRINT: got error when printing expr\n");
+            return -1;
+        }
+    }
     *res = arg->car;
-    return print_res;
+    return 0;
 }
 
 int bi_equal(expr *arg, expr **res) {

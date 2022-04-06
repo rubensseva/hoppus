@@ -4,6 +4,7 @@
 #include "expr.h"
 #include "memory.h"
 #include "list.h"
+#include "config.h"
 
 
 char *unknown_type_str = "unknown";
@@ -173,7 +174,33 @@ int expr_gt_lt(expr *e1, expr *e2, int gt_or_lt) {
 }
 
 
-int expr_print_tree(expr *e){
+int expr_is_str(expr *e) {
+    expr *curr = e;
+    for_each(curr) {
+        if (curr->car->type != CHAR) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int str_from_expr(expr *e, char **out) {
+    unsigned int length = list_length(e);
+    if (length >= LISP_STR_MAX_SIZE) {
+        printf("ERROR: EXPR: String is too large: %d\n", length);
+        return -1;
+    }
+    char *str = (char *) malloc(length);
+    expr *curr = e;
+    int i = 0;
+    for_each(curr) {
+        str[i++] = curr->car->data;
+    }
+    *out = str;
+    return 0;
+}
+
+int expr_print_tree(expr *e) {
     if (e == NULL) {
         printf("nil");
         return 0;
@@ -189,13 +216,26 @@ int expr_print_tree(expr *e){
             printf("%s", (char *)e->data);
             return 0;
         case CONS:;
+            if (expr_is_str(e)) {
+                char *str;
+                int ret_code = str_from_expr(e, &str);
+                if (ret_code < 0) {
+                    printf("ERROR: EXPR: PRINT: Converting expr to string\n");
+                    return -1;
+                }
+                printf("\"");
+                printf("%s", str);
+                printf("\"");
+                return 0;
+            }
             printf("(");
-            /* We could use list_end() here, but in order for this
-               to work for all kinds of cons cells, we need only check
-               for curr */
-            expr_print_tree(e->car);
-            printf(" ");
-            expr_print_tree(e->cdr);
+            expr *curr = e;
+            for_each(curr) {
+                expr_print_tree(curr->car);
+                if (!list_end(curr->cdr)) {
+                    printf(" ");
+                }
+            }
             printf(")");
             return 0;
         case BOOLEAN:
@@ -206,13 +246,12 @@ int expr_print_tree(expr *e){
             }
             return 0;
         default:
-            printf("ERROR: EVAL: PRINT: Got unknown expr type\n");
+            printf("ERROR: EXPR: PRINT: Got unknown expr type\n");
             return -1;
     }
 }
 
 int expr_print(expr *e) {
-    printf("\n");
     expr_print_tree(e);
     printf("\n");
     return 0;

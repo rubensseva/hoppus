@@ -69,21 +69,21 @@ int load_standard_library() {
         strcpy(copy, (char *)lib_strs[i]);
         int res = tokenize(copy, tokens);
         if (res < 0) {
-            printf("ERROR: MAIN: Tokenizing standard library string %s\n", (char *)lib_strs[0]);
+            printf("ERROR: MAIN: tokenizing standard library string %s\n", (char *)lib_strs[0]);
             return res;
         }
 
         expr *parsed;
         int parse_res = parse_tokens(tokens, 0, &parsed);
         if (parse_res < 0) {
-            printf("ERROR: MAIN: Parsing standard library tokens %s\n", (char *) lib_strs[0]);
+            printf("ERROR: MAIN: parsing standard library tokens %s\n", (char *) lib_strs[0]);
             return parse_res;
         }
 
         expr *evald;
         int eval_res = eval(parsed, &evald);
         if (eval_res < 0) {
-            printf("ERROR: MAIN: Evaluating standard library forms: %s\n", (char *) lib_strs[0]);
+            printf("ERROR: MAIN: evaluating standard library forms: %s\n", (char *) lib_strs[0]);
             return eval_res;
         }
         free(copy);
@@ -93,6 +93,7 @@ int load_standard_library() {
 
 int REPL_loop(int fd) {
     token_t *tokens = tokens_init();
+    expr *evald = NULL;
     while (1) {
         if (fd == 1) {
             printf("$ ");
@@ -102,26 +103,29 @@ int REPL_loop(int fd) {
         expr *parsed;
         int parse_res = parse_tokens(tokens, fd, &parsed);
         if (parse_res < 0) {
-            printf("ERROR: MAIN: Parsing tokens: %d\n", parse_res);
+            printf("ERROR: MAIN: parsing tokens: %d\n", parse_res);
             return -1;
         }
         if (parse_res == EOF_CODE) {
             printf("INFO: MAIN: EOF\n");
+            printf("INFO: MAIN: return value: ");
+            expr_print(evald);
             return 0;
         }
 
-        expr *evald;
         int eval_res = eval(parsed, &evald);
         if (eval_res < 0) {
-            printf("ERROR: MAIN: Evaluating forms: %d\n", eval_res);
+            printf("ERROR: MAIN: evaluating forms: %d\n", eval_res);
         } else {
-            expr_print(evald);
+            if (fd == 1) {
+                expr_print(evald);
+            }
         }
     }
 }
 
 int main(int argc, char **argv) {
-    printf("INFO: MAIN: Welcome to ukernel lisp!\n");
+    printf("INFO: MAIN: welcome to ukernel lisp!\n");
     int ret_code;
     if (argc > 2) {
         printf("USAGE: %s <filename>\n", argv[0]);
@@ -133,7 +137,7 @@ int main(int argc, char **argv) {
 
     ret_code = load_standard_library();
     if (ret_code < 0) {
-        printf("ERROR: MAIN: Loading standard library: %d\n", ret_code);
+        printf("ERROR: MAIN: loading standard library: %d\n", ret_code);
         return -1;
     }
     printf("INFO: MAIN: standard library loaded\n");
@@ -152,11 +156,11 @@ int main(int argc, char **argv) {
     printf("INFO: MAIN: starting REPL loop\n");
     ret_code = REPL_loop(fd);
     if (ret_code < 0) {
-        printf("ERROR: MAIN: Eval error: %d\n", ret_code);
+        printf("ERROR: MAIN: eval error: %d\n", ret_code);
         return -1;
     }
     /* TODO: Free remaining memory allocations */
-    printf("INFO: MAIN: Exiting with code: %d\n", ret_code);
-    printf("INFO: MAIN: Bye...\n");
+    printf("INFO: MAIN: exiting with code: %d\n", ret_code);
+    printf("INFO: MAIN: bye...\n");
     return ret_code;
 }
