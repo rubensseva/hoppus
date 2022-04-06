@@ -186,7 +186,7 @@ int expr_is_str(expr *e) {
 
 int str_from_expr(expr *e, char **out) {
     unsigned int length = list_length(e);
-    if (length >= LISP_STR_MAX_SIZE) {
+    if (length >= LISP_STR_MAX_LEN) {
         printf("ERROR: EXPR: String is too large: %d\n", length);
         return -1;
     }

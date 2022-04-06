@@ -11,8 +11,8 @@
 #include "lib/string1.h"
 
 int read_tokens_from_file(int fd, token_t *dest) {
-    char *buf = (char *) malloc(EXPR_STR_SIZE);
-    int bytes_read = read(fd, buf, EXPR_STR_SIZE);
+    char *buf = (char *) malloc(EXPR_STR_MAX_LEN);
+    int bytes_read = read(fd, buf, EXPR_STR_MAX_LEN);
     if (bytes_read <= -1) {
         perror("read");
         printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: read() returned error\n");
@@ -32,17 +32,17 @@ int read_tokens_from_file(int fd, token_t *dest) {
 }
 
 token_t *tokens_init() {
-    token_t *tokens = (token_t *) my_malloc(MAX_TOKENS * sizeof(token_t));
-    for (int i = 0; i < MAX_TOKENS; i++) {
+    token_t *tokens = (token_t *) my_malloc(TOKENS_MAX_NUM * sizeof(token_t));
+    for (int i = 0; i < TOKENS_MAX_NUM; i++) {
         tokens[i] = (token_t)NULL;
     }
     return tokens;
 }
 
 int tokens_add(token_t *tokens, token_t *new_tokens) {
-    for (int i = 0; i < MAX_TOKENS; i++) {
+    for (int i = 0; i < TOKENS_MAX_NUM; i++) {
         if (tokens[i] == NULL) {
-            for (int j = 0; j < MAX_TOKENS; j++) {
+            for (int j = 0; j < TOKENS_MAX_NUM; j++) {
                 if (new_tokens[j] == NULL) {
                     break;
                 }
@@ -77,7 +77,7 @@ int tokens_pop(token_t *tokens, int fd, token_t dest) {
         tokens_add(tokens, new_tokens);
     }
 
-    // token_t token = (token_t) my_malloc(MAX_TOKEN_LENGTH);
+    // token_t token = (token_t) my_malloc(TOKEN_STR_MAX_LEN);
     strcpy(dest, tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
@@ -113,7 +113,7 @@ int tokens_peek(token_t *tokens, int fd, token_t dest) {
 
 
 void tokens_free(token_t *tokens) {
-    for(int i = 0; i < MAX_TOKENS; i++) {
+    for(int i = 0; i < TOKENS_MAX_NUM; i++) {
         if (tokens[i] == NULL) {
             break;
         }
@@ -209,7 +209,7 @@ int tokenize(char *src_code, token_t *dest) {
     int num_tokens = 0;
     token_t token = strtok1(src_code, " ");
     while (token != NULL) {
-        if (num_tokens >= MAX_TOKENS) {
+        if (num_tokens >= TOKENS_MAX_NUM) {
             printf("ERROR: TOKENIZER: TOKENIZE: Too many tokens!\n");
             return 01;
         }

@@ -65,7 +65,7 @@ int load_standard_library() {
     /* Load standard library */
     for (int i = 0; i < (sizeof(lib_strs) / sizeof(char *)); i++) {
         token_t *tokens = tokens_init();
-        char *copy = malloc(EXPR_STR_SIZE);
+        char *copy = malloc(EXPR_STR_MAX_LEN);
         strcpy(copy, (char *)lib_strs[i]);
         int res = tokenize(copy, tokens);
         if (res < 0) {

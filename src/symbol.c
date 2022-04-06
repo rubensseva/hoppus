@@ -7,7 +7,7 @@
 #include "memory.h"
 
 int n_symbol = 0;
-symbol *symbols[MAX_SYMBOLS];
+symbol *symbols[SYMBOLS_MAX_NUM];
 
 symbol *__symbol_create(char *name, symbol_type type, expr *e, builtin_fn_t *fn, int is_special_operator) {
     symbol *new = (symbol *)malloc(sizeof(symbol));
@@ -26,7 +26,7 @@ symbol *symbol_builtin_create(char *name, builtin_fn_t *fn, int is_special_opera
 }
 
 void symbol_add(symbol *s) {
-    if (n_symbol >= MAX_SYMBOLS - 1) {
+    if (n_symbol >= SYMBOLS_MAX_NUM - 1) {
         printf("ERROR: SYMBOL: Too many symbols\n");
     } else {
         symbols[n_symbol++] = s;

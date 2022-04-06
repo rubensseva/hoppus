@@ -74,7 +74,7 @@ int bi_defun(expr *arg, expr **res) {
         }
     }
 
-    char *buf = my_malloc(MAX_TOKEN_LENGTH);
+    char *buf = my_malloc(TOKEN_STR_MAX_LEN);
     char *defun_name = (char *)(arg->car->car->data);
     strcpy(buf, defun_name);
 
@@ -120,7 +120,7 @@ int bi_define(expr *arg, expr **res) {
         return eval_res;
     }
 
-    char *buf = my_malloc(MAX_TOKEN_LENGTH);
+    char *buf = my_malloc(TOKEN_STR_MAX_LEN);
     /* The name of the symbol exist directly as a string in the first argument. */
     strcpy(buf, (char *)arg->car->data);
     symbol *new_sym = symbol_create(buf, VARIABLE, evaluated_arg);
@@ -474,7 +474,7 @@ int bi_defmacro(expr *arg, expr **res) {
         }
     }
 
-    char *buf = my_malloc(MAX_TOKEN_LENGTH);
+    char *buf = my_malloc(TOKEN_STR_MAX_LEN);
     char *macro_name = (char *)(arg->car->car->data);
     strcpy(buf, macro_name);
 

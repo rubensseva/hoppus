@@ -54,7 +54,7 @@ expr *expr_from_str(char *str) {
  */
 int parse_tokens(token_t *tokens, int fd, expr **res) {
     int ret_code;
-    token_t token = (token_t) my_malloc(MAX_TOKEN_LENGTH);
+    token_t token = (token_t) my_malloc(TOKEN_STR_MAX_LEN);
     ret_code = tokens_pop(tokens, fd, token);
     if (ret_code < 0) {
         printf("ERROR: PARSER: popping tokens\n");
@@ -148,7 +148,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
     if (strcmp("(", token) == 0) {
         expr *first = NULL, *curr = NULL, *prev = NULL;
         while (1) {
-            token_t peeked_token = (token_t) malloc(MAX_TOKEN_LENGTH);
+            token_t peeked_token = (token_t) malloc(TOKEN_STR_MAX_LEN);
             ret_code = tokens_peek(tokens, fd, peeked_token);
             if (ret_code < 0) {
                 return ret_code;
@@ -179,7 +179,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         }
         /* At this points, there should be a ")" on tokens, so lets pop it. */
         /* TODO: Maybe we could just use the stack here? */
-        token_t closing_paren = (token_t) malloc(MAX_TOKEN_LENGTH);
+        token_t closing_paren = (token_t) malloc(TOKEN_STR_MAX_LEN);
         ret_code = tokens_pop(tokens, fd, closing_paren);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Popping closing parentheses\n");
