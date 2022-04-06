@@ -11,7 +11,6 @@
 int quasiquote_eval(expr **arg);
 int function_invocation(symbol *sym, expr *args, expr **out);
 expr *free_tree(expr *e);
-int print_expr(expr *e);
 int eval(expr *e, expr **out);
 
 #endif // EVAL_H_

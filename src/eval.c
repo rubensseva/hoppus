@@ -186,53 +186,6 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
     return 0;
 }
 
-
-int print_expr_tree(expr *e){
-    if (e == NULL) {
-        printf("nil");
-        return 0;
-    }
-    switch(e->type) {
-        case NUMBER:
-            printf("%d", (int)e->data);
-            return 0;
-        case CHAR:
-            printf("'%c'", (char)e->data);
-            return 0;
-        case SYMBOL:
-            printf("%s", (char *)e->data);
-            return 0;
-        case CONS:;
-            printf("(");
-            /* We could use list_end() here, but in order for this
-               to work for all kinds of cons cells, we need only check
-               for curr */
-            print_expr_tree(e->car);
-            printf(" ");
-            print_expr_tree(e->cdr);
-            printf(")");
-            return 0;
-        case BOOLEAN:
-            if (e->data) {
-                printf("true");
-            } else {
-                printf("false");
-            }
-            return 0;
-        default:
-            printf("ERROR: EVAL: PRINT: Got unknown expr type\n");
-            return -1;
-    }
-}
-
-int print_expr(expr *e) {
-    printf("\n");
-    print_expr_tree(e);
-    printf("\n");
-    return 0;
-}
-
-
 int eval(expr *e, expr **out) {
     if (e == NULL) {
         printf("WARNING: EVAL: Eval got NULL, returning NULL\n");

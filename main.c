@@ -115,7 +115,7 @@ int REPL_loop(int fd) {
         if (eval_res < 0) {
             printf("ERROR: MAIN: Evaluating forms: %d\n", eval_res);
         } else {
-            print_expr(evald);
+            expr_print(evald);
         }
     }
 }

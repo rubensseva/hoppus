@@ -282,7 +282,7 @@ int bi_if(expr *arg, expr **res) {
 }
 
 int bi_print(expr *arg, expr **res) {
-    int print_res = print_expr(arg);
+    int print_res = expr_print(arg);
     *res = arg->car;
     return print_res;
 }

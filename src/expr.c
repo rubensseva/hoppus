@@ -171,3 +171,49 @@ int expr_gt_lt(expr *e1, expr *e2, int gt_or_lt) {
             return -1;
     }
 }
+
+
+int expr_print_tree(expr *e){
+    if (e == NULL) {
+        printf("nil");
+        return 0;
+    }
+    switch(e->type) {
+        case NUMBER:
+            printf("%d", (int)e->data);
+            return 0;
+        case CHAR:
+            printf("'%c'", (char)e->data);
+            return 0;
+        case SYMBOL:
+            printf("%s", (char *)e->data);
+            return 0;
+        case CONS:;
+            printf("(");
+            /* We could use list_end() here, but in order for this
+               to work for all kinds of cons cells, we need only check
+               for curr */
+            expr_print_tree(e->car);
+            printf(" ");
+            expr_print_tree(e->cdr);
+            printf(")");
+            return 0;
+        case BOOLEAN:
+            if (e->data) {
+                printf("true");
+            } else {
+                printf("false");
+            }
+            return 0;
+        default:
+            printf("ERROR: EVAL: PRINT: Got unknown expr type\n");
+            return -1;
+    }
+}
+
+int expr_print(expr *e) {
+    printf("\n");
+    expr_print_tree(e);
+    printf("\n");
+    return 0;
+}
