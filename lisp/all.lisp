@@ -28,3 +28,10 @@
 (if (eq (mac-add 3 4) 7)
     (print "passed macro test!")
     (print "failed macro test..."))
+
+(defmacro (mac-add-many &rest rst)
+  `(+ ,@rst))
+
+(if (eq (mac-add-many 1 2 3 4) 10)
+    (print "passed quasi/comma-at test!")
+    (print "failed quasi/comma-at test..."))
