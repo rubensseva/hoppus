@@ -56,6 +56,25 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
     return 0;
 }
 
+int tokens_fill(token_t *tokens, int fd) {
+    if (fd == -1) {
+        printf("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
+        return -1;
+    }
+    token_t *new_tokens = tokens_init();
+    int res = read_tokens_from_file(fd, new_tokens);
+    if (res < 0) {
+        printf("ERROR: TOKENIZER: TOKENS_FILL: Reading tokens from file\n");
+        return res;
+    }
+    if (res == EOF_CODE) {
+        return EOF_CODE;
+    }
+    tokens_add(tokens, new_tokens);
+    my_free(new_tokens);
+    return 0;
+}
+
 /**
    @brief Pop the next token from the tokens list, might read more tokens if the list
    is empty.
@@ -68,28 +87,16 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
    it will be malloced with the size of the token.
    @return Return status code */
 int tokens_pop(token_t *tokens, int fd, token_t *out) {
+    int ret_code;
     if (tokens == NULL) {
         printf("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
         return -1;
     }
 
     if (tokens[0] == NULL) {
-        if (fd == -1) {
-            printf("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
-            return -1;
-        }
-        token_t *new_tokens = tokens_init();
-        int res = read_tokens_from_file(fd, new_tokens);
-        if (res < 0) {
-            printf("ERROR: TOKENIZER: TOKENS_POP: reading tokens from file\n");
-            return res;
-        }
-        if (res == EOF_CODE) {
-            my_free(new_tokens);
-            return EOF_CODE;
-        }
-        tokens_add(tokens, new_tokens);
-        my_free(new_tokens);
+        ret_code = tokens_fill(tokens, fd);
+        if (ret_code != 0)
+            return ret_code;
     }
 
     /* We could just return tokens[0], but I have a gut feeling that a malloc and
@@ -119,23 +126,18 @@ int tokens_pop(token_t *tokens, int fd, token_t *out) {
    it will be malloced with the size of the token.
    @return Return status code */
 int tokens_peek(token_t *tokens, int fd, token_t *out) {
+    int ret_code;
     if (tokens == NULL) {
         printf("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
         return -1;
     }
 
     if (tokens[0] == NULL) {
-        token_t *new_tokens = tokens_init();
-        int res = read_tokens_from_file(fd, new_tokens);
-        if (res < 0) {
-            printf("ERROR: TOKENIZER: TOKENS_PEEK: Reading tokens from file\n");
-            return res;
-        }
-        if (res == EOF_CODE) {
-            return EOF_CODE;
-        }
-        tokens_add(tokens, new_tokens);
+        ret_code = tokens_fill(tokens, fd);
+        if (ret_code != 0)
+            return ret_code;
     }
+
     *out = my_malloc(strlen(tokens[0]) + 1);
     strcpy(*out, tokens[0]);
     return 0;
