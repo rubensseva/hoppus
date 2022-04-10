@@ -69,11 +69,10 @@ int parse_quotation_symbol(token_t *tokens, int fd, char *name, expr **out) {
                  file might be attempted to fill it up.
    @param fd The file descriptor that will be used to fill up tokens. Can be
              set to -1 to indicate that tokens should not be refilled.
-   @param res Output parameter.
 
    @return Return status code. Will be less than 0 on error
  */
-int parse_tokens(token_t *tokens, int fd, expr **res) {
+int parse_tokens(token_t *tokens, int fd, expr **out) {
     int ret_code; token_t token;
     ret_code = tokens_pop(tokens, fd, &token);
     if (ret_code < 0) {
@@ -84,39 +83,39 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         return EOF_CODE;
 
     if (strcmp(token, QUOTE_SHORT_STR)  == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, QUOTE_STR, res);
+        ret_code = parse_quotation_symbol(tokens, fd, QUOTE_STR, out);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing tokens after quote\n");
             return ret_code;
         }
     } else if (strcmp(token, QUASIQUOTE_SHORT_STR) == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, QUASIQUOTE_STR, res);
+        ret_code = parse_quotation_symbol(tokens, fd, QUASIQUOTE_STR, out);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing tokens after quasiquote\n");
             return ret_code;
         }
     } else if (strcmp(token, COMMA_SHORT_STR) == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, COMMA_STR, res);
+        ret_code = parse_quotation_symbol(tokens, fd, COMMA_STR, out);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing tokens after comma\n");
             return ret_code;
         }
     } else if (strcmp(token, COMMA_AT_SHORT_STR) == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, COMMA_AT_STR, res);
+        ret_code = parse_quotation_symbol(tokens, fd, COMMA_AT_STR, out);
         if (ret_code < 0) {
             printf("ERROR: PARSER: Parsing tokens after comma-at\n");
             return ret_code;
         }
     } else if (is_number(token)) {
         int num = atoi(token);
-        *res = expr_new(NUMBER, (uint64_t)num, NULL, NULL);
+        *out = expr_new(NUMBER, (uint64_t)num, NULL, NULL);
     } else if (is_boolean(token)) {
         int val = strcmp(token, BOOL_STR_T) == 0 ? 1 : 0;
-        *res = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+        *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
     } else if (is_string(token)) {
-        *res = expr_from_str(token);
+        *out = expr_from_str(token);
     } else if (is_nil(token)) {
-        *res = NULL;
+        *out = NULL;
     } else if (strcmp("(", token) == 0) {
         expr *first = NULL, *curr = NULL, *prev = NULL;
         while (1) {
@@ -158,7 +157,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
             return ret_code;
         }
         my_free(closing_paren);
-        *res = first;
+        *out = first;
     } else if (strcmp(")", token) == 0) {
         printf("ERROR: PARSER: Unmatched closing parentheses\n");
         return -1;
@@ -166,7 +165,7 @@ int parse_tokens(token_t *tokens, int fd, expr **res) {
         /* If not any of the above, then its a symbol */
         token_t symbol_name = malloc(strlen(token) + 1);
         strcpy(symbol_name, token);
-        *res = expr_new(SYMBOL, (uint64_t)symbol_name, NULL, NULL);
+        *out = expr_new(SYMBOL, (uint64_t)symbol_name, NULL, NULL);
     }
 
     my_free(token);

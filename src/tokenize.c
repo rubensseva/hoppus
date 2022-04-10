@@ -10,7 +10,7 @@
 #include "tokenize.h"
 #include "lib/string1.h"
 
-int read_tokens_from_file(int fd, token_t *dest) {
+int read_tokens_from_file(int fd, token_t *out) {
     char *buf = (char *) my_malloc(EXPR_STR_MAX_LEN);
     int bytes_read = read(fd, buf, EXPR_STR_MAX_LEN);
     if (bytes_read <= -1) {
@@ -24,7 +24,7 @@ int read_tokens_from_file(int fd, token_t *dest) {
     }
     buf[bytes_read] = '\0';
 
-    int res = tokenize(buf, dest);
+    int res = tokenize(buf, out);
     if (res < 0) {
         printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
         return res;
@@ -67,7 +67,7 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
    @param dest Output parameter. The token will be copied here. If no error occurs,
    it will be malloced with the size of the token.
    @return Return status code */
-int tokens_pop(token_t *tokens, int fd, token_t *dest) {
+int tokens_pop(token_t *tokens, int fd, token_t *out) {
     if (tokens == NULL) {
         printf("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
         return -1;
@@ -94,8 +94,8 @@ int tokens_pop(token_t *tokens, int fd, token_t *dest) {
 
     /* We could just return tokens[0], but I have a gut feeling that a malloc and
        strcpy is better. */
-    *dest = my_malloc(strlen(tokens[0]) + 1);
-    strcpy(*dest, tokens[0]);
+    *out = my_malloc(strlen(tokens[0]) + 1);
+    strcpy(*out, tokens[0]);
     my_free(tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
@@ -118,7 +118,7 @@ int tokens_pop(token_t *tokens, int fd, token_t *dest) {
    @param dest Output parameter. The token will be copied here. If no error occurs,
    it will be malloced with the size of the token.
    @return Return status code */
-int tokens_peek(token_t *tokens, int fd, token_t *dest) {
+int tokens_peek(token_t *tokens, int fd, token_t *out) {
     if (tokens == NULL) {
         printf("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
         return -1;
@@ -136,8 +136,8 @@ int tokens_peek(token_t *tokens, int fd, token_t *dest) {
         }
         tokens_add(tokens, new_tokens);
     }
-    *dest = my_malloc(strlen(tokens[0]) + 1);
-    strcpy(*dest, tokens[0]);
+    *out = my_malloc(strlen(tokens[0]) + 1);
+    strcpy(*out, tokens[0]);
     return 0;
 }
 
@@ -182,7 +182,7 @@ int pad_str(char *str, char *pad) {
 /**
    @brief Takes a string and tokenizes it. Does not modify "src_code", it makes copies
    of the tokens and puts them in "dest". */
-int tokenize(char *src_code, token_t *dest) {
+int tokenize(char *src_code, token_t *out) {
     /* Strip newlines */
     int src_code_size = strlen(src_code), is_in_str = 0;
     for (int i = 0; i < src_code_size; i++) {
@@ -224,7 +224,7 @@ int tokenize(char *src_code, token_t *dest) {
         }
         char *new_str = my_malloc(strlen(token) + 1);
         strcpy(new_str, token);
-        dest[num_tokens++] = new_str;
+        out[num_tokens++] = new_str;
         token = strtok1(NULL, " ");
     }
 
