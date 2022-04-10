@@ -14,7 +14,7 @@
 
 
 /** @brief Scans an expression tree for comma or comma-at signs, then takes
-    appropriate action. It leaves other types of expression untouched.
+    appropriate action.
 
     @param e The expression tree to scan. It also acts as output and will
     be modified in-place.
