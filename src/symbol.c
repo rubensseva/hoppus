@@ -10,7 +10,7 @@ int n_symbol = 0;
 symbol *symbols[SYMBOLS_MAX_NUM];
 
 symbol *__symbol_create(char *name, symbol_type type, expr *e, builtin_fn_t *fn, int is_special_operator) {
-    symbol *new = (symbol *)malloc(sizeof(symbol));
+    symbol *new = (symbol *)my_malloc(sizeof(symbol));
     new->name = name;
     new->type = type;
     new->e = e;

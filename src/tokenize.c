@@ -11,7 +11,7 @@
 #include "lib/string1.h"
 
 int read_tokens_from_file(int fd, token_t *dest) {
-    char *buf = (char *) malloc(EXPR_STR_MAX_LEN);
+    char *buf = (char *) my_malloc(EXPR_STR_MAX_LEN);
     int bytes_read = read(fd, buf, EXPR_STR_MAX_LEN);
     if (bytes_read <= -1) {
         perror("read");
@@ -19,6 +19,7 @@ int read_tokens_from_file(int fd, token_t *dest) {
         return -1;
     } else if (bytes_read == 0) {
         printf("INFO: PARSER: EOF\n");
+        my_free(buf);
         return EOF_CODE;
     }
     buf[bytes_read] = '\0';
@@ -28,6 +29,7 @@ int read_tokens_from_file(int fd, token_t *dest) {
         printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
         return res;
     }
+    my_free(buf);
     return 0;
 }
 
@@ -54,7 +56,18 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
     return 0;
 }
 
-int tokens_pop(token_t *tokens, int fd, token_t dest) {
+/**
+   @brief Pop the next token from the tokens list, might read more tokens if the list
+   is empty.
+
+   @param tokens List of tokens to pop from. Will possibly be refilled if empty.
+   Can be prefilled.
+   @param fd The file descriptor used to read more tokens. Will not attempt read if
+   "fd" is -1.
+   @param dest Output parameter. The token will be copied here. If no error occurs,
+   it will be malloced with the size of the token.
+   @return Return status code */
+int tokens_pop(token_t *tokens, int fd, token_t *dest) {
     if (tokens == NULL) {
         printf("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
         return -1;
@@ -72,12 +85,18 @@ int tokens_pop(token_t *tokens, int fd, token_t dest) {
             return res;
         }
         if (res == EOF_CODE) {
+            my_free(new_tokens);
             return EOF_CODE;
         }
         tokens_add(tokens, new_tokens);
+        my_free(new_tokens);
     }
 
-    strcpy(dest, tokens[0]);
+    /* We could just return tokens[0], but I have a gut feeling that a malloc and
+       strcpy is better. */
+    *dest = my_malloc(strlen(tokens[0]) + 1);
+    strcpy(*dest, tokens[0]);
+    my_free(tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
         tokens[count] = tokens[count + 1];
@@ -88,7 +107,18 @@ int tokens_pop(token_t *tokens, int fd, token_t dest) {
     return 0;
 }
 
-int tokens_peek(token_t *tokens, int fd, token_t dest) {
+/**
+   @brief Peek the next token from the tokens list, might read one more tokens if
+   the list is empty.
+
+   @param tokens List of tokens to peek from. Will possibly be refilled if empty.
+   Can be prefilled.
+   @param fd The file descriptor used to read more tokens. Will not attempt read if
+   "fd" is -1.
+   @param dest Output parameter. The token will be copied here. If no error occurs,
+   it will be malloced with the size of the token.
+   @return Return status code */
+int tokens_peek(token_t *tokens, int fd, token_t *dest) {
     if (tokens == NULL) {
         printf("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
         return -1;
@@ -106,7 +136,8 @@ int tokens_peek(token_t *tokens, int fd, token_t dest) {
         }
         tokens_add(tokens, new_tokens);
     }
-    strcpy(dest, tokens[0]);
+    *dest = my_malloc(strlen(tokens[0]) + 1);
+    strcpy(*dest, tokens[0]);
     return 0;
 }
 
@@ -148,6 +179,9 @@ int pad_str(char *str, char *pad) {
     return 0;
 }
 
+/**
+   @brief Takes a string and tokenizes it. Does not modify "src_code", it makes copies
+   of the tokens and puts them in "dest". */
 int tokenize(char *src_code, token_t *dest) {
     /* Strip newlines */
     int src_code_size = strlen(src_code), is_in_str = 0;
@@ -185,10 +219,12 @@ int tokenize(char *src_code, token_t *dest) {
     token_t token = strtok1(src_code, " ");
     while (token != NULL) {
         if (num_tokens >= TOKENS_MAX_NUM) {
-            printf("ERROR: TOKENIZER: TOKENIZE: Too many tokens!\n");
+            printf("ERROR: TOKENIZER: TOKENIZE: Too many tokens\n");
             return 01;
         }
-        dest[num_tokens++] = token;
+        char *new_str = my_malloc(strlen(token) + 1);
+        strcpy(new_str, token);
+        dest[num_tokens++] = new_str;
         token = strtok1(NULL, " ");
     }
 

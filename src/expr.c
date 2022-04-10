@@ -47,11 +47,7 @@ int expr_copy(expr* e, expr **out) {
             *out = expr_new(e->type, e->data, NULL, NULL);
             return 0;
         case SYMBOL:;
-            char *data = malloc(strlen((char *)e->data));
-            if (data == NULL) {
-                printf("ERROR: EXPR: COPY: malloc error \n");
-                return -1;
-            }
+            char *data = my_malloc(strlen((char *)e->data) + 1);
             strcpy(data, (char *)e->data);
             *out = expr_new(e->type, (uint64_t)data, NULL, NULL);
             return 0;
@@ -190,12 +186,13 @@ int str_from_expr(expr *e, char **out) {
         printf("ERROR: EXPR: String is too large: %d\n", length);
         return -1;
     }
-    char *str = (char *) malloc(length);
+    char *str = (char *) my_malloc(length + 1);
     expr *curr = e;
     int i = 0;
     for_each(curr) {
         str[i++] = curr->car->data;
     }
+    str[i] = '\0';
     *out = str;
     return 0;
 }
@@ -226,6 +223,7 @@ int expr_print_tree(expr *e) {
                 printf("\"");
                 printf("%s", str);
                 printf("\"");
+                my_free(str);
                 return 0;
             }
             printf("(");

@@ -65,7 +65,7 @@ int load_standard_library() {
     /* Load standard library */
     for (int i = 0; i < (sizeof(lib_strs) / sizeof(char *)); i++) {
         token_t *tokens = tokens_init();
-        char *copy = malloc(EXPR_STR_MAX_LEN);
+        char *copy = my_malloc(EXPR_STR_MAX_LEN);
         strcpy(copy, (char *)lib_strs[i]);
         int res = tokenize(copy, tokens);
         if (res < 0) {
@@ -86,7 +86,8 @@ int load_standard_library() {
             printf("ERROR: MAIN: evaluating standard library forms: %s\n", (char *) lib_strs[0]);
             return eval_res;
         }
-        free(copy);
+        my_free(tokens);
+        my_free(copy);
     }
     return 0;
 }
@@ -104,13 +105,14 @@ int REPL_loop(int fd) {
         int parse_res = parse_tokens(tokens, fd, &parsed);
         if (parse_res < 0) {
             printf("ERROR: MAIN: parsing tokens: %d\n", parse_res);
+            my_free(tokens);
             return -1;
         }
         if (parse_res == EOF_CODE) {
             printf("INFO: MAIN: EOF\n");
             printf("INFO: MAIN: return value: ");
             expr_print(evald);
-            return 0;
+            break;
         }
 
         int eval_res = eval(parsed, &evald);
@@ -122,6 +124,8 @@ int REPL_loop(int fd) {
             }
         }
     }
+    my_free(tokens);
+    return 0;
 }
 
 int main(int argc, char **argv) {
