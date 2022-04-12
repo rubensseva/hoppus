@@ -4,8 +4,11 @@
 # @file
 # @version 0.1
 
+LINKER_SCRIPT = modified_default.ld
+
 CFLAGS = -g3
 # CFLAGS += -fsanitize=address
+CFLAGS += -T $(LINKER_SCRIPT)
 
 INCLUDE_DIR = include
 SOURCE_DIR = src

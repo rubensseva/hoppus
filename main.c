@@ -5,6 +5,7 @@
 #include <error.h>
 #include <string.h>
 
+#include "lib/malloc1.h"
 #include "tokenize.h"
 #include "parser.h"
 #include "eval.h"
@@ -16,6 +17,7 @@
 #include "lisp_lib.h"
 
 void create_builtins() {
+    uint32_t x = 2;
     symbol *defun = symbol_builtin_create("defun", bi_defun, 1);
     symbol *define = symbol_builtin_create("define", bi_define, 1);
     symbol *add = symbol_builtin_create("+", bi_add, 0);
@@ -96,6 +98,7 @@ int REPL_loop(int fd) {
     token_t *tokens = tokens_init();
     expr *evald = NULL;
     while (1) {
+        gc_maybe_mark_and_sweep();
         if (fd == 1) {
             printf("$ ");
             fflush(stdout);
@@ -135,6 +138,8 @@ int main(int argc, char **argv) {
         printf("USAGE: %s <filename>\n", argv[0]);
         return -1;
     }
+    gc_init();
+    printf("INFO: MAIN: gc initialized\n");
 
     create_builtins();
     printf("INFO: MAIN: builtins created\n");

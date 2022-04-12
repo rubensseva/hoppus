@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "lib/malloc1.h"
 #include "eval.h"
 #include "parser.h"
 #include "expr.h"
@@ -187,6 +188,7 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
 }
 
 int eval(expr *e, expr **out) {
+    gc_maybe_mark_and_sweep();
     if (e == NULL) {
         printf("WARNING: EVAL: Eval got NULL, returning NULL\n");
         *out = NULL;

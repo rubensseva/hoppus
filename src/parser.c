@@ -163,7 +163,7 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         return -1;
     } else {
         /* If not any of the above, then its a symbol */
-        token_t symbol_name = malloc(strlen(token) + 1);
+        token_t symbol_name = my_malloc(strlen(token) + 1);
         strcpy(symbol_name, token);
         *out = expr_new(SYMBOL, (uint64_t)symbol_name, NULL, NULL);
     }

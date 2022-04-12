@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 #include "utility.h"
 #include "constants.h"
 
@@ -54,4 +55,15 @@ int insert_char_in_str(char *str, int i, char c) {
     str[str_size + 1] = '\0';
     str[i] = c;
     return 0;
+}
+
+unsigned int *word_align_up(unsigned int *ptr) {
+    if ((uint64_t) ptr % 8 != 0)
+        ptr += 8 - (uint64_t) ptr % 8;
+    return ptr;
+}
+unsigned int *word_align_down(unsigned int *ptr) {
+    if ((uint64_t) ptr % 8 != 0)
+        ptr -= (uint64_t) ptr % 8;
+    return ptr;
 }

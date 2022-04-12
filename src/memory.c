@@ -7,10 +7,10 @@
    between custom malloc functions and std lib */
 
 void *my_malloc(unsigned int size) {
-    // return malloc1(size);
-    return malloc(size);
+    return malloc1(size);
+    /* return malloc(size); */
 }
 void my_free(void *ptr) {
-    // free1(ptr);
-    free(ptr);
+    free1(ptr);
+    /* free(ptr); */
 }
