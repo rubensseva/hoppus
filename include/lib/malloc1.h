@@ -5,8 +5,9 @@
 // #define NULL (void *)0x0;
 #define __USER_DATA
 #define __USER_TEXT
-#define MALLOC_HEAP_SIZE 65536
+// #define MALLOC_HEAP_SIZE 65536
 // #define MALLOC_HEAP_SIZE 131072
+#define MALLOC_HEAP_SIZE 262144
 
 typedef struct mem_node_t {
     char *base;

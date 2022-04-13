@@ -81,6 +81,9 @@ int gc_init() {
 void gc_follow_obj(header *u) {
     for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
         uint64_t v = *(uint64_t *)p;
+        if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
+            continue;
+        }
         /* For each memory region, check if it points to any other entry in the used list */
         for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
             if (((uint64_t)uu->next & 1) == 1)
@@ -108,11 +111,11 @@ int gc_scan_heap() {
             continue;
 
         /* Go through all the memory for that used list entry */
-        /* TODO: Here we are going through each and every byte.
-        Consider going through words instead. */
-        /* for (header *p = u + 1; p < u + 1 + u->size; p = (header *)((uint64_t)p + 1)) { */
         for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
             uint64_t v = *(uint64_t *)p;
+            if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
+                continue;
+            }
             /* For each memory region, check if it points to any other entry in the used list */
             for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
                 if (((uint64_t)uu->next & 1) == 1)
@@ -130,14 +133,11 @@ int gc_scan_heap() {
 }
 
 int gc_scan_region(uint64_t *start, uint64_t *end) {
-    /* for (uint64_t *p = start; p <= end - 1; p = (uint64_t *)((uint64_t)p + 1)) { */
     for (uint64_t *p = start; p <= end - 1; p += 1) {
-        /* Skip the heap if we encounter it */
-        if ((char *)p >= malloc_heap && (char *)p < malloc_heap + MALLOC_HEAP_SIZE) {
-            p = (uint64_t*)(malloc_heap + MALLOC_HEAP_SIZE) - 1;
+        uint64_t v = *p;
+        if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
             continue;
         }
-        uint64_t v = *p;
         /* For each memory region, check if it points to any entry in the used list */
         for (header *u = used; u != NULL; u = UNTAG(u->next)) {
             if (((uint64_t)u->next & 1) == 1) {
@@ -193,6 +193,8 @@ int gc_dump_info() {
 
 int gc_mark_and_sweep() {
     uint64_t *stack_end;
+    register void *sp asm ("sp");
+    stack_end = sp;
 
     printf("-----------------------------\n");
     printf("INFO: GC: starting\n");
@@ -208,10 +210,10 @@ int gc_mark_and_sweep() {
     if (used == NULL) {
         return 0;
     }
-    /* since "end" is the last address PAST bss, we need to subtract 1 */
-    gc_scan_region((uint64_t *)&sdata, ((uint64_t *)&end) - 1);
-    register void *sp asm ("sp");
-    stack_end = sp;
+    /* Scan data segments. Skip the heap. Since "end" is the last
+       address PAST bss, we need to subtract 1 */
+    gc_scan_region((uint64_t *)&sdata, (uint64_t *)malloc_heap);
+    gc_scan_region((uint64_t *)(malloc_heap + MALLOC_HEAP_SIZE), (uint64_t *)&end - 1);
 
     gc_scan_region(stack_end, (uint64_t *)stack_start);
     gc_scan_heap();
@@ -232,7 +234,7 @@ int gc_mark_and_sweep() {
 int gc_maybe_mark_and_sweep() {
     if (gc_allocated_size >= MALLOC_HEAP_SIZE >> 1)
         return gc_mark_and_sweep();
-    printf("INFO: GC: skipping gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
+    // printf("INFO: GC: skipping gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
     return 0;
 }
 
