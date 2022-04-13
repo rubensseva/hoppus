@@ -78,39 +78,50 @@ int gc_init() {
 }
 
 
+void gc_follow_obj(header *u) {
+    for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
+        uint64_t v = *(uint64_t *)p;
+        /* For each memory region, check if it points to any other entry in the used list */
+        for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
+            if (((uint64_t)uu->next & 1) == 1)
+                continue;
+
+            if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
+                /* Mark as live */
+                uu->next = (header *)((uint64_t)uu->next | 1);
+                gc_follow_obj(uu);
+            }
+        }
+    }
+}
+
 int gc_scan_heap() {
     header *heap = (header *) align_up((uint64_t)malloc_heap);
     header *heap_end = (header *) ((char *)heap + MALLOC_HEAP_SIZE);
 
     uint64_t *b = (uint64_t *)heap;
 
-    /* Keep scanning until no new objects are marked. There is probably a more efficient
-       way to do this, but it works for now */
-    int marked_an_object = 1;
-    while (marked_an_object) {
-        marked_an_object = 0;
-        /* For each entry in used list */
-        for(header *u = used; u != NULL; u = UNTAG(u->next)) {
-            /* If the block is not marked, skip it */
-            if (((uint64_t)u->next & 1) == 0)
-                continue;
+    /* For each entry in used list */
+    for(header *u = used; u != NULL; u = UNTAG(u->next)) {
+        /* If the block is not marked, skip it */
+        if (((uint64_t)u->next & 1) == 0)
+            continue;
 
-            /* Go through all the memory for that used list entry */
-            /* TODO: Here we are going through each and every byte.
-            Consider going through words instead. */
-            /* for (header *p = u + 1; p < u + 1 + u->size; p = (header *)((uint64_t)p + 1)) { */
-            for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
-                uint64_t v = *(uint64_t *)p;
-                /* For each memory region, check if it points to any other entry in the used list */
-                for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
-                    if (((uint64_t)uu->next & 1) == 1)
-                        continue;
+        /* Go through all the memory for that used list entry */
+        /* TODO: Here we are going through each and every byte.
+        Consider going through words instead. */
+        /* for (header *p = u + 1; p < u + 1 + u->size; p = (header *)((uint64_t)p + 1)) { */
+        for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
+            uint64_t v = *(uint64_t *)p;
+            /* For each memory region, check if it points to any other entry in the used list */
+            for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
+                if (((uint64_t)uu->next & 1) == 1)
+                    continue;
 
-                    if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
-                        /* Mark as live */
-                        uu->next = (header *)((uint64_t)uu->next | 1);
-                        marked_an_object = 1;
-                    }
+                if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
+                    /* Mark as live */
+                    uu->next = (header *)((uint64_t)uu->next | 1);
+                    gc_follow_obj(uu);
                 }
             }
         }
