@@ -205,14 +205,10 @@ int gc_mark_and_sweep() {
 
     printf("-----------------------------\n");
     printf("INFO: GC: starting\n");
-    /* printf("INFO: GC: dump before running gc: \n"); */
-    gc_dump_info();
 
     /* Reset gc marks */
     for (header *u = used; u != NULL; u = UNTAG(u->next))
         u->next = UNTAG(u->next);
-    /* printf("INFO: GC: dump after resetting gc marks: \n"); */
-    /* gc_dump_info(); */
 
     if (used == NULL) {
         return 0;
@@ -225,14 +221,10 @@ int gc_mark_and_sweep() {
     gc_scan_region(stack_end, (uint64_t *)stack_start);
     gc_scan_heap();
 
-    /* printf("INFO: GC: dump after scanning: \n"); */
-    /* gc_dump_info(); */
 
-    gc_sweep();
-    printf("INFO: GC: finished\n");
-
-    printf("INFO: GC: dump after gc completion: \n");
+    printf("INFO: GC: scan finished\n");
     gc_dump_info();
+    gc_sweep();
     printf("-----------------------------\n");
 
     return 0;
