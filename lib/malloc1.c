@@ -10,6 +10,8 @@
 extern char end, sdata;
 
 header *used = NULL;
+header *prev_malloced = NULL;
+
 uint64_t stack_start;
 
 char malloc_heap[MALLOC_HEAP_SIZE];
@@ -138,6 +140,9 @@ int gc_scan_region(uint64_t *start, uint64_t *end) {
         if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
             continue;
         }
+        if (p == (uint64_t*)used || p == (uint64_t*)prev_malloced) {
+            continue;
+        }
         /* For each memory region, check if it points to any entry in the used list */
         for (header *u = used; u != NULL; u = UNTAG(u->next)) {
             if (((uint64_t)u->next & 1) == 1) {
@@ -160,6 +165,8 @@ int gc_sweep() {
         if (((uint64_t)u->next & 1) == 0) {
             num_sweeped++;
             gc_allocated_size -= (u->size + 1) * sizeof(header);
+            if (u == prev_malloced)
+                prev_malloced = prev;
             if (u == used) {
                 used = UNTAG(u->next);
             } else {
@@ -198,14 +205,14 @@ int gc_mark_and_sweep() {
 
     printf("-----------------------------\n");
     printf("INFO: GC: starting\n");
-    printf("INFO: GC: dump before running gc: \n");
+    /* printf("INFO: GC: dump before running gc: \n"); */
     gc_dump_info();
 
     /* Reset gc marks */
     for (header *u = used; u != NULL; u = UNTAG(u->next))
         u->next = UNTAG(u->next);
-    printf("INFO: GC: dump after resetting gc marks: \n");
-    gc_dump_info();
+    /* printf("INFO: GC: dump after resetting gc marks: \n"); */
+    /* gc_dump_info(); */
 
     if (used == NULL) {
         return 0;
@@ -218,8 +225,8 @@ int gc_mark_and_sweep() {
     gc_scan_region(stack_end, (uint64_t *)stack_start);
     gc_scan_heap();
 
-    printf("INFO: GC: dump after scanning: \n");
-    gc_dump_info();
+    /* printf("INFO: GC: dump after scanning: \n"); */
+    /* gc_dump_info(); */
 
     gc_sweep();
     printf("INFO: GC: finished\n");
@@ -232,9 +239,11 @@ int gc_mark_and_sweep() {
 }
 
 int gc_maybe_mark_and_sweep() {
-    if (gc_allocated_size >= MALLOC_HEAP_SIZE >> 1)
+    if (gc_allocated_size >= MALLOC_HEAP_SIZE >> 1) {
+        printf("INFO: GC: running gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
         return gc_mark_and_sweep();
-    // printf("INFO: GC: skipping gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
+    }
+    /* printf("INFO: GC: skipping gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE); */
     return 0;
 }
 
@@ -243,7 +252,7 @@ __USER_TEXT void malloc1_dump() {
     printf("INFO: MALLOC: heap start %p, end %p\n", malloc_heap, malloc_heap + MALLOC_HEAP_SIZE);
     int i = 0;
     for (header *u = used, *tag_addr = used->next;
-         u != NULL && u->next != NULL;
+         u != NULL && UNTAG(u->next) != NULL;
          u = UNTAG(u->next), tag_addr = u->next) {
         printf("INFO: MALLOC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
     }
@@ -268,39 +277,95 @@ __USER_TEXT void *malloc1(unsigned int size) {
     }
 
     unsigned int required_units = (align_up(size) + sizeof(header)) / sizeof(header);
+    if (required_units * sizeof(header) > MALLOC_HEAP_SIZE) {
+        printf("ERROR: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %lu, but its more than the size of the heap which is %d\n",
+               size,
+               required_units * sizeof(header),
+               MALLOC_HEAP_SIZE);
+        return (void *)NULL;
+    }
+
 
     /* Handle the free space before the first mem_node */
     if (used == NULL) {
         header *free_base = (header *)heap_start;
         free_base->size = required_units - 1;
-        free_base->next = new_next_ptr(free_base->next, NULL);
+        free_base->next = NULL;
         used = free_base;
+        prev_malloced = free_base;
         gc_allocated_size += (free_base->size + 1) * sizeof(header);
         return free_base + 1;
     }
 
     header *u;
-    for (u = used; u->next != NULL ; u = UNTAG(u->next)) {
+    if (prev_malloced == NULL) {
+        prev_malloced = used;
+    }
+    int first_round = 1;
+    for (u = UNTAG(prev_malloced);; u = UNTAG(u->next)) {
+        if (!first_round && u == prev_malloced)
+            break;
+        first_round = 0;
+        if (u == NULL)
+            u = used;
+
+        /* Start of list, compare against start of heap */
+        if (u == used) {
+            header *free_base = (header *)heap_start;
+            unsigned int free_size = u - free_base;
+            if (required_units <= free_size) {
+                free_base->size = required_units - 1;
+                free_base->next = u;
+                used = free_base;
+                prev_malloced = free_base;
+                gc_allocated_size += (free_base->size + 1) * sizeof(header);
+                /* printf("start of list, gc_allocated_size %lu\n", gc_allocated_size); */
+                /* printf("returning %p\n", free_base + 1); */
+                return free_base + 1;
+            }
+        }
+
+        /* End of list, compare against end of heap */
+        if (UNTAG(u->next) == NULL) {
+            header *free_base = u + 1 + u->size;
+            unsigned int free_size = (header *)heap_end - free_base;
+            if (required_units <= free_size) {
+                free_base->size = required_units - 1;
+                free_base->next = NULL;
+                u->next = new_next_ptr(u->next, free_base);
+                gc_allocated_size += (free_base->size + 1) * sizeof(header);
+                /* printf("end of list, gc_allocated_size %lu\n", gc_allocated_size); */
+                /* printf("returning %p\n", free_base + 1); */
+                return free_base + 1;
+            }
+            continue;
+        }
+
         header *free_base = (u + 1) + u->size;
+        if (free_base >= UNTAG(u->next)) continue;
         unsigned int free_size = UNTAG(u->next) - free_base;
         if (required_units <= free_size) {
             free_base->size = required_units - 1;
             free_base->next = new_next_ptr(free_base->next, u->next);
             u->next = free_base;
+            prev_malloced = free_base;
             gc_allocated_size += (free_base->size + 1) * sizeof(header);
+            /* printf("between list, gc_allocated_size %lu\n", gc_allocated_size); */
+            /* printf("returning %p\n", free_base + 1); */
             return free_base + 1;
         }
     }
 
-    header *free_base = u + 1 + u->size;
-    unsigned int free_size = (header *)heap_end - free_base;
-    if (required_units <= free_size) {
-        free_base->size = required_units - 1;
-        free_base->next = new_next_ptr(free_base->next, NULL);
-        u->next = new_next_ptr(u->next, free_base);
-        gc_allocated_size += (free_base->size + 1) * sizeof(header);
-        return free_base + 1;
-    }
+    /* header *free_base = u + 1 + u->size; */
+    /* unsigned int free_size = (header *)heap_end - free_base; */
+    /* if (required_units <= free_size) { */
+    /*     free_base->size = required_units - 1; */
+    /*     free_base->next = new_next_ptr(free_base->next, NULL); */
+    /*     u->next = new_next_ptr(u->next, free_base); */
+    /*     gc_allocated_size += (free_base->size + 1) * sizeof(header); */
+    /*     printf("end list, SHOULDNT HAPPEN, gc_allocated_size %lu\n", gc_allocated_size); */
+    /*     return free_base + 1; */
+    /* } */
 
     printf("ERROR: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
     printf("INFO: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap());
@@ -313,6 +378,7 @@ __USER_TEXT void free1(void *ptr) {
         printf("MALLOC: Attempt to free NULL\n");
         return;
     }
+    /* printf("INFO: MALLOC: running free on %p\n", ptr); */
     for (header *u = used, *prev = NULL; u != NULL; prev = u, u = UNTAG(u->next)) {
         if (u + 1 == (header *) ptr) {
             gc_allocated_size -= (u->size + 1) * sizeof(header);
@@ -321,6 +387,8 @@ __USER_TEXT void free1(void *ptr) {
             } else {
                 used = UNTAG(u->next);
             }
+            if (u == prev_malloced)
+                prev_malloced = prev;
             break;
         }
     }
