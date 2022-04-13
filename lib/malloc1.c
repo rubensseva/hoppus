@@ -17,6 +17,9 @@ uint64_t stack_start;
 char malloc_heap[MALLOC_HEAP_SIZE];
 uint64_t gc_allocated_size = 0;
 
+header *heap_start = NULL;
+header *heap_end = NULL;
+
 char *get_malloc_heap() {
     return malloc_heap;
 }
@@ -73,6 +76,9 @@ int gc_init() {
            "%*ld %*ld %*ld %*ld %*llu %*lu %*ld "
            "%*lu %*lu %*lu %lu", &stack_start);
     fclose(statfp);
+
+    heap_start = (header *)align_up((uint64_t)malloc_heap);
+    heap_end = (header *)align_down((uint64_t)(malloc_heap + MALLOC_HEAP_SIZE));
 
     gc_allocated_size = 0;
     used = NULL;
@@ -256,13 +262,6 @@ __USER_TEXT void *malloc1(unsigned int size) {
         return (void *)NULL;
     }
 
-    header *heap_start = (header *)malloc_heap;
-    header *heap_end = (header *)(malloc_heap + MALLOC_HEAP_SIZE);
-
-    /* TODO: Maybe calculate this in an init function or something */
-    heap_start = (header *) align_up((uint64_t)heap_start);
-    heap_end = (header *) align_down((uint64_t)heap_end);
-
     if (!heap_start || !heap_end) {
         printf("ERROR: MALLOC: missing heap start or end\n");
         return (void *)NULL;
@@ -277,8 +276,7 @@ __USER_TEXT void *malloc1(unsigned int size) {
         return (void *)NULL;
     }
 
-
-    /* Handle the free space before the first mem_node */
+    /* Set up used list if it is empty */
     if (used == NULL) {
         header *free_base = (header *)heap_start;
         free_base->size = required_units - 1;
@@ -289,12 +287,11 @@ __USER_TEXT void *malloc1(unsigned int size) {
         return free_base + 1;
     }
 
-    header *u;
     if (prev_malloced == NULL) {
         prev_malloced = used;
     }
     int first_round = 1;
-    for (u = UNTAG(prev_malloced);; u = UNTAG(u->next)) {
+    for (header *u = UNTAG(prev_malloced);; u = UNTAG(u->next)) {
         if (!first_round && u == prev_malloced)
             break;
         first_round = 0;
@@ -311,8 +308,6 @@ __USER_TEXT void *malloc1(unsigned int size) {
                 used = free_base;
                 prev_malloced = free_base;
                 gc_allocated_size += (free_base->size + 1) * sizeof(header);
-                /* printf("start of list, gc_allocated_size %lu\n", gc_allocated_size); */
-                /* printf("returning %p\n", free_base + 1); */
                 return free_base + 1;
             }
         }
@@ -326,8 +321,6 @@ __USER_TEXT void *malloc1(unsigned int size) {
                 free_base->next = NULL;
                 u->next = new_next_ptr(u->next, free_base);
                 gc_allocated_size += (free_base->size + 1) * sizeof(header);
-                /* printf("end of list, gc_allocated_size %lu\n", gc_allocated_size); */
-                /* printf("returning %p\n", free_base + 1); */
                 return free_base + 1;
             }
             continue;
@@ -342,22 +335,9 @@ __USER_TEXT void *malloc1(unsigned int size) {
             u->next = free_base;
             prev_malloced = free_base;
             gc_allocated_size += (free_base->size + 1) * sizeof(header);
-            /* printf("between list, gc_allocated_size %lu\n", gc_allocated_size); */
-            /* printf("returning %p\n", free_base + 1); */
             return free_base + 1;
         }
     }
-
-    /* header *free_base = u + 1 + u->size; */
-    /* unsigned int free_size = (header *)heap_end - free_base; */
-    /* if (required_units <= free_size) { */
-    /*     free_base->size = required_units - 1; */
-    /*     free_base->next = new_next_ptr(free_base->next, NULL); */
-    /*     u->next = new_next_ptr(u->next, free_base); */
-    /*     gc_allocated_size += (free_base->size + 1) * sizeof(header); */
-    /*     printf("end list, SHOULDNT HAPPEN, gc_allocated_size %lu\n", gc_allocated_size); */
-    /*     return free_base + 1; */
-    /* } */
 
     printf("ERROR: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
     printf("INFO: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap());
@@ -370,7 +350,6 @@ __USER_TEXT void free1(void *ptr) {
         printf("MALLOC: Attempt to free NULL\n");
         return;
     }
-    /* printf("INFO: MALLOC: running free on %p\n", ptr); */
     for (header *u = used, *prev = NULL; u != NULL; prev = u, u = UNTAG(u->next)) {
         if (u + 1 == (header *) ptr) {
             gc_allocated_size -= (u->size + 1) * sizeof(header);
