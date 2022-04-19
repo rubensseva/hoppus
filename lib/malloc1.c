@@ -237,6 +237,7 @@ int gc_mark_and_sweep() {
 }
 
 int gc_maybe_mark_and_sweep() {
+    /* return gc_mark_and_sweep(); */
     if (gc_allocated_size >= MALLOC_HEAP_SIZE >> 1) {
         printf("INFO: GC: running gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
         return gc_mark_and_sweep();
@@ -298,45 +299,29 @@ __USER_TEXT void *malloc1(unsigned int size) {
         if (u == NULL)
             u = used;
 
-        /* Start of list, compare against start of heap */
-        if (u == used) {
-            header *free_base = (header *)heap_start;
-            unsigned int free_size = u - free_base;
-            if (required_units <= free_size) {
-                free_base->size = required_units - 1;
-                free_base->next = u;
-                used = free_base;
-                prev_malloced = free_base;
-                gc_allocated_size += (free_base->size + 1) * sizeof(header);
-                return free_base + 1;
-            }
-        }
-
-        /* End of list, compare against end of heap */
-        if (UNTAG(u->next) == NULL) {
-            header *free_base = u + 1 + u->size;
-            unsigned int free_size = (header *)heap_end - free_base;
-            if (required_units <= free_size) {
-                free_base->size = required_units - 1;
-                free_base->next = NULL;
-                u->next = new_next_ptr(u->next, free_base);
-                gc_allocated_size += (free_base->size + 1) * sizeof(header);
-                return free_base + 1;
-            }
+        header *free_base, *u_end = u + 1 + u->size;
+        /* Start of the used list, and space before first block */
+        if (u == used && required_units < u - (header *)heap_start) {
+            free_base = (header *)heap_start;
+            free_base->next = u;
+            used = free_base;
+        /* End of the list, and space after the last block */
+        } else if (UNTAG(u->next) == NULL && required_units < (header *)heap_end - u_end) {
+            free_base = u_end;
+            free_base->next = NULL;
+            u->next = new_next_ptr(u->next, free_base);
+        /* Space between this block and the next block */
+        } else if (required_units < UNTAG(u->next) - u_end) {
+            free_base = u_end;
+            free_base->next = u->next;
+            u->next = new_next_ptr(u->next, free_base); // TODO: Why do we not use new_next_ptr here?
+        } else {
             continue;
         }
-
-        header *free_base = (u + 1) + u->size;
-        if (free_base >= UNTAG(u->next)) continue;
-        unsigned int free_size = UNTAG(u->next) - free_base;
-        if (required_units <= free_size) {
-            free_base->size = required_units - 1;
-            free_base->next = new_next_ptr(free_base->next, u->next);
-            u->next = free_base;
-            prev_malloced = free_base;
-            gc_allocated_size += (free_base->size + 1) * sizeof(header);
-            return free_base + 1;
-        }
+        free_base->size = required_units - 1;
+        prev_malloced = free_base;
+        gc_allocated_size += (free_base->size + 1) * sizeof(header);
+        return free_base + 1;
     }
 
     printf("ERROR: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
