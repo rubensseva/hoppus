@@ -237,12 +237,10 @@ int gc_mark_and_sweep() {
 }
 
 int gc_maybe_mark_and_sweep() {
-    /* return gc_mark_and_sweep(); */
     if (gc_allocated_size >= MALLOC_HEAP_SIZE >> 1) {
         printf("INFO: GC: running gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
         return gc_mark_and_sweep();
     }
-    /* printf("INFO: GC: skipping gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE); */
     return 0;
 }
 
@@ -300,8 +298,14 @@ __USER_TEXT void *malloc1(unsigned int size) {
             u = used;
 
         header *free_base, *u_end = u + 1 + u->size;
+
+        /* Space between this block and the next block. Most common case, so lets check for it first. */
+        if (u->next != NULL && required_units < UNTAG(u->next) - u_end) {
+            free_base = u_end;
+            free_base->next = u->next;
+            u->next = new_next_ptr(u->next, free_base); // TODO: Why do we not use new_next_ptr here?
         /* Start of the used list, and space before first block */
-        if (u == used && required_units < u - (header *)heap_start) {
+        } else if (u == used && required_units < u - (header *)heap_start) {
             free_base = (header *)heap_start;
             free_base->next = u;
             used = free_base;
@@ -310,11 +314,7 @@ __USER_TEXT void *malloc1(unsigned int size) {
             free_base = u_end;
             free_base->next = NULL;
             u->next = new_next_ptr(u->next, free_base);
-        /* Space between this block and the next block */
-        } else if (required_units < UNTAG(u->next) - u_end) {
-            free_base = u_end;
-            free_base->next = u->next;
-            u->next = new_next_ptr(u->next, free_base); // TODO: Why do we not use new_next_ptr here?
+        /* If none of the above clauses are true, go to the next block */
         } else {
             continue;
         }
