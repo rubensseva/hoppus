@@ -19,7 +19,7 @@
    Parameters:
    - expr *arg: a list containing the arguments. It is a "proper" lisp list in the
            sense that it is built up of cons cells.
-   - expr **res: output argument
+   - expr **out: output argument
 
    Return value:
       -1 on error, 0 on success.
@@ -51,7 +51,7 @@
    f_name --> arg1 --> arg2         list of function logic               list of function logic
 
 */
-int bi_defun(expr *arg, expr **res) {
+int bi_defun(expr *arg, expr **out) {
     unsigned int arg_count = list_length(arg);
     if (arg_count < 2) {
         printf("ERROR: BUILTIN: DEFUN: need exactly two arguments, but got %d\n", arg_count);
@@ -81,7 +81,7 @@ int bi_defun(expr *arg, expr **res) {
     symbol *new_sym = symbol_create(buf, FUNCTION, arg);
 
     symbol_add(new_sym);
-    *res = arg;
+    *out = arg;
     return 0;
 }
 
@@ -99,7 +99,7 @@ int bi_defun(expr *arg, expr **res) {
    argument, so we should not evaluate this argument. The second argument however, needs
    to be evaluated.
 */
-int bi_define(expr *arg, expr **res) {
+int bi_define(expr *arg, expr **out) {
     unsigned int arg_count = list_length(arg);
     if (arg_count != 2) {
         printf("ERROR: BUILTIN: DEFINE: need exactly two arguments, but got %d\n", arg_count);
@@ -126,11 +126,11 @@ int bi_define(expr *arg, expr **res) {
     symbol *new_sym = symbol_create(buf, VARIABLE, evaluated_arg);
 
     symbol_add(new_sym);
-    *res = evaluated_arg;
+    *out = evaluated_arg;
     return 0;
 }
 
-int bi_add(expr *arg, expr **res) {
+int bi_add(expr *arg, expr **out) {
     int acc = 0;
     expr *curr = arg;
     for_each(curr) {
@@ -141,12 +141,12 @@ int bi_add(expr *arg, expr **res) {
         }
         acc += (int)curr->car->data;
     }
-    expr *_res = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
-    *res = _res;
+    expr *_out = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
+    *out = _out;
     return 0;
 }
 
-int bi_sub(expr *arg, expr **res) {
+int bi_sub(expr *arg, expr **out) {
     expr *curr = arg;
     for_each(curr) {
         if (curr->car == NULL) {
@@ -173,27 +173,27 @@ int bi_sub(expr *arg, expr **res) {
         }
     }
 
-    expr *_res = expr_new(NUMBER, acc, NULL, NULL);
-    *res = _res;
+    expr *_out = expr_new(NUMBER, acc, NULL, NULL);
+    *out = _out;
     return 0;
 }
 
-int bi_cons(expr *arg, expr **res) {
+int bi_cons(expr *arg, expr **out) {
     unsigned int size = list_length(arg);
     if (size != 2) {
         printf("ERROR: BUILTIN: CONS: need exactly two arguments, but got %d\n", size);
         return -1;
     }
 
-    *res = expr_cons(arg->car, arg->cdr->car);
+    *out = expr_cons(arg->car, arg->cdr->car);
     return 0;
 }
 
 
-int bi_car(expr *arg, expr **res) {
+int bi_car(expr *arg, expr **out) {
     if (arg == NULL) {
         printf("WARNING: BUILTIN: CAR: got NULL as argument, returning NULL\n");
-        *res = NULL;
+        *out = NULL;
         return 0;
     }
     if (arg->car == NULL) {
@@ -208,14 +208,14 @@ int bi_car(expr *arg, expr **res) {
     /* Car is the first argument to the car builtin, and since
        the first argument is a cons cell, we need the car of that
        as well */
-    *res = arg->car->car;
+    *out = arg->car->car;
     return 0;
 }
 
-int bi_cdr(expr *arg, expr **res) {
+int bi_cdr(expr *arg, expr **out) {
     if (arg == NULL) {
         printf("WARNING: BUILTIN: CDR: got NULL as argument, returning NULL\n");
-        *res = NULL;
+        *out = NULL;
         return 0;
     }
     if (arg->car == NULL) {
@@ -227,31 +227,31 @@ int bi_cdr(expr *arg, expr **res) {
                type_str(arg->car->type));
         return -1;
     }
-    *res = arg->car->cdr;
+    *out = arg->car->cdr;
     return 0;
 }
 
-int bi_progn(expr *arg, expr **res) {
+int bi_progn(expr *arg, expr **out) {
     if (arg == NULL) {
         printf("WARNING: BUILTIN: PROGN: got NULL as argument, returning NULL\n");
-        *res = NULL;
+        *out = NULL;
         return 0;
     }
-    expr *curr_arg = arg, *_res;
+    expr *curr_arg = arg, *_out;
     /* TODO: Probably can use the for_each macro here? */
     while (!list_end(curr_arg)) {
-        int eval_res = eval(curr_arg->car, &_res);
+        int eval_res = eval(curr_arg->car, &_out);
         if (eval_res < 0) {
             printf("ERROR: BUILTIN: PROGN: got error when evaluating an expression\n");
             return eval_res;
         }
         curr_arg = curr_arg->cdr;
     }
-    *res = _res;
+    *out = _out;
     return 0;
 }
 
-int bi_if(expr *arg, expr **res) {
+int bi_if(expr *arg, expr **out) {
     unsigned int arg_count = list_length(arg);
     if (arg_count != 3) {
         printf("ERROR: BUILTIN: IF: needs exactly three arguments, but got %d \n", arg_count);
@@ -265,13 +265,13 @@ int bi_if(expr *arg, expr **res) {
         return eval_res;
     }
     if (expr_is_true(_eval)) {
-        int eval_res = eval(arg->cdr->car, res);
+        int eval_res = eval(arg->cdr->car, out);
         if (eval_res < 0) {
             printf("ERROR: BUILTIN: IF: got error when evaluating second argument\n");
             return eval_res;
         }
     } else {
-        int eval_res = eval(arg->cdr->cdr->car, res);
+        int eval_res = eval(arg->cdr->cdr->car, out);
         if (eval_res < 0) {
             printf("ERROR: BUILTIN: IF: got error when evaluating third argument\n");
             return eval_res;
@@ -281,7 +281,7 @@ int bi_if(expr *arg, expr **res) {
     return 0;
 }
 
-int bi_print(expr *arg, expr **res) {
+int bi_print(expr *arg, expr **out) {
     expr *curr = arg;
     for_each(curr) {
         int print_res = expr_print(curr->car);
@@ -290,11 +290,11 @@ int bi_print(expr *arg, expr **res) {
             return -1;
         }
     }
-    *res = arg->car;
+    *out = arg->car;
     return 0;
 }
 
-int bi_equal(expr *arg, expr **res) {
+int bi_equal(expr *arg, expr **out) {
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -321,11 +321,11 @@ int bi_equal(expr *arg, expr **res) {
     }
 
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
-    *res = new_expr;
+    *out = new_expr;
     return 0;
 }
 
-int bi_gt(expr *arg, expr **res) {
+int bi_gt(expr *arg, expr **out) {
     int arg_length = list_length(arg);
     if (arg_length != 2) {
         printf("ERROR: BUILTIN: GT: needs exactly two arguments\n");
@@ -334,11 +334,11 @@ int bi_gt(expr *arg, expr **res) {
 
     int val = expr_gt_lt(arg->car, arg->cdr->car, 1);
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
-    *res = new_expr;
+    *out = new_expr;
     return 0;
 }
 
-int bi_lt(expr *arg, expr **res) {
+int bi_lt(expr *arg, expr **out) {
     int arg_length = list_length(arg);
     if (arg_length != 2) {
         printf("ERROR: BUILTIN: LT: needs exactly two arguments\n");
@@ -347,11 +347,11 @@ int bi_lt(expr *arg, expr **res) {
 
     int val = expr_gt_lt(arg->car, arg->cdr->car, 0);
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
-    *res = new_expr;
+    *out = new_expr;
     return 0;
 }
 
-int bi_and(expr *arg, expr **res) {
+int bi_and(expr *arg, expr **out) {
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -377,11 +377,11 @@ int bi_and(expr *arg, expr **res) {
     }
 
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
-    *res = new_expr;
+    *out = new_expr;
     return 0;
 }
 
-int bi_or(expr *arg, expr **res) {
+int bi_or(expr *arg, expr **out) {
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -407,21 +407,21 @@ int bi_or(expr *arg, expr **res) {
     }
 
     expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
-    *res = new_expr;
+    *out = new_expr;
     return 0;
 }
 
-int bi_quote(expr *arg, expr **res) {
+int bi_quote(expr *arg, expr **out) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
         printf("ERROR: BUILTIN: QUOTE: only accepts exactly one argument, but got %d\n", arg_length);
         return -1;
     }
-    *res = arg->car;
+    *out = arg->car;
     return 0;
 }
 
-int bi_quasiquote(expr *arg, expr **res) {
+int bi_quasiquote(expr *arg, expr **out) {
     int ret_code;
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
@@ -439,26 +439,26 @@ int bi_quasiquote(expr *arg, expr **res) {
         printf("ERROR: BUILTIN: QUASIQUOTE: running quasiquote eval\n");
         return 0;
     }
-    *res = copy;
+    *out = copy;
     return 0;
 }
 
 /** If this builtin is triggered as part of normal evaluation, something is wrong.
    All comma signs should be within a quasiquote, and will be handled by quasitquote
    without evaluating the comma symbol itself */
-int bi_comma(expr *arg, expr **res) {
+int bi_comma(expr *arg, expr **out) {
     printf("ERROR: BUILTIN: COMMA: encountered comma outside quasiquote\n");
     return -1;
 }
 /** If this builtin is triggered as part of normal evaluation, something is wrong.
    All comma-at signs should be within a quasiquote, and will be handled by quasitquote
    without evaluating the comma-at symbol itself */
-int bi_comma_at(expr *arg, expr **res) {
+int bi_comma_at(expr *arg, expr **out) {
     printf("ERROR: BUILTIN: COMMA-at: encountered comma-at outside quasiquote\n");
     return -1;
 }
 
-int bi_defmacro(expr *arg, expr **res) {
+int bi_defmacro(expr *arg, expr **out) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 2) {
         printf("ERROR: BUILTIN: DEFMACRO: only accepts exactly one argument, but got %d\n", arg_length);
@@ -481,11 +481,11 @@ int bi_defmacro(expr *arg, expr **res) {
     symbol *new_sym = symbol_create(buf, MACRO, arg);
 
     symbol_add(new_sym);
-    *res = arg;
+    *out = arg;
     return 0;
 }
 
-int bi_macroexpand(expr *arg, expr **res) {
+int bi_macroexpand(expr *arg, expr **out) {
     unsigned int arg_length = list_length(arg);
     if (arg_length != 1) {
         printf("ERROR: BUILTIN: MACROEXPAND: only accepts exactly one argument, but got %d\n", arg_length);
@@ -505,6 +505,6 @@ int bi_macroexpand(expr *arg, expr **res) {
         return func_inv_res;
     }
 
-    *res = macro_expand;
+    *out = macro_expand;
     return 0;
 }
