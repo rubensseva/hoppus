@@ -100,6 +100,7 @@ int bi_defun(expr *arg, expr **out) {
    to be evaluated.
 */
 int bi_define(expr *arg, expr **out) {
+    int ret_code;
     unsigned int arg_count = list_length(arg);
     if (arg_count != 2) {
         printf("ERROR: BUILTIN: DEFINE: need exactly two arguments, but got %d\n", arg_count);
@@ -114,10 +115,10 @@ int bi_define(expr *arg, expr **out) {
 
     /* The second argument needs to be evaluated */
     expr *evaluated_arg;
-    int eval_res = eval(arg->cdr->car, &evaluated_arg);
-    if (eval_res < 0) {
-        printf("ERROR: BUILTIN: DEFINE: got error when evaluating the second argument: %d\n", eval_res);
-        return eval_res;
+    ret_code = eval(arg->cdr->car, &evaluated_arg);
+    if (ret_code < 0) {
+        printf("ERROR: BUILTIN: DEFINE: got error when evaluating the second argument: %d\n", ret_code);
+        return ret_code;
     }
 
     char *buf = my_malloc(TOKEN_STR_MAX_LEN);
@@ -237,13 +238,14 @@ int bi_progn(expr *arg, expr **out) {
         *out = NULL;
         return 0;
     }
+    int ret_code;
     expr *curr_arg = arg, *_out;
     /* TODO: Probably can use the for_each macro here? */
     while (!list_end(curr_arg)) {
-        int eval_res = eval(curr_arg->car, &_out);
-        if (eval_res < 0) {
+        ret_code = eval(curr_arg->car, &_out);
+        if (ret_code < 0) {
             printf("ERROR: BUILTIN: PROGN: got error when evaluating an expression\n");
-            return eval_res;
+            return ret_code;
         }
         curr_arg = curr_arg->cdr;
     }
@@ -252,6 +254,7 @@ int bi_progn(expr *arg, expr **out) {
 }
 
 int bi_if(expr *arg, expr **out) {
+    int ret_code;
     unsigned int arg_count = list_length(arg);
     if (arg_count != 3) {
         printf("ERROR: BUILTIN: IF: needs exactly three arguments, but got %d \n", arg_count);
@@ -259,22 +262,22 @@ int bi_if(expr *arg, expr **out) {
     }
 
     expr *_eval;
-    int eval_res = eval(arg->car, &_eval);
-    if (eval_res < 0) {
+    ret_code = eval(arg->car, &_eval);
+    if (ret_code < 0) {
         printf("ERROR: BUILTIN: IF: got error when evaluating first argument\n");
-        return eval_res;
+        return ret_code;
     }
     if (expr_is_true(_eval)) {
-        int eval_res = eval(arg->cdr->car, out);
-        if (eval_res < 0) {
+        ret_code = eval(arg->cdr->car, out);
+        if (ret_code < 0) {
             printf("ERROR: BUILTIN: IF: got error when evaluating second argument\n");
-            return eval_res;
+            return ret_code;
         }
     } else {
-        int eval_res = eval(arg->cdr->cdr->car, out);
-        if (eval_res < 0) {
+        ret_code = eval(arg->cdr->cdr->car, out);
+        if (ret_code < 0) {
             printf("ERROR: BUILTIN: IF: got error when evaluating third argument\n");
-            return eval_res;
+            return ret_code;
         }
     }
 
@@ -282,10 +285,11 @@ int bi_if(expr *arg, expr **out) {
 }
 
 int bi_print(expr *arg, expr **out) {
+    int ret_code;
     expr *curr = arg;
     for_each(curr) {
-        int print_res = expr_print(curr->car);
-        if (print_res < 0) {
+        ret_code = expr_print(curr->car);
+        if (ret_code < 0) {
             printf("ERROR: BUILTIN: PRINT: got error when printing expr\n");
             return -1;
         }
@@ -352,7 +356,7 @@ int bi_lt(expr *arg, expr **out) {
 }
 
 int bi_and(expr *arg, expr **out) {
-    int val, arg_length = list_length(arg);
+    int val, ret_code, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
     } else {
@@ -360,10 +364,10 @@ int bi_and(expr *arg, expr **out) {
         expr *curr = arg;
         for_each(curr) {
             expr *_eval;
-            int eval_res = eval(curr->car, &_eval);
-            if (eval_res < 0) {
+            ret_code = eval(curr->car, &_eval);
+            if (ret_code < 0) {
                 printf("ERROR: BUILTIN: AND: builtin got error when evaluating expression\n");
-                return eval_res;
+                return ret_code;
             }
             val = expr_is_true(_eval);
             if (val == -1) {
@@ -382,7 +386,7 @@ int bi_and(expr *arg, expr **out) {
 }
 
 int bi_or(expr *arg, expr **out) {
-    int val, arg_length = list_length(arg);
+    int val, ret_code, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
     } else {
@@ -390,8 +394,8 @@ int bi_or(expr *arg, expr **out) {
         expr *curr = arg;
         for_each(curr) {
             expr *_eval;
-            int eval_res = eval(curr->car, &_eval);
-            if (eval_res < 0) {
+            ret_code = eval(curr->car, &_eval);
+            if (ret_code < 0) {
                 printf("ERROR: BUILTIN: OR: builtin got error when evaluating expression\n");
                 return -1;
             }
