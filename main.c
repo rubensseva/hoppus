@@ -17,7 +17,6 @@
 #include "lisp_lib.h"
 
 void create_builtins() {
-    uint32_t x = 2;
     symbol *defun = symbol_builtin_create("defun", bi_defun, 1);
     symbol *define = symbol_builtin_create("define", bi_define, 1);
     symbol *add = symbol_builtin_create("+", bi_add, 0);

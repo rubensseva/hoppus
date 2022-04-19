@@ -79,12 +79,16 @@ int gc_init() {
 }
 
 
+int gc_is_skippable_ptr(uint64_t *p) {
+    return (*p < (uint64_t)malloc_heap || *p >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) || /* If outside heap */
+        (p == (uint64_t*)used || p == (uint64_t*)prev_malloced); /* If pointing to gc structures */
+}
+
 void gc_scan_follow_obj(header *u) {
     for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
-        uint64_t v = *(uint64_t *)p;
-        if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
+        if (gc_is_skippable_ptr((uint64_t *) p))
             continue;
-        }
+        uint64_t v = *(uint64_t *)p;
         /* For each memory region, check if it points to any other entry in the used list */
         for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
             if (((uint64_t)uu->next & 1) == 1)
@@ -105,19 +109,15 @@ int gc_scan_heap() {
 
     uint64_t *b = (uint64_t *)heap;
 
-    /* For each entry in used list */
     for(header *u = used; u != NULL; u = UNTAG(u->next)) {
         /* If the block is not marked, skip it */
         if (((uint64_t)u->next & 1) == 0)
             continue;
-
-        /* Go through all the memory for that used list entry */
+        /* Go through the memory of the used block */
         for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
-            uint64_t v = *(uint64_t *)p;
-            if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
+            if (gc_is_skippable_ptr((uint64_t *) p))
                 continue;
-            }
-            /* For each memory region, check if it points to any other entry in the used list */
+            uint64_t v = *(uint64_t *)p;
             for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
                 if (((uint64_t)uu->next & 1) == 1)
                     continue;
@@ -135,20 +135,16 @@ int gc_scan_heap() {
 
 int gc_scan_region(uint64_t *start, uint64_t *end) {
     for (uint64_t *p = start; p <= end - 1; p += 1) {
+        if (gc_is_skippable_ptr(p))
+            continue;
         uint64_t v = *p;
-        if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
-            continue;
-        }
-        if (p == (uint64_t*)used || p == (uint64_t*)prev_malloced) {
-            continue;
-        }
-        /* For each memory region, check if it points to any entry in the used list */
         for (header *u = used; u != NULL; u = UNTAG(u->next)) {
+            /* If the block is marked, skip it */
             if (((uint64_t)u->next & 1) == 1) {
                 continue;
             }
+            /* If an address in the region points to a used block, mark it as live */
             if (v >= (uint64_t)(u + 1) && v <= (uint64_t)(u + 1 + u->size)) {
-                /* Mark as live */
                 u->next = (header *)((uint64_t)u->next | 1);
             }
         }
@@ -253,7 +249,6 @@ void *gc_malloc(unsigned int size) {
         printf("ERROR: GC: MALLOC: got request to malloc with size 0\n");
         return (void *)NULL;
     }
-
     if (!heap_start || !heap_end) {
         printf("ERROR: GC: MALLOC: missing heap start or end\n");
         return (void *)NULL;
