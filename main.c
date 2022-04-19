@@ -62,30 +62,52 @@ void create_builtins() {
     symbol_add(comma_at);
 }
 
+void parser_error(int error) {
+    switch (error) {
+        case GENERIC_ERROR:
+            printf("ERROR: PARSER: generic error, no more info\n");
+        case EOF_WHILE_READING_EXPR_ERROR_CODE:
+            printf("ERROR: PARSER: Got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
+        default:
+            printf("ERROR: PARSER: Unknown error: %d\n", error);
+    }
+}
+void eval_error(int error) {
+    switch (error) {
+        case GENERIC_ERROR:
+            printf("ERROR: EVAL: generic error, no more info\n");
+        default:
+            printf("ERROR: EVAL: Unknown error: %d\n", error);
+    }
+}
+
 int load_standard_library() {
+    int ret_code;
     /* Load standard library */
     for (int i = 0; i < (sizeof(lib_strs) / sizeof(char *)); i++) {
         token_t *tokens = tokens_init();
         char *copy = my_malloc(EXPR_STR_MAX_LEN);
         strcpy(copy, (char *)lib_strs[i]);
-        int res = tokenize(copy, tokens);
-        if (res < 0) {
+        ret_code = tokenize(copy, tokens);
+        if (ret_code < 0) {
             printf("ERROR: MAIN: tokenizing standard library string %s\n", (char *)lib_strs[0]);
-            return res;
+            return ret_code;
         }
 
         expr *parsed;
-        int parse_res = parse_tokens(tokens, 0, &parsed);
-        if (parse_res < 0) {
+        ret_code = parse_tokens(tokens, 0, &parsed);
+        if (ret_code < 0) {
             printf("ERROR: MAIN: parsing standard library tokens %s\n", (char *) lib_strs[0]);
-            return parse_res;
+            parser_error(ret_code);
+            return ret_code;
         }
 
         expr *evald;
-        int eval_res = eval(parsed, &evald);
-        if (eval_res < 0) {
+        ret_code = eval(parsed, &evald);
+        if (ret_code < 0) {
             printf("ERROR: MAIN: evaluating standard library forms: %s\n", (char *) lib_strs[0]);
-            return eval_res;
+            eval_error(ret_code);
+            return ret_code;
         }
         my_free(tokens);
         my_free(copy);
@@ -94,32 +116,33 @@ int load_standard_library() {
 }
 
 int REPL_loop(int fd) {
+    int ret_code;
     token_t *tokens = tokens_init();
-    expr *evald = NULL;
+    expr *parsed = NULL, *evald = NULL;
     while (1) {
-        gc_maybe_mark_and_sweep();
         if (fd == 1) {
             printf("$ ");
             fflush(stdout);
         }
 
-        expr *parsed;
-        int parse_res = parse_tokens(tokens, fd, &parsed);
-        if (parse_res < 0) {
-            printf("ERROR: MAIN: parsing tokens: %d\n", parse_res);
+        ret_code = parse_tokens(tokens, fd, &parsed);
+        if (ret_code < 0) {
+            printf("ERROR: MAIN: parsing tokens: %d\n", ret_code);
+            parser_error(ret_code);
             my_free(tokens);
             return -1;
         }
-        if (parse_res == EOF_CODE) {
+        if (ret_code == EOF_CODE) {
             printf("INFO: MAIN: EOF\n");
             printf("INFO: MAIN: return value: ");
             expr_print(evald);
             break;
         }
 
-        int eval_res = eval(parsed, &evald);
-        if (eval_res < 0) {
-            printf("ERROR: MAIN: evaluating forms: %d\n", eval_res);
+        ret_code = eval(parsed, &evald);
+        if (ret_code < 0) {
+            printf("ERROR: MAIN: evaluating forms: %d\n", ret_code);
+            parser_error(ret_code);
         } else {
             if (fd == 1) {
                 expr_print(evald);
@@ -131,8 +154,8 @@ int REPL_loop(int fd) {
 }
 
 int main(int argc, char **argv) {
-    printf("INFO: MAIN: welcome to ukernel lisp!\n");
     int ret_code;
+    printf("INFO: MAIN: welcome to ukernel lisp!\n");
     if (argc > 2) {
         printf("USAGE: %s <filename>\n", argv[0]);
         return -1;
@@ -164,10 +187,10 @@ int main(int argc, char **argv) {
     printf("INFO: MAIN: starting REPL loop\n");
     ret_code = REPL_loop(fd);
     if (ret_code < 0) {
-        printf("ERROR: MAIN: eval error: %d\n", ret_code);
+        printf("ERROR: MAIN: %d\n", ret_code);
         return -1;
     }
-    /* TODO: Free remaining memory allocations */
+
     printf("INFO: MAIN: exiting with code: %d\n", ret_code);
     printf("INFO: MAIN: bye...\n");
     return ret_code;

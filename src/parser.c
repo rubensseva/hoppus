@@ -37,11 +37,6 @@ expr *expr_from_str(char *str) {
             prev->cdr = new_cons;
         prev = new_cons;
     }
-    /* If empty string, return a single cons cell
-       Else, we append an empty cons cell at the end of the list
-       to signify the end of the string */
-    if (!first)
-        return NULL;
     return first;
 }
 
@@ -50,8 +45,7 @@ expr *expr_from_str(char *str) {
    quasiquote, comma and comma-at. */
 int parse_quotation_symbol(token_t *tokens, int fd, char *name, expr **out) {
     int ret_code; expr *parsed;
-    ret_code = parse_tokens(tokens, fd, &parsed);
-    if (ret_code < 0)
+    if ((ret_code = parse_tokens(tokens, fd, &parsed)) < 0)
         return ret_code;
     *out = expr_cons(expr_new(SYMBOL, (uint64_t)name, NULL, NULL),
                      expr_cons(parsed, NULL));
@@ -82,33 +76,20 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
     if (ret_code == EOF_CODE)
         return EOF_CODE;
 
-    if (strcmp(token, QUOTE_SHORT_STR)  == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, QUOTE_STR, out);
-        if (ret_code < 0) {
-            printf("ERROR: PARSER: Parsing tokens after quote\n");
+    if (strcmp(token, QUOTE_SHORT_STR) == 0) {
+        if ((ret_code = parse_quotation_symbol(tokens, fd, QUOTE_STR, out)) < 0)
             return ret_code;
-        }
     } else if (strcmp(token, QUASIQUOTE_SHORT_STR) == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, QUASIQUOTE_STR, out);
-        if (ret_code < 0) {
-            printf("ERROR: PARSER: Parsing tokens after quasiquote\n");
+        if ((ret_code = parse_quotation_symbol(tokens, fd, QUASIQUOTE_STR, out)) < 0)
             return ret_code;
-        }
     } else if (strcmp(token, COMMA_SHORT_STR) == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, COMMA_STR, out);
-        if (ret_code < 0) {
-            printf("ERROR: PARSER: Parsing tokens after comma\n");
+        if ((ret_code = parse_quotation_symbol(tokens, fd, COMMA_STR, out) < 0))
             return ret_code;
-        }
     } else if (strcmp(token, COMMA_AT_SHORT_STR) == 0) {
-        ret_code = parse_quotation_symbol(tokens, fd, COMMA_AT_STR, out);
-        if (ret_code < 0) {
-            printf("ERROR: PARSER: Parsing tokens after comma-at\n");
+        if ((ret_code = parse_quotation_symbol(tokens, fd, COMMA_AT_STR, out)) < 0)
             return ret_code;
-        }
     } else if (is_number(token)) {
-        int num = atoi(token);
-        *out = expr_new(NUMBER, (uint64_t)num, NULL, NULL);
+        *out = expr_new(NUMBER, (uint64_t)atoi(token), NULL, NULL);
     } else if (is_boolean(token)) {
         int val = strcmp(token, BOOL_STR_T) == 0 ? 1 : 0;
         *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
@@ -120,18 +101,13 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         expr *first = NULL, *curr = NULL, *prev = NULL;
         while (1) {
             token_t peeked_token;
-            ret_code = tokens_peek(tokens, fd, &peeked_token);
-            if (ret_code < 0)
+            if ((ret_code = tokens_peek(tokens, fd, &peeked_token) < 0))
                 return ret_code;
-            if (ret_code == EOF_CODE) {
-                printf("ERROR: PARSER: Got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
+            if (ret_code == EOF_CODE)
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
-            }
             int cmp = strcmp(")", peeked_token) == 0;
             my_free(peeked_token);
-            if (cmp) {
-                break;
-            }
+            if (cmp) break;
 
             expr *new;
             ret_code = parse_tokens(tokens, fd, &new);
@@ -151,11 +127,8 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         }
         /* At this points, there should be a ")" on tokens, so lets pop it. */
         token_t closing_paren;
-        ret_code = tokens_pop(tokens, fd, &closing_paren);
-        if (ret_code < 0) {
-            printf("ERROR: PARSER: Popping closing parentheses\n");
+        if ((ret_code = tokens_pop(tokens, fd, &closing_paren) < 0))
             return ret_code;
-        }
         my_free(closing_paren);
         *out = first;
     } else if (strcmp(")", token) == 0) {

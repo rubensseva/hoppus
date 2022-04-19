@@ -7,6 +7,7 @@
 LINKER_SCRIPT = modified_default.ld
 
 CFLAGS = -g3
+# CFLAGS = -O3
 # CFLAGS += -fsanitize=address
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -T $(LINKER_SCRIPT)
