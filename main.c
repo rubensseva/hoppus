@@ -5,7 +5,7 @@
 #include <error.h>
 #include <string.h>
 
-#include "lib/malloc1.h"
+#include "gc.h"
 #include "tokenize.h"
 #include "parser.h"
 #include "eval.h"

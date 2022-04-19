@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lib/malloc1.h"
+#include "gc.h"
 #include "eval.h"
 #include "parser.h"
 #include "expr.h"

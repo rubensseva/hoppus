@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include "lib/malloc1.h"
+#include "gc.h"
 #include "utility.h"
 
 #define UNTAG(p) ((header *)(((uint64_t) (p)) & 0xFFFFFFFFFFFFFFFC))

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "memory.h"
-#include "lib/malloc1.h"
+#include "gc.h"
 
 /* Some simple inderection functions for easialy changing malloc implementations
    between custom malloc functions and std lib */
