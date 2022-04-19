@@ -20,13 +20,6 @@ uint64_t gc_allocated_size = 0;
 header *heap_start = NULL;
 header *heap_end = NULL;
 
-char *get_malloc_heap() {
-    return malloc_heap;
-}
-header *get_malloc_used_list() {
-    return used;
-}
-
 unsigned int gc_get_cap() {
     return MALLOC_HEAP_SIZE;
 }
@@ -86,7 +79,7 @@ int gc_init() {
 }
 
 
-void gc_follow_obj(header *u) {
+void gc_scan_follow_obj(header *u) {
     for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
         uint64_t v = *(uint64_t *)p;
         if (v < (uint64_t)malloc_heap || v >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) {
@@ -100,7 +93,7 @@ void gc_follow_obj(header *u) {
             if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
                 /* Mark as live */
                 uu->next = (header *)((uint64_t)uu->next | 1);
-                gc_follow_obj(uu);
+                gc_scan_follow_obj(uu);
             }
         }
     }
@@ -132,7 +125,7 @@ int gc_scan_heap() {
                 if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
                     /* Mark as live */
                     uu->next = (header *)((uint64_t)uu->next | 1);
-                    gc_follow_obj(uu);
+                    gc_scan_follow_obj(uu);
                 }
             }
         }
@@ -245,30 +238,30 @@ int gc_maybe_mark_and_sweep() {
 }
 
 
-__USER_TEXT void malloc1_dump() {
-    printf("INFO: MALLOC: heap start %p, end %p\n", malloc_heap, malloc_heap + MALLOC_HEAP_SIZE);
+void gc_alloc_dump() {
+    printf("INFO: GC: heap start %p, end %p\n", malloc_heap, malloc_heap + MALLOC_HEAP_SIZE);
     int i = 0;
     for (header *u = used, *tag_addr = used->next;
          u != NULL && UNTAG(u->next) != NULL;
          u = UNTAG(u->next), tag_addr = u->next) {
-        printf("INFO: MALLOC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
+        printf("INFO: GC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
     }
 }
 
-__USER_TEXT void *malloc1(unsigned int size) {
+void *gc_malloc(unsigned int size) {
     if (size <= 0) {
-        printf("ERROR: MALLOC: got request to malloc with size 0\n");
+        printf("ERROR: GC: MALLOC: got request to malloc with size 0\n");
         return (void *)NULL;
     }
 
     if (!heap_start || !heap_end) {
-        printf("ERROR: MALLOC: missing heap start or end\n");
+        printf("ERROR: GC: MALLOC: missing heap start or end\n");
         return (void *)NULL;
     }
 
     unsigned int required_units = (align_up(size) + sizeof(header)) / sizeof(header);
     if (required_units * sizeof(header) > MALLOC_HEAP_SIZE) {
-        printf("ERROR: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %lu, but its more than the size of the heap which is %d\n",
+        printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %lu, but its more than the size of the heap which is %d\n",
                size,
                required_units * sizeof(header),
                MALLOC_HEAP_SIZE);
@@ -324,15 +317,15 @@ __USER_TEXT void *malloc1(unsigned int size) {
         return free_base + 1;
     }
 
-    printf("ERROR: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
-    printf("INFO: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap());
+    printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
+    printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap());
     return (void *)NULL;
 }
 
 /* TODO: Shouldnt really need this once gc is working */
-__USER_TEXT void free1(void *ptr) {
+void gc_free(void *ptr) {
     if (ptr == 0x0) {
-        printf("MALLOC: Attempt to free NULL\n");
+        printf("ERROR: GC: FREE: Attempt to free NULL\n");
         return;
     }
     for (header *u = used, *prev = NULL; u != NULL; prev = u, u = UNTAG(u->next)) {
