@@ -14,6 +14,7 @@ int bi_car(expr *arg, expr **out);
 int bi_cdr(expr *arg, expr **out);
 int bi_progn(expr *arg, expr **out);
 int bi_if(expr *arg, expr **out);
+int bi_cond(expr *arg, expr **out);
 int bi_print(expr *arg, expr **out);
 int bi_equal(expr *arg, expr **out);
 int bi_gt(expr *arg, expr **out);

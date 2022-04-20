@@ -28,6 +28,7 @@ void create_builtins() {
     symbol *cdr = symbol_builtin_create("cdr", bi_cdr, 0);
     symbol *progn = symbol_builtin_create("progn", bi_progn, 0);
     symbol *_if = symbol_builtin_create("if", bi_if, 1);
+    symbol *cond = symbol_builtin_create("cond", bi_cond, 1);
     symbol *_print = symbol_builtin_create("print", bi_print, 0);
     symbol *equal = symbol_builtin_create("eq", bi_equal, 0);
     symbol *_gt = symbol_builtin_create("gt", bi_gt, 0);
@@ -52,6 +53,7 @@ void create_builtins() {
     symbol_add(cdr);
     symbol_add(progn);
     symbol_add(_if);
+    symbol_add(cond);
     symbol_add(_print);
     symbol_add(equal);
     symbol_add(_gt);

@@ -238,6 +238,22 @@ int bi_if(expr *arg, expr **out) {
     return 0;
 }
 
+int bi_cond(expr *arg, expr **out) {
+    int ret_code;
+    expr *curr = arg;
+    for_each(curr) {
+        expr *pred = curr->car->car, *form = curr->car->cdr->car;
+        expr *evald;
+        if ((ret_code = eval(pred, &evald)) < 0) return ret_code;
+        if (expr_is_true(evald)) {
+            if ((ret_code = eval(form, out)) < 0) return ret_code;
+            return 0;
+        }
+    }
+    *out = NULL;
+    return 0;
+}
+
 int bi_print(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
