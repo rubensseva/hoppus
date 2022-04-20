@@ -7,7 +7,8 @@
 #define __USER_TEXT
 // #define MALLOC_HEAP_SIZE 65536
 // #define MALLOC_HEAP_SIZE 131072
-#define MALLOC_HEAP_SIZE 262144
+// #define MALLOC_HEAP_SIZE 262144
+#define MALLOC_HEAP_SIZE 524288
 
 /* Struct for used memory block. This will be embedded at the start of the block it is referring to.
    The size field is not including the header size.

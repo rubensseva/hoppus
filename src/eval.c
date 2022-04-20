@@ -106,7 +106,7 @@ int add_param_symbols(expr *params, expr *args) {
     while ((!is_rest && !list_end(curr_param)) || !list_end(curr_arg)) {
         if ((!is_rest && list_end(curr_param)) || list_end(curr_arg)) {
             printf("ERROR: EVAL: ADD_PARAM_SYMBOLS: Mismatch between number of args and params\n");
-            return -1;
+            return NUMBER_OF_ARGUMENTS_ERROR;
         }
 
         if (!is_rest && strcmp((char *)curr_param->car->data, REST_ARGUMENTS_STR) == 0) {
@@ -170,11 +170,12 @@ int remove_param_symbols(expr *params) {
    @return status code
 */
 int function_invocation(symbol *sym, expr *args, expr **out) {
+    int ret_code;
     expr *defun_params = sym->e;
     expr *function_params = defun_params->car, *name = defun_params->car->car,
         *forms = defun_params->cdr;
 
-    add_param_symbols(function_params->cdr, args);
+    if ((ret_code = add_param_symbols(function_params->cdr, args)) < 0) return ret_code;
 
     /* Evaluate the function forms. The evaluation of the last form will be returned. */
     expr *curr_form = forms;

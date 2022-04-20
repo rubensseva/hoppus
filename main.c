@@ -92,6 +92,9 @@ void eval_error(int error) {
         case TYPE_ERROR:
             printf("ERROR: MAIN: EVAL: type error\n");
             break;
+        case INVALID_FORM_ERROR:
+            printf("ERROR: MAIN: EVAL: invalid form\n");
+            break;
         default:
             printf("ERROR: MAIN: EVAL: unknown error: %d\n", error);
     }
@@ -141,20 +144,20 @@ int REPL_loop(int fd) {
 
         ret_code = parse_tokens(tokens, fd, &parsed);
         if (ret_code < 0) {
-            printf("ERROR: MAIN: parsing tokens: %d\n", ret_code);
             parser_error(ret_code);
-            return -1;
+            return ret_code;
         }
         if (ret_code == EOF_CODE) {
             printf("INFO: MAIN: EOF\n");
             printf("INFO: MAIN: return value: ");
             expr_print(evald);
-            break;
+            return 0;
         }
 
         ret_code = eval(parsed, &evald);
         if (ret_code < 0) {
             eval_error(ret_code);
+            return ret_code;
         } else {
             if (fd == 1) {
                 expr_print(evald);
@@ -201,6 +204,17 @@ int main(int argc, char **argv) {
         printf("ERROR: MAIN: %d\n", ret_code);
         return -1;
     }
+
+    if (fd != 1) {
+        close(fd);
+        printf("INFO: MAIN: starting REPL loop after file read\n");
+        ret_code = REPL_loop(1);
+        if (ret_code < 0) {
+            printf("ERROR: MAIN: %d\n", ret_code);
+            return -1;
+        }
+    }
+
 
     printf("INFO: MAIN: exiting with code: %d\n", ret_code);
     printf("INFO: MAIN: bye...\n");

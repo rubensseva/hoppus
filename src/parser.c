@@ -109,11 +109,10 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
             if (cmp) break;
 
             expr *new;
-            ret_code = parse_tokens(tokens, fd, &new);
-            if (ret_code < 0) {
-                printf("ERROR: PARSER: Parsing tokens inside a list\n");
+            if ((ret_code = parse_tokens(tokens, fd, &new)) < 0)
                 return ret_code;
-            }
+            if (ret_code == EOF_CODE)
+                return EOF_WHILE_READING_EXPR_ERROR_CODE;
             curr = expr_cons(new, NULL);
             if (!first) {
                 if (new->type != SYMBOL)

@@ -190,7 +190,7 @@ int bi_cons(expr *arg, expr **out) {
 
 
 int bi_car(expr *arg, expr **out) {
-    if (arg == NULL) {
+    if (arg == NULL || arg->car == NULL) {
         *out = NULL;
         return 0;
     }
@@ -242,6 +242,8 @@ int bi_cond(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
     for_each(curr) {
+        if (!curr->car || !curr->car->cdr)
+            return INVALID_FORM_ERROR;
         expr *pred = curr->car->car, *form = curr->car->cdr->car;
         expr *evald;
         if ((ret_code = eval(pred, &evald)) < 0) return ret_code;

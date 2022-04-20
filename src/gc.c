@@ -226,9 +226,13 @@ int gc_mark_and_sweep() {
 }
 
 int gc_maybe_mark_and_sweep() {
-    if (gc_allocated_size >= MALLOC_HEAP_SIZE >> 1) {
-        printf("INFO: GC: running gc, alloc: %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
-        return gc_mark_and_sweep();
+    if (gc_allocated_size >= (MALLOC_HEAP_SIZE >> 1)) {
+        printf("INFO: GC: gc running %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
+        printf("INFO: GC: gc recalculated %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE);
+        int ret_code = gc_mark_and_sweep();
+        printf("INFO: GC: gc done %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
+        printf("INFO: GC: gc recalculated  %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE);
+        return ret_code;
     }
     return 0;
 }
