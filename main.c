@@ -65,19 +65,29 @@ void create_builtins() {
 void parser_error(int error) {
     switch (error) {
         case GENERIC_ERROR:
-            printf("ERROR: PARSER: generic error, no more info\n");
+            printf("ERROR: MAIN: PARSER: generic error, no more info\n");
         case EOF_WHILE_READING_EXPR_ERROR_CODE:
-            printf("ERROR: PARSER: Got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
+            printf("ERROR: MAIN: PARSER: got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
         default:
-            printf("ERROR: PARSER: Unknown error: %d\n", error);
+            printf("ERROR: MAIN: PARSER: unknown error: %d\n", error);
     }
 }
 void eval_error(int error) {
     switch (error) {
         case GENERIC_ERROR:
-            printf("ERROR: EVAL: generic error, no more info\n");
+            printf("ERROR: MAIN: EVAL: generic error\n");
+            break;
+        case UNBOUND_SYMBOL_NAME_ERROR:
+            printf("ERROR: MAIN: EVAL: unbound symbol name error\n");
+            break;
+        case NUMBER_OF_ARGUMENTS_ERROR:
+            printf("ERROR: MAIN: EVAL: wrong number of arguments error\n");
+            break;
+        case TYPE_ERROR:
+            printf("ERROR: MAIN: EVAL: type error\n");
+            break;
         default:
-            printf("ERROR: EVAL: Unknown error: %d\n", error);
+            printf("ERROR: MAIN: EVAL: unknown error: %d\n", error);
     }
 }
 
@@ -141,8 +151,7 @@ int REPL_loop(int fd) {
 
         ret_code = eval(parsed, &evald);
         if (ret_code < 0) {
-            printf("ERROR: MAIN: evaluating forms: %d\n", ret_code);
-            parser_error(ret_code);
+            eval_error(ret_code);
         } else {
             if (fd == 1) {
                 expr_print(evald);

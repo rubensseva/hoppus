@@ -22,9 +22,9 @@
     @return Status code
 */
 int quasiquote_eval(expr **e) {
+    int ret_code;
     if (e == NULL || *e == NULL)
         return 0;
-    int ret_code;
     switch((*e)->type) {
         case NUMBER:
         case CHAR:
@@ -39,7 +39,7 @@ int quasiquote_eval(expr **e) {
                     ret_code = eval((*e)->car->cdr->car, &evald);
                     if (ret_code < 0) {
                         printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
-                        return ret_code;
+                        goto error;
                     }
                     (*e)->car = evald;
                     return 0;
@@ -49,7 +49,7 @@ int quasiquote_eval(expr **e) {
                     ret_code = eval((*e)->car->cdr->car, &evald);
                     if (ret_code < 0) {
                         printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
-                        return ret_code;
+                        goto error;
                     }
 
                     /* Splice */
@@ -64,19 +64,23 @@ int quasiquote_eval(expr **e) {
             ret_code = quasiquote_eval(&((*e)->car));
             if (ret_code < 0) {
                 printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
-                return ret_code;
+                goto error;
             }
             ret_code = quasiquote_eval(&((*e)->cdr));
             if (ret_code < 0) {
                 printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
-                return ret_code;
+                goto error;
             }
             return 0;
         default:
-            printf("ERROR: BUILTIN: QUASIQUOTE_EVAL: got unknown type\n");
-            return -1;
+            printf("ERROR: EVAL: QUASIQUOTE_EVAL: Got unknown type: %d\n", (*e)->type);
+            ret_code = -1;
+            goto error;
     }
 
+error:
+    expr_print(*e);
+    return ret_code;
 }
 
 
@@ -188,6 +192,7 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
 }
 
 int eval(expr *e, expr **out) {
+    int ret_code;
     gc_maybe_mark_and_sweep();
     if (e == NULL) {
         printf("WARNING: EVAL: Eval got NULL, returning NULL\n");
@@ -212,65 +217,65 @@ int eval(expr *e, expr **out) {
                     return 0;
                 }
                 expr *copy;
-                int ret_code = expr_copy(sym->e, &copy);
-                if (ret_code < 0) {
-                    printf("ERROR: EVAL: Error when copying symbol");
-                    return ret_code;
-                }
+                if ((ret_code = expr_copy(sym->e, &copy)) < 0) return ret_code;
                 *out = copy;
                 return 0;
             }
-            printf("WARNING: EVAL: Couldnt find symbol: %s\n", (char *)e->data);
-            *out = e;
-            return 0;
+            printf("ERROR: EVAL: couldnt find symbol: %s\n", (char *)e->data);
+            ret_code = UNBOUND_SYMBOL_NAME_ERROR;
+            goto error;
         }
         case CONS:;
             expr *proc = e, *fun = proc->car, *arg = e->cdr;
             symbol *sym;
             if (proc == NULL || proc->car == NULL) {
                 printf("ERROR: EVAL: expr was NULL when evaluating cons cell \n");
-                return -1;
+                ret_code = -1;
+                goto error;
             }
             if (proc->car->type != SYMBOL) {
                 *out = proc;
                 return 0;
             }
             /* Here we can invoce special operators, which should not have their arguments evaluated */
-            sym = symbol_find((char *)(fun->data));
-            if (sym == NULL) {
-                printf("ERROR: EVAL: Trying to invoke function, but couldnt find symbol %s\n",
+            if ((sym = symbol_find((char *)(fun->data))) == NULL) {
+                printf("ERROR: EVAL: trying to invoke function, but couldnt find symbol %s\n",
                        (char *)(fun->data));
-                return -1;
+                ret_code = UNBOUND_SYMBOL_NAME_ERROR;
+                goto error;
             }
             if (sym->type == VARIABLE) {
-                printf("ERROR: EVAL: Cannot use variable %s as function\n", sym->name);
-                return -1;
+                printf("ERROR: EVAL: cannot use variable %s as function\n", sym->name);
+                ret_code = TYPE_ERROR;
+                goto error;
             }
             if (sym->type == MACRO) {
                 expr *macro_expand;
-                int func_inv_res = function_invocation(sym, arg, &macro_expand);
-                if (func_inv_res < 0) {
-                    printf("ERROR: EVAL: Got error when expanding macro %d\n", func_inv_res);
-                    return func_inv_res;
+                ret_code = function_invocation(sym, arg, &macro_expand);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: got error when expanding macro %d\n", ret_code);
+                    goto error;
                 }
                 expr *evald;
-                int eval_res = eval(macro_expand, &evald);
-                if (eval_res < 0) {
-                    printf("ERROR: EVAL: Got error when evaluating expanded macro %d\n", eval_res);
-                    return eval_res;
+                ret_code = eval(macro_expand, &evald);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: got error when evaluating expanded macro %d\n", ret_code);
+                    expr_print(macro_expand);
+                    goto error;
                 }
                 *out = evald;
                 return 0;
             }
             if (sym->is_special_operator) {
                 if (sym->type != BUILTIN) {
-                    printf("ERROR: EVAL: Attempting to exec special operator, but the symbol was not of type builtin\n");
-                    return -1;
+                    printf("ERROR: EVAL: attempting to exec special operator, but the symbol was not of type builtin\n");
+                    ret_code = TYPE_ERROR;
+                    goto error;
                 }
-                int bi_res = sym->builtin_fn(arg, out);
-                if (bi_res == -1) {
-                    printf("ERROR: EVAL: Builtin function encountered error\n");
-                    return -1;
+                ret_code = sym->builtin_fn(arg, out);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
+                    goto error;
                 }
                 return 0;
             }
@@ -279,10 +284,11 @@ int eval(expr *e, expr **out) {
             expr *curr_arg = arg, *first_cons = NULL, *prev_cons = NULL;
             for_each(curr_arg) {
                 expr *curr_eval;
-                int eval_res = eval(curr_arg->car, &curr_eval);
-                if (eval_res < 0) {
-                    printf("ERROR: EVAL: Got error when evaluating arguments\n");
-                    return eval_res;
+                ret_code = eval(curr_arg->car, &curr_eval);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: got error when evaluating argument\n");
+                    expr_print(curr_arg);
+                    goto error;
                 }
                 expr *new_cons = expr_cons(curr_eval, NULL);
                 if (first_cons == NULL)
@@ -295,26 +301,32 @@ int eval(expr *e, expr **out) {
             /* Invoke the builtin or lisp function. We already found the symbol
                earlier when checking for special operators. */
             if (sym->type == BUILTIN) {
-                int bi_res = sym->builtin_fn(first_cons, out);
-                if (bi_res == -1) {
-                    printf("ERROR: EVAL: Builtin function encountered error\n");
-                    return -1;
+                ret_code = sym->builtin_fn(first_cons, out);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
+                    goto error;
                 }
                 return 0;
             }
             if (sym->type == FUNCTION) {
-                int func_inv_res = function_invocation(sym, first_cons, out);
-                if (func_inv_res < 0) {
-                    printf("ERROR: EVAL: Got error when invocing function %d\n", func_inv_res);
-                    return func_inv_res;
+                ret_code = function_invocation(sym, first_cons, out);
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: function \"%s\" encountered an error\n", sym->name);
+                    goto error;
                 }
             } else if (sym->type == VARIABLE) {
                 printf("ERROR: EVAL: Cant use variable %s as a function\n", (char*)fun->data);
-                return -1;
+                ret_code = -1;
+                goto error;
             }
             return 0;
         default:
             printf("ERROR: EVAL: Got unknown type: %d\n", e->type);
-            return -1;
+            ret_code = -1;
+            goto error;
     }
+
+error:
+    expr_print(e);
+    return ret_code;
 }
