@@ -46,7 +46,6 @@ symbol *symbol_find(char *s) {
 }
 
 int symbol_remove_i(int index) {
-    my_free(symbols[index]);
     for (int i = index; i < n_symbol; i++) {
         symbols[i] = symbols[i + 1];
     }

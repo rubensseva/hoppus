@@ -223,7 +223,6 @@ int expr_print_tree(expr *e) {
                 printf("\"");
                 printf("%s", str);
                 printf("\"");
-                my_free(str);
                 return 0;
             }
             printf("(");

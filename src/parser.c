@@ -106,7 +106,6 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
             if (ret_code == EOF_CODE)
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
             int cmp = strcmp(")", peeked_token) == 0;
-            my_free(peeked_token);
             if (cmp) break;
 
             expr *new;
@@ -129,7 +128,6 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         token_t closing_paren;
         if ((ret_code = tokens_pop(tokens, fd, &closing_paren) < 0))
             return ret_code;
-        my_free(closing_paren);
         *out = first;
     } else if (strcmp(")", token) == 0) {
         printf("ERROR: PARSER: Unmatched closing parentheses\n");
@@ -141,6 +139,5 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         *out = expr_new(SYMBOL, (uint64_t)symbol_name, NULL, NULL);
     }
 
-    my_free(token);
     return 0;
 }

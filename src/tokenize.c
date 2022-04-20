@@ -19,7 +19,6 @@ int read_tokens_from_file(int fd, token_t *out) {
         return -1;
     } else if (bytes_read == 0) {
         printf("INFO: PARSER: EOF\n");
-        my_free(buf);
         return EOF_CODE;
     }
     buf[bytes_read] = '\0';
@@ -29,7 +28,6 @@ int read_tokens_from_file(int fd, token_t *out) {
         printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
         return res;
     }
-    my_free(buf);
     return 0;
 }
 
@@ -71,7 +69,6 @@ int tokens_fill(token_t *tokens, int fd) {
         return EOF_CODE;
     }
     tokens_add(tokens, new_tokens);
-    my_free(new_tokens);
     return 0;
 }
 
@@ -103,7 +100,6 @@ int tokens_pop(token_t *tokens, int fd, token_t *out) {
        strcpy is better. */
     *out = my_malloc(strlen(tokens[0]) + 1);
     strcpy(*out, tokens[0]);
-    my_free(tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
         tokens[count] = tokens[count + 1];
@@ -142,18 +138,6 @@ int tokens_peek(token_t *tokens, int fd, token_t *out) {
     strcpy(*out, tokens[0]);
     return 0;
 }
-
-
-void tokens_free(token_t *tokens) {
-    for(int i = 0; i < TOKENS_MAX_NUM; i++) {
-        if (tokens[i] == NULL) {
-            break;
-        }
-        my_free(tokens[i]);
-    }
-    my_free(tokens);
-}
-
 
 int pad_str(char *str, char *pad) {
     int is_in_str = 0;

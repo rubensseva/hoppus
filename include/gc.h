@@ -23,6 +23,5 @@ int gc_init();
 int gc_maybe_mark_and_sweep();
 
 void *gc_malloc(unsigned int size);
-void gc_free(void *base);
 
 #endif // GC_H_

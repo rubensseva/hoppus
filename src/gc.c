@@ -263,6 +263,8 @@ void *gc_malloc(unsigned int size) {
         return (void *)NULL;
     }
 
+    gc_maybe_mark_and_sweep();
+
     /* Set up used list if it is empty */
     if (used == NULL) {
         header *free_base = (header *)heap_start;
@@ -315,25 +317,4 @@ void *gc_malloc(unsigned int size) {
     printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
     printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap());
     return (void *)NULL;
-}
-
-/* TODO: Shouldnt really need this once gc is working */
-void gc_free(void *ptr) {
-    if (ptr == 0x0) {
-        printf("ERROR: GC: FREE: Attempt to free NULL\n");
-        return;
-    }
-    for (header *u = used, *prev = NULL; u != NULL; prev = u, u = UNTAG(u->next)) {
-        if (u + 1 == (header *) ptr) {
-            gc_allocated_size -= (u->size + 1) * sizeof(header);
-            if (prev) {
-                prev->next = new_next_ptr(prev->next, u->next);
-            } else {
-                used = UNTAG(u->next);
-            }
-            if (u == prev_malloced)
-                prev_malloced = prev;
-            break;
-        }
-    }
 }

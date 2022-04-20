@@ -193,7 +193,6 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
 
 int eval(expr *e, expr **out) {
     int ret_code;
-    gc_maybe_mark_and_sweep();
     if (e == NULL) {
         printf("WARNING: EVAL: Eval got NULL, returning NULL\n");
         *out = NULL;
@@ -239,7 +238,7 @@ int eval(expr *e, expr **out) {
             }
             /* Here we can invoce special operators, which should not have their arguments evaluated */
             if ((sym = symbol_find((char *)(fun->data))) == NULL) {
-                printf("ERROR: EVAL: trying to invoke function, but couldnt find symbol %s\n",
+                printf("ERROR: EVAL: unable find function \"%s\"\n",
                        (char *)(fun->data));
                 ret_code = UNBOUND_SYMBOL_NAME_ERROR;
                 goto error;

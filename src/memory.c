@@ -10,7 +10,3 @@ void *my_malloc(unsigned int size) {
     return gc_malloc(size);
     /* return malloc(size); */
 }
-void my_free(void *ptr) {
-    gc_free(ptr);
-    /* free(ptr); */
-}

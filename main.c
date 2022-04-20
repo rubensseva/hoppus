@@ -78,10 +78,10 @@ void eval_error(int error) {
             printf("ERROR: MAIN: EVAL: generic error\n");
             break;
         case UNBOUND_SYMBOL_NAME_ERROR:
-            printf("ERROR: MAIN: EVAL: unbound symbol name error\n");
+            printf("ERROR: MAIN: EVAL: unbound symbol name\n");
             break;
         case NUMBER_OF_ARGUMENTS_ERROR:
-            printf("ERROR: MAIN: EVAL: wrong number of arguments error\n");
+            printf("ERROR: MAIN: EVAL: wrong number of arguments\n");
             break;
         case TYPE_ERROR:
             printf("ERROR: MAIN: EVAL: type error\n");
@@ -119,8 +119,6 @@ int load_standard_library() {
             eval_error(ret_code);
             return ret_code;
         }
-        my_free(tokens);
-        my_free(copy);
     }
     return 0;
 }
@@ -139,7 +137,6 @@ int REPL_loop(int fd) {
         if (ret_code < 0) {
             printf("ERROR: MAIN: parsing tokens: %d\n", ret_code);
             parser_error(ret_code);
-            my_free(tokens);
             return -1;
         }
         if (ret_code == EOF_CODE) {
@@ -158,7 +155,6 @@ int REPL_loop(int fd) {
             }
         }
     }
-    my_free(tokens);
     return 0;
 }
 
