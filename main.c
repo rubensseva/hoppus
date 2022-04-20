@@ -21,6 +21,8 @@ void create_builtins() {
     symbol *define = symbol_builtin_create("define", bi_define, 1);
     symbol *add = symbol_builtin_create("+", bi_add, 0);
     symbol *sub = symbol_builtin_create("-", bi_sub, 0);
+    symbol *mult = symbol_builtin_create("*", bi_mult, 0);
+    symbol *div = symbol_builtin_create("/", bi_div, 0);
     symbol *cons = symbol_builtin_create("cons", bi_cons, 0);
     symbol *car = symbol_builtin_create("car", bi_car, 0);
     symbol *cdr = symbol_builtin_create("cdr", bi_cdr, 0);
@@ -43,6 +45,8 @@ void create_builtins() {
     symbol_add(define);
     symbol_add(add);
     symbol_add(sub);
+    symbol_add(mult);
+    symbol_add(div);
     symbol_add(cons);
     symbol_add(car);
     symbol_add(cdr);

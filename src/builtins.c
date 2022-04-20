@@ -144,6 +144,43 @@ int bi_sub(expr *arg, expr **out) {
     return 0;
 }
 
+int bi_mult(expr *arg, expr **out) {
+    int acc = 1;
+    if (list_length(arg) == 0) {
+        acc = 0;
+    } else {
+        expr *curr = arg;
+        for_each(curr) {
+            if (curr->car->type != NUMBER) return TYPE_ERROR;
+            acc *= (int)curr->car->data;
+        }
+    }
+    expr *_out = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
+    *out = _out;
+    return 0;
+}
+
+int bi_div(expr *arg, expr **out) {
+    expr *curr = arg;
+    for_each(curr) {
+        if (curr->car->type != NUMBER) return TYPE_ERROR;
+    }
+    int acc = 0, arg_length = list_length(arg);
+    if (arg_length == 0) {
+        acc = 0;
+    } else if (arg_length == 1) {
+        acc = (int)arg->car->data;
+    } else {
+        acc = (int)arg->car->data;
+        expr *curr = arg->cdr;
+        for_each(curr) {
+            acc /= (int)curr->car->data;
+        }
+    }
+    *out = expr_new(NUMBER, acc, NULL, NULL);
+    return 0;
+}
+
 int bi_cons(expr *arg, expr **out) {
     unsigned int size = list_length(arg);
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;

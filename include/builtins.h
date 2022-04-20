@@ -7,6 +7,8 @@ int bi_defun(expr *arg, expr **out);
 int bi_define(expr *arg, expr **out);
 int bi_add(expr *arg, expr **out);
 int bi_sub(expr *arg, expr **out);
+int bi_mult(expr *arg, expr **out);
+int bi_div(expr *arg, expr **out);
 int bi_cons(expr *arg, expr **out);
 int bi_car(expr *arg, expr **out);
 int bi_cdr(expr *arg, expr **out);
