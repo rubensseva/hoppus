@@ -200,7 +200,7 @@ int bi_car(expr *arg, expr **out) {
 }
 
 int bi_cdr(expr *arg, expr **out) {
-    if (arg == NULL) {
+    if (arg == NULL || arg->car == NULL) {
         *out = NULL;
         return 0;
     }
