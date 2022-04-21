@@ -5,9 +5,13 @@
     "(defmacro (not form) "    \
     "`(if ,form false true)) "
 
-#define LISP_LIB_WHEN          \
-    "(defun (when pred form) " \
-    "(if pred form nil))"
+#define LISP_LIB_IF                          \
+    "(defmacro (if pred form other-form) "   \
+    "`(cond (,pred ,form) (true ,other-form))) "
+
+#define LISP_LIB_WHEN               \
+    "(defmacro (when pred form) "   \
+    "`(if ,pred ,form nil)) "
 
 #define LISP_LIB_CADR          \
     "(defun (cadr cell) "      \
@@ -59,6 +63,7 @@
 
 const char* lib_strs[] = {
     LISP_LIB_NOT,
+    LISP_LIB_IF,
     LISP_LIB_WHEN,
     LISP_LIB_CADR,
     LISP_LIB_LIST,

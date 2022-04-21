@@ -223,21 +223,6 @@ int bi_progn(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_if(expr *arg, expr **out) {
-    int ret_code;
-    if (list_length(arg) != 3) return NUMBER_OF_ARGUMENTS_ERROR;
-
-    expr *_eval;
-    if ((ret_code = eval(arg->car, &_eval)) < 0) return ret_code;
-    if (expr_is_true(_eval)) {
-        ret_code = eval(arg->cdr->car, out);
-    } else {
-        ret_code = eval(arg->cdr->cdr->car, out);
-    }
-    if (ret_code < 0) return ret_code;
-    return 0;
-}
-
 int bi_cond(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
