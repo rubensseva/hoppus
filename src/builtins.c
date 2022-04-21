@@ -52,9 +52,9 @@
 
 */
 int bi_defun(expr *arg, expr **out) {
-    if (list_length(arg) < 2) return NUMBER_OF_ARGUMENTS_ERROR;
+    if (list_length(arg) < 3) return NUMBER_OF_ARGUMENTS_ERROR;
 
-    expr *curr = arg->car;
+    expr *curr = arg->cdr->car;
     for_each(curr) {
         if (curr->car->type != SYMBOL) return TYPE_ERROR;
 
@@ -67,7 +67,7 @@ int bi_defun(expr *arg, expr **out) {
     }
 
     char *buf = my_malloc(TOKEN_STR_MAX_LEN);
-    char *defun_name = (char *)(arg->car->car->data);
+    char *defun_name = (char *)(arg->car->data);
     strcpy(buf, defun_name);
 
     symbol *new_sym = symbol_create(buf, FUNCTION, arg);
@@ -359,13 +359,13 @@ int bi_comma_at(expr *arg, expr **out) {
 }
 
 int bi_defmacro(expr *arg, expr **out) {
-    if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
-    expr *curr = arg->car;
+    if (list_length(arg) < 3) return NUMBER_OF_ARGUMENTS_ERROR;
+    expr *curr = arg->cdr->car;
     for_each(curr) {
         if (curr->car->type != SYMBOL) return TYPE_ERROR;
     }
     char *buf = my_malloc(TOKEN_STR_MAX_LEN);
-    strcpy(buf, (char *)arg->car->car->data);
+    strcpy(buf, (char *)arg->car->data);
     symbol_add(symbol_create(buf, MACRO, arg));
     *out = arg;
     return 0;

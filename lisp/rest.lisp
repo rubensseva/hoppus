@@ -1,4 +1,4 @@
-(defun (add &rest rst)
+(defun add (&rest rst)
     (+ (car rst) (car (cdr rst))))
 
 (add 1 2)
