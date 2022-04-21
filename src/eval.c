@@ -32,6 +32,7 @@ int quasiquote_eval(expr **e) {
         case SYMBOL:;
             return 0;
         case CONS:;
+            int handled_car = 0;
             if ((*e)->car && (*e)->car->car && (*e)->car->car->type == SYMBOL) {
                 symbol *sym = symbol_find((char *)((*e)->car->car->data));
                 if (sym && strcmp(sym->name, COMMA_STR) == 0) {
@@ -42,7 +43,7 @@ int quasiquote_eval(expr **e) {
                         goto error;
                     }
                     (*e)->car = evald;
-                    return 0;
+                    handled_car = 1;
                 }
                 if (sym && strcmp(sym->name, COMMA_AT_STR) == 0) {
                     expr *evald;
@@ -51,20 +52,20 @@ int quasiquote_eval(expr **e) {
                         printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
                         goto error;
                     }
-
                     /* Splice */
                     expr *old_cdr = (*e)->cdr;
                     *e = evald;
                     while (!list_end(evald->cdr)) {evald = evald->cdr;};
                     evald->cdr = old_cdr;
-
-                    return 0;
+                    handled_car = 1;
                 }
             }
-            ret_code = quasiquote_eval(&((*e)->car));
-            if (ret_code < 0) {
-                printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
-                goto error;
+            if (!handled_car) {
+                ret_code = quasiquote_eval(&((*e)->car));
+                if (ret_code < 0) {
+                    printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
+                    goto error;
+                }
             }
             ret_code = quasiquote_eval(&((*e)->cdr));
             if (ret_code < 0) {
