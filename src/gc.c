@@ -248,27 +248,7 @@ void gc_alloc_dump() {
     }
 }
 
-void *gc_malloc(unsigned int size) {
-    if (size <= 0) {
-        printf("ERROR: GC: MALLOC: got request to malloc with size 0\n");
-        return (void *)NULL;
-    }
-    if (!heap_start || !heap_end) {
-        printf("ERROR: GC: MALLOC: missing heap start or end\n");
-        return (void *)NULL;
-    }
-
-    unsigned int required_units = (align_up(size) + sizeof(header)) / sizeof(header);
-    if (required_units * sizeof(header) > MALLOC_HEAP_SIZE) {
-        printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %lu, but its more than the size of the heap which is %d\n",
-               size,
-               required_units * sizeof(header),
-               MALLOC_HEAP_SIZE);
-        return (void *)NULL;
-    }
-
-    gc_maybe_mark_and_sweep();
-
+void *gc_malloc_units(unsigned int required_units) {
     /* Set up used list if it is empty */
     if (used == NULL) {
         header *free_base = (header *)heap_start;
@@ -317,8 +297,38 @@ void *gc_malloc(unsigned int size) {
         gc_allocated_size += (free_base->size + 1) * sizeof(header);
         return free_base + 1;
     }
+    return NULL;
+}
 
-    printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
-    printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap());
-    return (void *)NULL;
+void *gc_malloc(unsigned int size) {
+    if (size <= 0) {
+        printf("ERROR: GC: MALLOC: got request to malloc with size 0\n");
+        return (void *)NULL;
+    }
+    if (!heap_start || !heap_end) {
+        printf("ERROR: GC: MALLOC: missing heap start or end\n");
+        return (void *)NULL;
+    }
+
+    unsigned int required_units = (align_up(size) + sizeof(header)) / sizeof(header);
+    if (required_units * sizeof(header) > MALLOC_HEAP_SIZE) {
+        printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %lu, but its more than the size of the heap which is %d\n",
+               size,
+               required_units * sizeof(header),
+               MALLOC_HEAP_SIZE);
+        return (void *)NULL;
+    }
+
+    void *ptr = gc_malloc_units(required_units);
+    if (ptr == NULL) {
+        /* no space, run gc, then try again */
+        gc_mark_and_sweep();
+        ptr = gc_malloc_units(required_units);
+    }
+
+    if (ptr == NULL) {
+        printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
+    }
+    /* printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap()); */
+    return ptr;
 }
