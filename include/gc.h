@@ -1,6 +1,8 @@
 #ifndef GC_H_
 #define GC_H_
 
+#include <stdint.h>
+
 /* Config for clisp, without microkernel */
 // #define NULL (void *)0x0;
 #define __USER_DATA
@@ -20,6 +22,9 @@ struct header {
     unsigned int size;
     header *next;
 };
+
+uint64_t gc_stats_get_num_malloc();
+uint64_t gc_stats_get_allocated_total();
 
 int gc_init();
 int gc_maybe_mark_and_sweep();

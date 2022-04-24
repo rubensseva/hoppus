@@ -101,8 +101,6 @@ int add_param_symbols(expr *params, expr *args) {
     int is_rest = 0;
     /* Would preferably use the for_each() macro here, but since
        we need to iterate through two lists, we need a custom loop */
-    /* TODO: Consider getting the size once, then iterating, to
-       avoid continually calculating list end */
     /* TODO: Simplify the boolean logic here */
     while ((!is_rest && !list_end(curr_param)) || !list_end(curr_arg)) {
         if ((!is_rest && list_end(curr_param)) || list_end(curr_arg)) {

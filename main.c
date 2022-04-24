@@ -214,6 +214,8 @@ int main(int argc, char **argv) {
     }
 
 
+    printf("INFO: MAIN: GC: num mallocs: %lu\n", gc_stats_get_num_malloc());
+    printf("INFO: MAIN: GC: total allocated: %lu\n", gc_stats_get_allocated_total());
     printf("INFO: MAIN: exiting with code: %d\n", ret_code);
     printf("INFO: MAIN: bye...\n");
     return ret_code;

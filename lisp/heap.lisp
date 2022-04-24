@@ -54,13 +54,8 @@
           (__heap-balance-all (__heap-balance-follow heap curr-i) (- curr-i 1))))
 
 (defun heap-balance-all (heap)
-    (print "balancing " heap " with " (__heap-balance-all heap (- (length heap) 1)))
-    (print (eq heap (__heap-balance-all heap (- (length heap) 1))))
-    (print (not (eq heap (__heap-balance-all heap (- (length heap) 1)))))
     (if (not (eq heap (__heap-balance-all heap (- (length heap) 1))))
-        (progn
-          (print "running balance again!")
-          (heap-balance-all (__heap-balance-all heap (- (length heap) 1))))
+        (heap-balance-all (__heap-balance-all heap (- (length heap) 1)))
         (__heap-balance-all heap (- (length heap) 1))))
 
 (heap-balance-all (get-premade-heap))

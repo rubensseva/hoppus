@@ -20,6 +20,17 @@ uint64_t gc_allocated_size = 0;
 header *heap_start = NULL;
 header *heap_end = NULL;
 
+
+uint64_t gc_stats_num_malloc = 0;
+uint64_t gc_stats_allocated_total = 0;
+
+uint64_t gc_stats_get_num_malloc() {
+    return gc_stats_num_malloc;
+}
+uint64_t gc_stats_get_allocated_total() {
+    return gc_stats_allocated_total;
+}
+
 unsigned int gc_get_cap() {
     return MALLOC_HEAP_SIZE;
 }
@@ -190,6 +201,8 @@ int gc_dump_info() {
     printf("INFO: GC: %d allocated objects\n", count);
     printf("INFO: GC: %d marked objects\n", marked);
     printf("INFO: GC: %d unmarked objects\n", unmarked);
+    printf("INFO: GC: %lu num mallocs\n", gc_stats_get_num_malloc());
+    printf("INFO: GC: %lu total alloc\n", gc_stats_get_allocated_total());
     return 0;
 }
 
@@ -329,6 +342,8 @@ void *gc_malloc(unsigned int size) {
     if (ptr == NULL) {
         printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
     }
+    gc_stats_num_malloc += 1;
+    gc_stats_allocated_total += required_units * sizeof(header);
     /* printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap()); */
     return ptr;
 }

@@ -47,9 +47,10 @@ int expr_copy(expr* e, expr **out) {
             *out = expr_new(e->type, e->data, NULL, NULL);
             return 0;
         case SYMBOL:;
-            char *data = my_malloc(strlen((char *)e->data) + 1);
-            strcpy(data, (char *)e->data);
-            *out = expr_new(e->type, (uint64_t)data, NULL, NULL);
+            /* We could copy the string as well here, but a symbol name
+               shouldnt really ever change, so should be fine to just use
+               the same string */
+            *out = expr_new(e->type, e->data, NULL, NULL);
             return 0;
         case CONS:;
             expr *car, *cdr;
@@ -108,7 +109,7 @@ int expr_is_equal(expr *e1, expr *e2) {
                 printf("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare symbol with something else\n");
                 return -1;
             }
-            /* TODO: This is stupid, find another way. Even if the name is the same the scope might be different */
+            /* TODO: Perhaps just comparing the pointers is better here? */
             int cmp_eq = strcmp((char *)e1->data, (char *)e2->data);
             return cmp_eq ? 0 : 1;
         case CONS:;
