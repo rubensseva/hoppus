@@ -29,12 +29,12 @@ expr *expr_from_str(char *str) {
     /* Loop from 2nd element to next to last element, because
        we need to skip the " signs at start and end of the string */
     for(i = 1; i < size - 1; i++) {
-        expr *new_char = expr_new(CHAR, (uint64_t)str[i], NULL, NULL);
-        expr *new_cons = expr_cons(new_char, NULL);
+        expr *new_char = expr_new_val(CHAR, (uint64_t)str[i]);
+        expr *new_cons = expr_new_cons(new_char, NULL);
         if (first == NULL)
             first = new_cons;
         if (prev != NULL)
-            prev->cdr = new_cons;
+            set_cdr(prev, new_cons);
         prev = new_cons;
     }
     return first;
@@ -47,8 +47,8 @@ int parse_quotation_symbol(token_t *tokens, int fd, char *name, expr **out) {
     int ret_code; expr *parsed;
     if ((ret_code = parse_tokens(tokens, fd, &parsed)) < 0)
         return ret_code;
-    *out = expr_cons(expr_new(SYMBOL, (uint64_t)name, NULL, NULL),
-                     expr_cons(parsed, NULL));
+    *out = expr_new_cons(expr_new_val(SYMBOL, (uint64_t)name),
+                         expr_new_cons(parsed, NULL));
     return 0;
 }
 
@@ -89,10 +89,10 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         if ((ret_code = parse_quotation_symbol(tokens, fd, COMMA_AT_STR, out)) < 0)
             return ret_code;
     } else if (is_number(token)) {
-        *out = expr_new(NUMBER, (uint64_t)atoi(token), NULL, NULL);
+        *out = expr_new_val(NUMBER, (uint64_t)atoi(token));
     } else if (is_boolean(token)) {
         int val = strcmp(token, BOOL_STR_T) == 0 ? 1 : 0;
-        *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+        *out = expr_new_val(BOOLEAN, (uint64_t)val);
     } else if (is_string(token)) {
         *out = expr_from_str(token);
     } else if (is_nil(token)) {
@@ -105,22 +105,21 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
                 return ret_code;
             if (ret_code == EOF_CODE)
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
-            int cmp = strcmp(")", peeked_token) == 0;
-            if (cmp) break;
+            if (strcmp(")", peeked_token) == 0) break;
 
             expr *new;
             if ((ret_code = parse_tokens(tokens, fd, &new)) < 0)
                 return ret_code;
             if (ret_code == EOF_CODE)
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
-            curr = expr_cons(new, NULL);
+            curr = expr_new_cons(new, NULL);
             if (!first) {
-                if (new->type != SYMBOL)
-                    printf("WARNING: PARSER: First entry in a list was not a symbol, instead it had type: %d\n", new->type);
+                if (type(new) != SYMBOL)
+                    printf("WARNING: PARSER: First entry in a list was not a symbol, instead it had type: %d\n", type(new));
                 first = curr;
             }
             if (prev)
-                prev->cdr = curr;
+                set_cdr(prev, curr);
             prev = curr;
         }
         /* At this points, there should be a ")" on tokens, so lets pop it. */
@@ -135,7 +134,7 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         /* If not any of the above, then its a symbol */
         token_t symbol_name = my_malloc(strlen(token) + 1);
         strcpy(symbol_name, token);
-        *out = expr_new(SYMBOL, (uint64_t)symbol_name, NULL, NULL);
+        *out = expr_new_val(SYMBOL, (uint64_t)symbol_name);
     }
 
     return 0;

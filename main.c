@@ -203,15 +203,15 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    if (fd != 1) {
-        close(fd);
-        printf("INFO: MAIN: starting REPL loop after file read\n");
-        ret_code = REPL_loop(1);
-        if (ret_code < 0) {
-            printf("ERROR: MAIN: %d\n", ret_code);
-            return -1;
-        }
-    }
+    /* if (fd != 1) { */
+    /*     close(fd); */
+    /*     printf("INFO: MAIN: starting REPL loop after file read\n"); */
+    /*     ret_code = REPL_loop(1); */
+    /*     if (ret_code < 0) { */
+    /*         printf("ERROR: MAIN: %d\n", ret_code); */
+    /*         return -1; */
+    /*     } */
+    /* } */
 
 
     printf("INFO: MAIN: GC: num mallocs: %lu\n", gc_stats_get_num_malloc());

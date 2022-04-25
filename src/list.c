@@ -12,7 +12,7 @@ int list_end(expr *e) {
 unsigned int list_length(expr *e) {
     expr *curr = e; unsigned int count = 0;
     while (!(list_end(curr))) {
-        curr = curr->cdr;
+        curr = cdr(curr);
         count++;
     }
     return count;

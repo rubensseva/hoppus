@@ -203,6 +203,8 @@ int gc_dump_info() {
     printf("INFO: GC: %d unmarked objects\n", unmarked);
     printf("INFO: GC: %lu num mallocs\n", gc_stats_get_num_malloc());
     printf("INFO: GC: %lu total alloc\n", gc_stats_get_allocated_total());
+    printf("INFO: GC: gc done %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
+    printf("INFO: GC: gc recalculated  %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE);
     return 0;
 }
 

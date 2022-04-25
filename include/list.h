@@ -10,7 +10,7 @@
   macro is changed to something other than a loop, it will probably introduce
   some bugs */
 #define for_each(curr)                          \
-    for(; !list_end(curr); curr = curr->cdr)
+    for(; !list_end(curr); curr = cdr(curr))
 
 int list_end(expr *e);
 unsigned int list_length(expr *e);

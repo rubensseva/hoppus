@@ -54,19 +54,19 @@
 int bi_defun(expr *arg, expr **out) {
     if (list_length(arg) < 3) return NUMBER_OF_ARGUMENTS_ERROR;
 
-    expr *curr = arg->cdr->car;
+    expr *curr = nth(1, arg);
     for_each(curr) {
-        if (curr->car->type != SYMBOL) return TYPE_ERROR;
+        if (tar(curr) != SYMBOL) return TYPE_ERROR;
 
-        if (strcmp((char *)curr->car->data, REST_ARGUMENTS_STR) == 0) {
-            if (curr->cdr == NULL) {
+        if (strcmp((char *)dar(curr), REST_ARGUMENTS_STR) == 0) {
+            if (cdr(curr) == NULL) {
                 printf("ERROR: BUILTIN: DEFUN: expected a symbol after &rest keyword, but got nothing\n");
                 return NUMBER_OF_ARGUMENTS_ERROR;
             }
         }
     }
 
-    char *defun_name = (char *)(arg->car->data);
+    char *defun_name = (char *)(dar(arg));
     char *buf = my_malloc(strlen(defun_name) + 1);
     strcpy(buf, defun_name);
 
@@ -94,13 +94,13 @@ int bi_defun(expr *arg, expr **out) {
 int bi_define(expr *arg, expr **out) {
     int ret_code;
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
-    if (arg->car->type != SYMBOL) return TYPE_ERROR;
+    if (tar(arg) != SYMBOL) return TYPE_ERROR;
 
     /* The second argument needs to be evaluated */
     expr *evaluated_arg;
-    if ((ret_code = eval(arg->cdr->car, &evaluated_arg) < 0)) return ret_code;
+    if ((ret_code = eval(car(cdr(arg)), &evaluated_arg) < 0)) return ret_code;
 
-    char *define_name = (char *)arg->car->data;
+    char *define_name = (char *)dar(arg);
     char *buf = my_malloc(strlen(define_name) + 1);
     /* The name of the symbol exist directly as a string in the first argument. */
     strcpy(buf, define_name);
@@ -115,10 +115,10 @@ int bi_add(expr *arg, expr **out) {
     int acc = 0;
     expr *curr = arg;
     for_each(curr) {
-        if (curr->car->type != NUMBER) return TYPE_ERROR;
-        acc += (int)curr->car->data;
+        if (type(car(curr)) != NUMBER) return TYPE_ERROR;
+        acc += (int)dar(curr);
     }
-    expr *_out = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
+    expr *_out = expr_new_val(NUMBER, (uint64_t)acc);
     *out = _out;
     return 0;
 }
@@ -126,22 +126,22 @@ int bi_add(expr *arg, expr **out) {
 int bi_sub(expr *arg, expr **out) {
     expr *curr = arg;
     for_each(curr) {
-        if (curr->car->type != NUMBER) return TYPE_ERROR;
+        if (type(car(curr)) != NUMBER) return TYPE_ERROR;
     }
 
     int acc = 0, arg_length = list_length(arg);
     if (arg_length == 0) {
         acc = 0;
     } else if (arg_length == 1) {
-        acc = (int)arg->car->data * -1;
+        acc = (int)dar(arg) * -1;
     } else {
-        acc = (int)arg->car->data;
-        expr *curr = arg->cdr;
+        acc = (int)dar(arg);
+        expr *curr = cdr(arg);
         for_each(curr) {
-            acc -= (int)curr->car->data;
+            acc -= (int)dar(curr);
         }
     }
-    *out = expr_new(NUMBER, acc, NULL, NULL);
+    *out = expr_new_val(NUMBER, acc);
     return 0;
 }
 
@@ -152,11 +152,11 @@ int bi_mult(expr *arg, expr **out) {
     } else {
         expr *curr = arg;
         for_each(curr) {
-            if (curr->car->type != NUMBER) return TYPE_ERROR;
-            acc *= (int)curr->car->data;
+            if (tar(curr) != NUMBER) return TYPE_ERROR;
+            acc *= (int)dar(curr);
         }
     }
-    expr *_out = expr_new(NUMBER, (uint64_t)acc, NULL, NULL);
+    expr *_out = expr_new_val(NUMBER, (uint64_t)acc);
     *out = _out;
     return 0;
 }
@@ -164,49 +164,49 @@ int bi_mult(expr *arg, expr **out) {
 int bi_div(expr *arg, expr **out) {
     expr *curr = arg;
     for_each(curr) {
-        if (curr->car->type != NUMBER) return TYPE_ERROR;
+        if (tar(curr) != NUMBER) return TYPE_ERROR;
     }
     int acc = 0, arg_length = list_length(arg);
     if (arg_length == 0) {
         acc = 0;
     } else if (arg_length == 1) {
-        acc = (int)arg->car->data;
+        acc = (int)dar(arg);
     } else {
-        acc = (int)arg->car->data;
-        expr *curr = arg->cdr;
+        acc = (int)dar(arg);
+        expr *curr = cdr(arg);
         for_each(curr) {
-            acc /= (int)curr->car->data;
+            acc /= (int)dar(curr);
         }
     }
-    *out = expr_new(NUMBER, acc, NULL, NULL);
+    *out = expr_new_val(NUMBER, acc);
     return 0;
 }
 
 int bi_cons(expr *arg, expr **out) {
     unsigned int size = list_length(arg);
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
-    *out = expr_cons(arg->car, arg->cdr->car);
+    *out = expr_new_cons(car(arg), car(cdr(arg)));
     return 0;
 }
 
 
 int bi_car(expr *arg, expr **out) {
-    if (arg == NULL || arg->car == NULL) {
+    if (arg == NULL || car(arg) == NULL) {
         *out = NULL;
         return 0;
     }
-    if (arg->car->type != CONS) return TYPE_ERROR;
-    *out = arg->car->car;
+    if (tar(arg) != CONS) return TYPE_ERROR;
+    *out = car(car(arg));
     return 0;
 }
 
 int bi_cdr(expr *arg, expr **out) {
-    if (arg == NULL || arg->car == NULL) {
+    if (arg == NULL || car(arg) == NULL) {
         *out = NULL;
         return 0;
     }
-    if (arg->car->type != CONS) return TYPE_ERROR;
-    *out = arg->car->cdr;
+    if (tar(arg) != CONS) return TYPE_ERROR;
+    *out = cdr(car(arg));
     return 0;
 }
 
@@ -218,7 +218,7 @@ int bi_progn(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg, *_out;
     for_each(curr) {
-        if ((ret_code = eval(curr->car, &_out)) < 0) return ret_code;
+        if ((ret_code = eval(car(curr), &_out)) < 0) return ret_code;
     }
     *out = _out;
     return 0;
@@ -228,9 +228,9 @@ int bi_cond(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
     for_each(curr) {
-        if (!curr->car || !curr->car->cdr)
+        if (!car(curr) || !cdr(car(curr)))
             return INVALID_FORM_ERROR;
-        expr *pred = curr->car->car, *form = curr->car->cdr->car;
+        expr *pred = car(car(curr)), *form = car(cdr(car(curr)));
         expr *evald;
         if ((ret_code = eval(pred, &evald)) < 0) return ret_code;
         if (expr_is_true(evald)) {
@@ -246,9 +246,9 @@ int bi_print(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
     for_each(curr) {
-        if ((ret_code = expr_print(curr->car)) < 0) return ret_code;
+        if ((ret_code = expr_print(car(curr))) < 0) return ret_code;
     }
-    *out = arg->car;
+    *out = car(arg);
     return 0;
 }
 
@@ -266,27 +266,27 @@ int bi_equal(expr *arg, expr **out) {
                 prev = curr;
                 continue;
             }
-            if ((val = expr_is_equal(prev->car, curr->car)) < 0) return val;
+            if ((val = expr_is_equal(car(prev), car(curr))) < 0) return val;
             if (val == 0)
                 break;
             prev = curr;
         }
     }
-    *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *out = expr_new_val(BOOLEAN, (uint64_t)val);
     return 0;
 }
 
 int bi_gt(expr *arg, expr **out) {
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
-    int val = expr_gt_lt(arg->car, arg->cdr->car, 1);
-    *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    int val = expr_gt_lt(car(arg), car(cdr(arg)), 1);
+    *out = expr_new_val(BOOLEAN, (uint64_t)val);
     return 0;
 }
 
 int bi_lt(expr *arg, expr **out) {
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
-    int val = expr_gt_lt(arg->car, arg->cdr->car, 0);
-    *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    int val = expr_gt_lt(car(arg), car(cdr(arg)), 0);
+    *out = expr_new_val(BOOLEAN, (uint64_t)val);
     return 0;
 }
 
@@ -299,12 +299,12 @@ int bi_and(expr *arg, expr **out) {
         expr *curr = arg;
         for_each(curr) {
             expr *_eval;
-            if ((ret_code = eval(curr->car, &_eval)) < 0) return ret_code;
+            if ((ret_code = eval(car(curr), &_eval)) < 0) return ret_code;
             if ((val = expr_is_true(_eval)) < 0) return val;
             if (val == 0) break;
         }
     }
-    *out = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    *out = expr_new_val(BOOLEAN, (uint64_t)val);
     return 0;
 }
 
@@ -317,20 +317,20 @@ int bi_or(expr *arg, expr **out) {
         expr *curr = arg;
         for_each(curr) {
             expr *_eval;
-            if ((ret_code = eval(curr->car, &_eval)) < 0) return ret_code;
+            if ((ret_code = eval(car(curr), &_eval)) < 0) return ret_code;
             if ((val = expr_is_true(_eval)) < 0) return val;
             if (val == 1) break;
         }
     }
 
-    expr* new_expr = expr_new(BOOLEAN, (uint64_t)val, NULL, NULL);
+    expr* new_expr = expr_new_val(BOOLEAN, (uint64_t)val);
     *out = new_expr;
     return 0;
 }
 
 int bi_quote(expr *arg, expr **out) {
     if (list_length(arg) != 1) return NUMBER_OF_ARGUMENTS_ERROR;
-    *out = arg->car;
+    *out = car(arg);
     return 0;
 }
 
@@ -338,7 +338,7 @@ int bi_quasiquote(expr *arg, expr **out) {
     int ret_code;
     if (list_length(arg) != 1) return NUMBER_OF_ARGUMENTS_ERROR;
     expr *copy;
-    if ((ret_code = expr_copy(arg->car, &copy)) < 0) return ret_code;
+    if ((ret_code = expr_copy(car(arg), &copy)) < 0) return ret_code;
     if ((ret_code = quasiquote_eval(&copy)) < 0) return ret_code;
     *out = copy;
     return 0;
@@ -361,11 +361,11 @@ int bi_comma_at(expr *arg, expr **out) {
 
 int bi_defmacro(expr *arg, expr **out) {
     if (list_length(arg) < 3) return NUMBER_OF_ARGUMENTS_ERROR;
-    expr *curr = arg->cdr->car;
+    expr *curr = car(cdr(arg));
     for_each(curr) {
-        if (curr->car->type != SYMBOL) return TYPE_ERROR;
+        if (tar(curr) != SYMBOL) return TYPE_ERROR;
     }
-    char *macro_name = (char *)arg->car->data;
+    char *macro_name = (char *)dar(arg);
     char *buf = my_malloc(strlen(macro_name) + 1);
     strcpy(buf, macro_name);
     symbol_add(symbol_create(buf, MACRO, arg));
@@ -376,10 +376,10 @@ int bi_defmacro(expr *arg, expr **out) {
 int bi_macroexpand(expr *arg, expr **out) {
     int ret_code;
     if (list_length(arg) != 1) return NUMBER_OF_ARGUMENTS_ERROR;
-    symbol *sym = symbol_find((char *) arg->car->car->data);
+    symbol *sym = symbol_find((char *) dar(car(arg)));
     if (sym == NULL) return UNBOUND_SYMBOL_NAME_ERROR;
     expr *macro_expand;
-    if ((ret_code = function_invocation(sym, arg->car->cdr, &macro_expand)) < 0)
+    if ((ret_code = function_invocation(sym, cdr(car(arg)), &macro_expand)) < 0)
         return ret_code;
     *out = macro_expand;
     return 0;

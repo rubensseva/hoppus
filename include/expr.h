@@ -29,17 +29,32 @@ typedef enum expr_type_t {
     BOOLEAN
 } expr_type;
 
-typedef struct expr_t {
-    expr_type type;
-    uint64_t data;
-    struct expr_t *car;
-    struct expr_t *cdr;
-} expr;
+typedef struct expr_t expr;
+struct expr_t {
+    expr *car;  /* Data field if other type than cons cell */
+    expr *cdr;  /* LSB designates if it is cons cell or anything else. */
+};
 
 char *type_str(expr_type tp);
 
-expr *expr_new(expr_type type, uint64_t data, expr* car, expr *cdr);
-expr *expr_cons(expr* car, expr *cdr);
+expr *car(expr *e);
+void set_car(expr *e, expr *new_car);
+expr *cdr(expr *e);
+void set_cdr(expr *e, expr* new_cdr);
+uint64_t data(expr *e);
+void set_data(expr *e, uint64_t data);
+expr_type type(expr *e);
+void set_type(expr *e, expr_type type);
+
+/* type of the car */
+expr_type tar(expr *e);
+/* data of the car */
+uint64_t dar(expr *e);
+
+expr *nth(unsigned int i, expr *e);
+
+expr *expr_new_val(expr_type type, uint64_t data);
+expr *expr_new_cons(expr* car, expr *cdr);
 int expr_copy(expr *e, expr **out);
 
 int expr_is_true(expr *e);
