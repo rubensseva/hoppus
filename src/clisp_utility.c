@@ -1,9 +1,12 @@
-#include <ctype.h>
-#include <string.h>
 #include <stdint.h>
-#include "utility.h"
-#include "constants.h"
 
+#include <string1.h>
+#include <clisp_utility.h>
+#include <constants.h>
+
+int isdigit(char c) {
+    return c >= '0' && c <= '9';
+}
 
 /* Taken from https://www.codegrepper.com/code-examples/c/c+isnumber */
 int is_number(char *s) {
@@ -20,14 +23,14 @@ int is_number(char *s) {
 }
 
 int is_boolean(char *s) {
-    if (strcmp(s, BOOL_STR_T) == 0 || strcmp(s, BOOL_STR_F) == 0) {
+    if (strcmp1(s, BOOL_STR_T) == 0 || strcmp1(s, BOOL_STR_F) == 0) {
         return 1;
     }
     return 0;
 }
 
 int is_string(char *s) {
-    unsigned int size = strlen(s);
+    unsigned int size = strlen1(s);
     if (size < 2)
         return 0;
     if (s[0] != '"')
@@ -38,14 +41,14 @@ int is_string(char *s) {
 }
 
 int is_nil(char *s) {
-    if (strcmp(s, NIL_STR) == 0) {
+    if (strcmp1(s, NIL_STR) == 0) {
         return 1;
     }
     return 0;
 }
 
 int insert_char_in_str(char *str, int i, char c) {
-    int str_size = strlen(str);
+    int str_size = strlen1(str);
     if (i < 0 || i == str_size)
         return -1;
 

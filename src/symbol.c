@@ -1,10 +1,9 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "symbol.h"
-#include "config.h"
-#include "memory.h"
+#include <USER_stdio.h>
+#include <symbol.h>
+#include <clisp_config.h>
+#include <clisp_memory.h>
+#include <string1.h>
+#include <types.h>
 
 int n_symbol = 0;
 symbol *symbols[SYMBOLS_MAX_NUM];
@@ -38,7 +37,7 @@ symbol *symbol_find(char *s) {
        Symbols will work in a stack-ish kind of way when multiple variables
        with the same name are defined */
     for (int i = n_symbol - 1; i >= 0; i--) {
-        if (strcmp(symbols[i]->name, s) == 0) {
+        if (strcmp1(symbols[i]->name, s) == 0) {
             return symbols[i];
         }
     }
@@ -59,7 +58,7 @@ int symbol_remove_name(char *s) {
        Symbols will work in a stack-ish kind of way when multiple variables
        with the same name are defined */
     for (int i = n_symbol - 1; i >= 0; i--) {
-        if (strcmp(symbols[i]->name, s) == 0) {
+        if (strcmp1(symbols[i]->name, s) == 0) {
             return symbol_remove_i(i);
         }
     }

@@ -1,17 +1,15 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <USER_stdio.h>
 #include <stdint.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <types.h>
 
-#include "expr.h"
-#include "parser.h"
-#include "utility.h"
-#include "config.h"
-#include "constants.h"
-#include "memory.h"
-#include "tokenize.h"
+#include <string1.h>
+#include <expr.h>
+#include <parser.h>
+#include <clisp_utility.h>
+#include <clisp_config.h>
+#include <constants.h>
+#include <clisp_memory.h>
+#include <tokenize.h>
 
 
 /**
@@ -24,7 +22,7 @@
 */
 expr *expr_from_str(char *str) {
     expr *first = NULL, *prev = NULL;
-    unsigned int size = strlen(str);
+    unsigned int size = strlen1(str);
     int i;
     /* Loop from 2nd element to next to last element, because
        we need to skip the " signs at start and end of the string */
@@ -76,28 +74,28 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
     if (ret_code == EOF_CODE)
         return EOF_CODE;
 
-    if (strcmp(token, QUOTE_SHORT_STR) == 0) {
+    if (strcmp1(token, QUOTE_SHORT_STR) == 0) {
         if ((ret_code = parse_quotation_symbol(tokens, fd, QUOTE_STR, out)) < 0)
             return ret_code;
-    } else if (strcmp(token, QUASIQUOTE_SHORT_STR) == 0) {
+    } else if (strcmp1(token, QUASIQUOTE_SHORT_STR) == 0) {
         if ((ret_code = parse_quotation_symbol(tokens, fd, QUASIQUOTE_STR, out)) < 0)
             return ret_code;
-    } else if (strcmp(token, COMMA_SHORT_STR) == 0) {
+    } else if (strcmp1(token, COMMA_SHORT_STR) == 0) {
         if ((ret_code = parse_quotation_symbol(tokens, fd, COMMA_STR, out) < 0))
             return ret_code;
-    } else if (strcmp(token, COMMA_AT_SHORT_STR) == 0) {
+    } else if (strcmp1(token, COMMA_AT_SHORT_STR) == 0) {
         if ((ret_code = parse_quotation_symbol(tokens, fd, COMMA_AT_STR, out)) < 0)
             return ret_code;
     } else if (is_number(token)) {
-        *out = expr_new_val(NUMBER, (uint64_t)atoi(token));
+        *out = expr_new_val(NUMBER, (uint64_t)atoi1(token));
     } else if (is_boolean(token)) {
-        int val = strcmp(token, BOOL_STR_T) == 0 ? 1 : 0;
+        int val = strcmp1(token, BOOL_STR_T) == 0 ? 1 : 0;
         *out = expr_new_val(BOOLEAN, (uint64_t)val);
     } else if (is_string(token)) {
         *out = expr_from_str(token);
     } else if (is_nil(token)) {
         *out = NULL;
-    } else if (strcmp("(", token) == 0) {
+    } else if (strcmp1("(", token) == 0) {
         expr *first = NULL, *curr = NULL, *prev = NULL;
         while (1) {
             token_t peeked_token;
@@ -105,7 +103,7 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
                 return ret_code;
             if (ret_code == EOF_CODE)
                 return EOF_WHILE_READING_EXPR_ERROR_CODE;
-            if (strcmp(")", peeked_token) == 0) break;
+            if (strcmp1(")", peeked_token) == 0) break;
 
             expr *new;
             if ((ret_code = parse_tokens(tokens, fd, &new)) < 0)
@@ -127,13 +125,13 @@ int parse_tokens(token_t *tokens, int fd, expr **out) {
         if ((ret_code = tokens_pop(tokens, fd, &closing_paren) < 0))
             return ret_code;
         *out = first;
-    } else if (strcmp(")", token) == 0) {
+    } else if (strcmp1(")", token) == 0) {
         printf("ERROR: PARSER: Unmatched closing parentheses\n");
         return -1;
     } else {
         /* If not any of the above, then its a symbol */
-        token_t symbol_name = my_malloc(strlen(token) + 1);
-        strcpy(symbol_name, token);
+        token_t symbol_name = my_malloc(strlen1(token) + 1);
+        strcpy1(symbol_name, token);
         *out = expr_new_val(SYMBOL, (uint64_t)symbol_name);
     }
 

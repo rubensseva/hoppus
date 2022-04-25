@@ -1,6 +1,6 @@
-#include "list.h"
+#include <list.h>
 
-#include "eval.h"
+#include <eval.h>
 
 /**
    When iterating through the list, a NULL pointer signifies the end

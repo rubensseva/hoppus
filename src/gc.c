@@ -1,7 +1,8 @@
 #include <stdint.h>
-#include <stdio.h>
-#include "gc.h"
-#include "utility.h"
+
+#include <USER_stdio.h>
+#include <gc.h>
+#include <clisp_utility.h>
 
 #define UNTAG(p) ((header *)(((uint64_t) (p)) & 0xFFFFFFFFFFFFFFFC))
 
@@ -61,25 +62,25 @@ header *new_next_ptr(header *old_next, header *new_next) {
 /* Inspired from https://maplant.com/gc.html */
 int gc_init() {
     static int initted;
-    FILE *statfp;
+    /* FILE *statfp;
 
     if (initted)
         return 0;
 
     initted = 1;
 
-    statfp = fopen("/proc/self/stat", "r");
-    if (statfp == NULL) {
-        perror("open");
-        printf("ERROR: GC: GC_INIT: Opening stat\n");
-        return -1;
-    }
-    fscanf(statfp,
-           "%*d %*s %*c %*d %*d %*d %*d %*d %*u "
-           "%*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld "
-           "%*ld %*ld %*ld %*ld %*llu %*lu %*ld "
-           "%*lu %*lu %*lu %lu", &stack_start);
-    fclose(statfp);
+    /* statfp = fopen("/proc/self/stat", "r"); */
+    /* if (statfp == NULL) { */
+    /*     perror("open"); */
+    /*     printf("ERROR: GC: GC_INIT: Opening stat\n"); */
+    /*     return -1; */
+    /* } */
+    /* fscanf(statfp, */
+    /*        "%*d %*s %*c %*d %*d %*d %*d %*d %*u " */
+    /*        "%*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld " */
+    /*        "%*ld %*ld %*ld %*ld %*llu %*lu %*ld " */
+    /*        "%*lu %*lu %*lu %lu", &stack_start); */
+    /* fclose(statfp); */
 
     heap_start = (header *)align_up((uint64_t)malloc_heap);
     heap_end = (header *)align_down((uint64_t)(malloc_heap + MALLOC_HEAP_SIZE));

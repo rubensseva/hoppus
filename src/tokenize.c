@@ -1,27 +1,16 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <USER_stdio.h>
+#include <user_thread.h>
 
-#include "utility.h"
-#include "config.h"
-#include "memory.h"
-#include "tokenize.h"
-#include "lib/string1.h"
+#include <clisp_utility.h>
+#include <clisp_config.h>
+#include <clisp_memory.h>
+#include <tokenize.h>
+#include <string1.h>
 
 int read_tokens_from_file(int fd, token_t *out) {
     char *buf = (char *) my_malloc(EXPR_STR_MAX_LEN);
-    int bytes_read = read(fd, buf, EXPR_STR_MAX_LEN);
-    if (bytes_read <= -1) {
-        perror("read");
-        printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: read() returned error\n");
-        return -1;
-    } else if (bytes_read == 0) {
-        printf("INFO: PARSER: EOF\n");
-        return EOF_CODE;
-    }
-    buf[bytes_read] = '\0';
+    read_line(buf);
+    // buf[] = '\0';
 
     int res = tokenize(buf, out);
     if (res < 0) {
@@ -98,8 +87,8 @@ int tokens_pop(token_t *tokens, int fd, token_t *out) {
 
     /* We could just return tokens[0], but I have a gut feeling that a malloc and
        strcpy is better. */
-    *out = my_malloc(strlen(tokens[0]) + 1);
-    strcpy(*out, tokens[0]);
+    *out = my_malloc(strlen1(tokens[0]) + 1);
+    strcpy1(*out, tokens[0]);
     int count = 0;
     while (tokens[count] != NULL && tokens[count + 1] != NULL) {
         tokens[count] = tokens[count + 1];
@@ -134,22 +123,22 @@ int tokens_peek(token_t *tokens, int fd, token_t *out) {
             return ret_code;
     }
 
-    *out = my_malloc(strlen(tokens[0]) + 1);
-    strcpy(*out, tokens[0]);
+    *out = my_malloc(strlen1(tokens[0]) + 1);
+    strcpy1(*out, tokens[0]);
     return 0;
 }
 
 int pad_str(char *str, char *pad) {
     int is_in_str = 0;
-    unsigned int pad_len = strlen(pad);
+    unsigned int pad_len = strlen1(pad);
     /* We want to recompute the string length each iteration, since the
        act of padding the string might increase its size */
-    for (int i = 0; i < strlen(str); i++) {
+    for (int i = 0; i < strlen1(str); i++) {
         if (str[i] == '"')
             is_in_str = !is_in_str;
 
         int pad_match = 1;
-        for (int j = 0; j < pad_len && j + i < strlen(str); j++) {
+        for (int j = 0; j < pad_len && j + i < strlen1(str); j++) {
             if (str[i + j] != pad[j]) {
                 pad_match = 0;
                 break;
@@ -170,7 +159,7 @@ int pad_str(char *str, char *pad) {
    of the tokens and puts them in "dest". */
 int tokenize(char *src_code, token_t *out) {
     /* Strip newlines */
-    int src_code_size = strlen(src_code), is_in_str = 0;
+    int src_code_size = strlen1(src_code), is_in_str = 0;
     for (int i = 0; i < src_code_size; i++) {
         if (src_code[i] == '"')
             is_in_str = !is_in_str;
@@ -187,7 +176,7 @@ int tokenize(char *src_code, token_t *out) {
 
     /* Pad commas, but not comma-ats */
     is_in_str = 0;
-    for (int i = 0, j = 0; i < strlen(src_code) - 1; i++) {
+    for (int i = 0, j = 0; i < strlen1(src_code) - 1; i++) {
         if (src_code[i] == '"')
             is_in_str = !is_in_str;
         if (src_code[i] == ',' && src_code[i + 1] != '@') {
@@ -208,8 +197,8 @@ int tokenize(char *src_code, token_t *out) {
             printf("ERROR: TOKENIZER: TOKENIZE: Too many tokens\n");
             return 01;
         }
-        char *new_str = my_malloc(strlen(token) + 1);
-        strcpy(new_str, token);
+        char *new_str = my_malloc(strlen1(token) + 1);
+        strcpy1(new_str, token);
         out[num_tokens++] = new_str;
         token = strtok1(NULL, " ");
     }

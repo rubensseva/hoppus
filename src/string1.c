@@ -1,9 +1,9 @@
-#include "lib/string1.h"
-#include "utility.h"
+#include <string1.h>
+#include <clisp_utility.h>
+#include <types.h>
 
-#include <string.h>
 
-#define NULL (void *)0x0
+// #define NULL (void *)0x0
 
 /**
    Trims delim from start and end of str.
@@ -11,7 +11,7 @@
    another position in the str argument.
 */
 char* trim1(char *str, char delim) {
-    unsigned int size = strlen(str);
+    unsigned int size = strlen1(str);
     int new_start = -1;
     for (int i = 0; i < size; i++) {
         if (str[i] != delim) {
@@ -21,7 +21,7 @@ char* trim1(char *str, char delim) {
     }
 
     str = &str[new_start];
-    size = strlen(str);
+    size = strlen1(str);
 
     int new_end = -1;
     for (int i = size - 1; i > 0; i--) {
@@ -34,7 +34,7 @@ char* trim1(char *str, char delim) {
 }
 
 int char_in_str(char c, char *s) {
-    unsigned int size = strlen(s);
+    unsigned int size = strlen1(s);
     for (int i = 0; i < size; i++) {
         if (c == s[i]) {
             return 1;
@@ -80,4 +80,48 @@ char* strtok1(char *str, const char* delim) {
     }
     _buffer = b;
     return ret;
+}
+
+
+uint32_t strlen1(char *str) {
+    for (int i = 0;;i++) {
+        if (str[i] == '\0')
+            return i;
+    }
+}
+
+uint32_t strcmp1(char *str1, char *str2) {
+    if (strlen1(str1) != strlen1(str2)) {
+        return 1;
+    }
+    for (int i = 0; i < strlen1(str1); i++) {
+        if (str1[i] != str2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+uint32_t strcpy1(char *str, char *buf) {
+    for (int i = 0; i < strlen1(str); i++) {
+        buf[i] = str[i];
+    }
+    buf[strlen1(str)] = '\0';
+    return 0;
+}
+
+
+/* From https://www.geeksforgeeks.org/write-your-own-atoi/ */
+int atoi1(char* str)
+{
+    int res = 0;
+    int sign = 1;
+    int i = 0;
+    if (str[0] == '-') {
+        sign = -1;
+        i++;
+    }
+    for (; str[i] != '\0'; i++)
+        res = res * 10 + str[i] - '0';
+    return sign * res;
 }

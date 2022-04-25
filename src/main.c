@@ -1,20 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <error.h>
-#include <string.h>
-
-#include "gc.h"
-#include "tokenize.h"
-#include "parser.h"
-#include "eval.h"
-#include "memory.h"
-#include "symbol.h"
-#include "builtins.h"
-#include "config.h"
-#include "constants.h"
-#include "lisp_lib.h"
+#include <string1.h>
+#include <gc.h>
+#include <tokenize.h>
+#include <parser.h>
+#include <eval.h>
+#include <clisp_memory.h>
+#include <symbol.h>
+#include <builtins.h>
+#include <clisp_config.h>
+#include <constants.h>
+#include <lisp_lib.h>
 
 void create_builtins() {
     symbol *defun = symbol_builtin_create("defun", bi_defun, 1);
@@ -104,7 +98,7 @@ int load_standard_library() {
     for (int i = 0; i < (sizeof(lib_strs) / sizeof(char *)); i++) {
         token_t *tokens = tokens_init();
         char *copy = my_malloc(EXPR_STR_MAX_LEN);
-        strcpy(copy, (char *)lib_strs[i]);
+        strcpy1(copy, (char *)lib_strs[i]);
         ret_code = tokenize(copy, tokens);
         if (ret_code < 0) {
             printf("ERROR: MAIN: tokenizing standard library string %s\n", (char *)lib_strs[0]);
@@ -137,7 +131,7 @@ int REPL_loop(int fd) {
     while (1) {
         if (fd == 1) {
             printf("$ ");
-            fflush(stdout);
+            // fflush(stdout);
         }
 
         ret_code = parse_tokens(tokens, fd, &parsed);
@@ -165,7 +159,7 @@ int REPL_loop(int fd) {
     return 0;
 }
 
-int main(int argc, char **argv) {
+int clisp_main(int argc, char **argv) {
     int ret_code;
     printf("INFO: MAIN: welcome to ukernel lisp!\n");
     if (argc > 2) {
@@ -185,16 +179,16 @@ int main(int argc, char **argv) {
     }
     printf("INFO: MAIN: standard library loaded\n");
 
-    int fd;
-    if (argc == 2) {
-        fd = open(argv[1], O_RDONLY);
-        if (fd == -1) {
-            perror("open");
-            return -1;
-        }
-    } else {
-        fd = 1;
-    }
+    int fd = 0;
+    /* if (argc == 2) { */
+    /*     fd = open(argv[1], O_RDONLY); */
+    /*     if (fd == -1) { */
+    /*         perror("open"); */
+    /*         return -1; */
+    /*     } */
+    /* } else { */
+    /*     fd = 1; */
+    /* } */
 
     printf("INFO: MAIN: starting REPL loop\n");
     ret_code = REPL_loop(fd);

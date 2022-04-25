@@ -1,17 +1,17 @@
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <USER_stdio.h>
+#include <string1.h>
 
-#include "gc.h"
-#include "eval.h"
-#include "parser.h"
-#include "expr.h"
-#include "symbol.h"
-#include "config.h"
-#include "constants.h"
-#include "memory.h"
-#include "builtins.h"
-#include "list.h"
+#include <gc.h>
+#include <eval.h>
+#include <parser.h>
+#include <expr.h>
+#include <symbol.h>
+#include <clisp_config.h>
+#include <constants.h>
+#include <clisp_memory.h>
+#include <builtins.h>
+#include <list.h>
 
 
 /** @brief Scans an expression tree for comma or comma-at signs, then takes
@@ -35,7 +35,7 @@ int quasiquote_eval(expr **e) {
             int handled_car = 0;
             if (car(*e) && tar(*e) == CONS && car(car(*e)) && tar(car(*e)) == SYMBOL) {
                 symbol *sym = symbol_find((char *)(dar(car(*e))));
-                if (sym && strcmp(sym->name, COMMA_STR) == 0) {
+                if (sym && strcmp1(sym->name, COMMA_STR) == 0) {
                     expr *evald;
                     ret_code = eval(car(cdr(car(*e))), &evald);
                     if (ret_code < 0) {
@@ -45,7 +45,7 @@ int quasiquote_eval(expr **e) {
                     set_car(*e, evald);
                     handled_car = 1;
                 }
-                if (sym && strcmp(sym->name, COMMA_AT_STR) == 0) {
+                if (sym && strcmp1(sym->name, COMMA_AT_STR) == 0) {
                     expr *evald;
                     ret_code = eval(car(cdr(car(*e))), &evald);
                     if (ret_code < 0) {
@@ -112,7 +112,7 @@ int add_param_symbols(expr *params, expr *args) {
             return NUMBER_OF_ARGUMENTS_ERROR;
         }
 
-        if (!is_rest && strcmp((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
+        if (!is_rest && strcmp1((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
             if (cdr(curr_param) == NULL) {
                 printf("ERROR: EVAL: ADD_PARAM_SYMBOLS: found &rest keyword, but no argument after it\n");
                 return -1;
@@ -151,7 +151,7 @@ int add_param_symbols(expr *params, expr *args) {
 int remove_param_symbols(expr *params) {
     expr *curr_param = params;
     for_each(curr_param) {
-        if (strcmp((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
+        if (strcmp1((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
             continue;
         }
         int sym_res = symbol_remove_name((char *)dar(curr_param));

@@ -1,16 +1,15 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include <string1.h>
 
-#include "builtins.h"
-#include "parser.h"
-#include "eval.h"
-#include "list.h"
-#include "expr.h"
-#include "symbol.h"
-#include "memory.h"
-#include "config.h"
-#include "constants.h"
+#include <builtins.h>
+#include <parser.h>
+#include <eval.h>
+#include <list.h>
+#include <expr.h>
+#include <symbol.h>
+#include <clisp_memory.h>
+#include <clisp_config.h>
+#include <constants.h>
 
 /**
    Here are all the builtin functions. Some of them are also special operators,
@@ -58,7 +57,7 @@ int bi_defun(expr *arg, expr **out) {
     for_each(curr) {
         if (tar(curr) != SYMBOL) return TYPE_ERROR;
 
-        if (strcmp((char *)dar(curr), REST_ARGUMENTS_STR) == 0) {
+        if (strcmp1((char *)dar(curr), REST_ARGUMENTS_STR) == 0) {
             if (cdr(curr) == NULL) {
                 printf("ERROR: BUILTIN: DEFUN: expected a symbol after &rest keyword, but got nothing\n");
                 return NUMBER_OF_ARGUMENTS_ERROR;
@@ -67,8 +66,8 @@ int bi_defun(expr *arg, expr **out) {
     }
 
     char *defun_name = (char *)(dar(arg));
-    char *buf = my_malloc(strlen(defun_name) + 1);
-    strcpy(buf, defun_name);
+    char *buf = my_malloc(strlen1(defun_name) + 1);
+    strcpy1(buf, defun_name);
 
     symbol *new_sym = symbol_create(buf, FUNCTION, arg);
 
@@ -101,9 +100,9 @@ int bi_define(expr *arg, expr **out) {
     if ((ret_code = eval(car(cdr(arg)), &evaluated_arg) < 0)) return ret_code;
 
     char *define_name = (char *)dar(arg);
-    char *buf = my_malloc(strlen(define_name) + 1);
+    char *buf = my_malloc(strlen1(define_name) + 1);
     /* The name of the symbol exist directly as a string in the first argument. */
-    strcpy(buf, define_name);
+    strcpy1(buf, define_name);
     symbol *new_sym = symbol_create(buf, VARIABLE, evaluated_arg);
 
     symbol_add(new_sym);
@@ -366,8 +365,8 @@ int bi_defmacro(expr *arg, expr **out) {
         if (tar(curr) != SYMBOL) return TYPE_ERROR;
     }
     char *macro_name = (char *)dar(arg);
-    char *buf = my_malloc(strlen(macro_name) + 1);
-    strcpy(buf, macro_name);
+    char *buf = my_malloc(strlen1(macro_name) + 1);
+    strcpy1(buf, macro_name);
     symbol_add(symbol_create(buf, MACRO, arg));
     *out = arg;
     return 0;

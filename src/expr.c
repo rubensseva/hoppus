@@ -1,10 +1,9 @@
-#include <stdio.h>
-#include <string.h>
+#include <string1.h>
 
-#include "expr.h"
-#include "memory.h"
-#include "list.h"
-#include "config.h"
+#include <expr.h>
+#include <list.h>
+#include <clisp_memory.h>
+#include <clisp_config.h>
 
 #define CDR_UNTAG(cdr) ((expr *)(((uint64_t) cdr) & 0xFFFFFFFFFFFFFFFE))
 #define CDR_IS_CONS(cdr) (!((expr *)(((uint64_t) (cdr)) & 1)))
@@ -174,7 +173,7 @@ int expr_is_equal(expr *e1, expr *e2) {
                 return -1;
             }
             /* TODO: Perhaps just comparing the pointers is better here? */
-            int cmp_eq = strcmp((char *)data(e1), (char *)data(e2));
+            int cmp_eq = strcmp1((char *)data(e1), (char *)data(e2));
             return cmp_eq ? 0 : 1;
         case CONS:;
             if (type(e2) != CONS) {
