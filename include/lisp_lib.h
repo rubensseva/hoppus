@@ -1,67 +1,69 @@
 #ifndef LISP_LIB_H_
 #define LISP_LIB_H_
 
-#define LISP_LIB_IF                          \
-    "(defmacro if (pred form other-form) "   \
-    "`(cond (,pred ,form) (true ,other-form))) "
+#include <link.h>
 
-#define LISP_LIB_NOT           \
+__USER_DATA char LISP_LIB_IF[] = \
+    "(defmacro if (pred form other-form) " \
+    "`(cond (,pred ,form) (true ,other-form))) ";
+
+__USER_DATA char LISP_LIB_NOT[] =           \
     "(defmacro not (form) "    \
-    "`(if ,form false true)) "
+    "`(if ,form false true)) ";
 
-#define LISP_LIB_WHEN               \
+__USER_DATA char LISP_LIB_WHEN[] =                       \
     "(defmacro when (pred form) "   \
-    "`(if ,pred ,form nil)) "
+    "`(if ,pred ,form nil)) ";
 
-#define LISP_LIB_CADR          \
+__USER_DATA char LISP_LIB_CADR[] =          \
     "(defun cadr (cell) "      \
-    "(car (cdr cell)))"
+    "(car (cdr cell)))";
 
-#define LISP_LIB_LIST          \
+__USER_DATA char LISP_LIB_LIST[] =          \
     "(defun list (&rest rst) " \
-    "rst)"
+    "rst)";
 
-#define LISP_LIB__LENGTH                   \
+__USER_DATA char LISP_LIB__LENGTH[] =                   \
     "(defun __length (list count) "        \
     "(if list "                            \
     "(__length (cdr list) (+ count 1)) "   \
-    "count))"
+    "count))";
 
-#define LISP_LIB_LENGTH           \
+__USER_DATA char LISP_LIB_LENGTH[] =           \
     "(defun length (list) "       \
     "(if list "                   \
     "(__length list 0) "    \
-        "0)) "
+    "0)) ";
 
-#define LISP_LIB_CONCAT                             \
+__USER_DATA char LISP_LIB_CONCAT[] =                             \
     "(defun concat (seq1 seq2) "                    \
     "(if seq1 "                                     \
     "(cons (car seq1) (concat (cdr seq1) seq2)) "   \
-    "seq2))"
+    "seq2))";
 
-#define LISP_LIB_NTH                \
+__USER_DATA char LISP_LIB_NTH[] =                \
     "(defun nth (i l) "             \
      "(if i (nth (- i 1) (cdr l)) " \
-        "(car l))) "
+    "(car l))) ";
 
-#define LISP_LIB_FIRST      \
+__USER_DATA char LISP_LIB_FIRST[] =      \
     "(defun first (l) "     \
-    "(car l)) "
-#define LISP_LIB_SECOND     \
+    "(car l)) ";
+__USER_DATA char LISP_LIB_SECOND[] =     \
     "(defun second (l) "    \
-    "(nth 1 l)) "
-#define LISP_LIB_THIRD      \
+    "(nth 1 l)) ";
+__USER_DATA char LISP_LIB_THIRD[] =      \
     "(defun third (l) "     \
-    "(nth 2 l)) "
-#define LISP_LIB_FOURTH     \
+    "(nth 2 l)) ";
+__USER_DATA char LISP_LIB_FOURTH[] =     \
     "(defun fourth (l) "    \
-    "(nth 3 l)) "
-#define LISP_LIB_FIFTH      \
+    "(nth 3 l)) ";
+__USER_DATA char LISP_LIB_FIFTH[] =      \
     "(defun fifth (l) "     \
-    "(nth 4 l)) "
+    "(nth 4 l)) ";
 
 
-const char* lib_strs[] = {
+__USER_DATA const char* lib_strs[] = {
     LISP_LIB_IF,
     LISP_LIB_NOT,
     LISP_LIB_WHEN,

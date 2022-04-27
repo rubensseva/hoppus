@@ -5,11 +5,9 @@
 
 /* Config for clisp, without microkernel */
 // #define NULL (void *)0x0;
-#define __USER_DATA
-#define __USER_TEXT
 // #define MALLOC_HEAP_SIZE 65536
 // #define MALLOC_HEAP_SIZE 131072
-#define MALLOC_HEAP_SIZE 262144
+// #define MALLOC_HEAP_SIZE 262144
 // #define MALLOC_HEAP_SIZE 524288
 // #define MALLOC_HEAP_SIZE 2097152
 
@@ -23,8 +21,8 @@ struct header {
     header *next;
 };
 
-uint64_t gc_stats_get_num_malloc();
-uint64_t gc_stats_get_allocated_total();
+uint32_t gc_stats_get_num_malloc();
+uint32_t gc_stats_get_allocated_total();
 
 int gc_init();
 int gc_maybe_mark_and_sweep();

@@ -3,39 +3,39 @@
 #include <USER_stdio.h>
 #include <gc.h>
 #include <clisp_utility.h>
+#include <link.h>
 
-#define UNTAG(p) ((header *)(((uint64_t) (p)) & 0xFFFFFFFFFFFFFFFC))
+#define UNTAG(p) ((header *)(((uint32_t) (p)) & 0xFFFFFFFC))
 
 /* provided by linker, sdata is from customized default linker script,
    not in regular default linker script */
 extern char end, sdata;
 
-header *used = NULL;
-header *prev_malloced = NULL;
+__USER_DATA header *used = NULL;
+__USER_DATA header *prev_malloced = NULL;
 
-uint64_t stack_start;
+// char malloc_heap[MALLOC_HEAP_SIZE];
+__USER_DATA uint32_t gc_allocated_size = 0;
 
-char malloc_heap[MALLOC_HEAP_SIZE];
-uint64_t gc_allocated_size = 0;
-
-header *heap_start = NULL;
-header *heap_end = NULL;
+__USER_DATA header *heap_start = NULL;
+__USER_DATA header *heap_end = NULL;
+__USER_DATA uint32_t heap_size = 0;
 
 
-uint64_t gc_stats_num_malloc = 0;
-uint64_t gc_stats_allocated_total = 0;
+__USER_DATA uint32_t gc_stats_num_malloc = 0;
+__USER_DATA uint32_t gc_stats_allocated_total = 0;
 
-uint64_t gc_stats_get_num_malloc() {
+__USER_TEXT uint32_t gc_stats_get_num_malloc() {
     return gc_stats_num_malloc;
 }
-uint64_t gc_stats_get_allocated_total() {
+__USER_TEXT uint32_t gc_stats_get_allocated_total() {
     return gc_stats_allocated_total;
 }
 
-unsigned int gc_get_cap() {
-    return MALLOC_HEAP_SIZE;
+__USER_TEXT unsigned int gc_get_cap() {
+    return heap_size;
 }
-unsigned int gc_calc_allocated() {
+__USER_TEXT unsigned int gc_calc_allocated() {
     unsigned int count = 0;
     for (header *u = used; u != NULL; u = UNTAG(u->next)) {
         count += u->size + 1;
@@ -44,23 +44,23 @@ unsigned int gc_calc_allocated() {
 }
 
 
-uint64_t align_up(uint64_t ptr) {
+__USER_TEXT uint32_t align_up(uint32_t ptr) {
     if (ptr % sizeof(header) != 0)
         ptr += sizeof(header) - ptr % sizeof(header);
     return ptr;
 }
-uint64_t align_down(uint64_t ptr) {
+__USER_TEXT uint32_t align_down(uint32_t ptr) {
     if (ptr % sizeof(header) != 0)
         ptr -= ptr % sizeof(header);
     return ptr;
 }
 
-header *new_next_ptr(header *old_next, header *new_next) {
-    return (header *)((uint64_t)UNTAG(new_next) | ((uint64_t)old_next & 1));
+__USER_TEXT header *new_next_ptr(header *old_next, header *new_next) {
+    return (header *)((uint32_t)UNTAG(new_next) | ((uint32_t)old_next & 1));
 }
 
 /* Inspired from https://maplant.com/gc.html */
-int gc_init() {
+__USER_TEXT int gc_init() {
     static int initted;
     /* FILE *statfp;
 
@@ -72,7 +72,7 @@ int gc_init() {
     /* statfp = fopen("/proc/self/stat", "r"); */
     /* if (statfp == NULL) { */
     /*     perror("open"); */
-    /*     printf("ERROR: GC: GC_INIT: Opening stat\n"); */
+    /*     user_puts("ERROR: GC: GC_INIT: Opening stat\n"); */
     /*     return -1; */
     /* } */
     /* fscanf(statfp, */
@@ -82,8 +82,12 @@ int gc_init() {
     /*        "%*lu %*lu %*lu %lu", &stack_start); */
     /* fclose(statfp); */
 
-    heap_start = (header *)align_up((uint64_t)malloc_heap);
-    heap_end = (header *)align_down((uint64_t)(malloc_heap + MALLOC_HEAP_SIZE));
+    heap_start = (header *)align_up((uint32_t)&user_thread_heap_start);
+    heap_end = (header *)align_down((uint32_t)&user_thread_heap_end);
+    heap_size = (char *)heap_end - (char *)heap_start;
+
+    /* heap_start = (header *)align_up((uint32_t)malloc_heap); */
+    /* heap_end = (header *)align_down((uint32_t)(malloc_heap + MALLOC_HEAP_SIZE)); */
 
     gc_allocated_size = 0;
     used = NULL;
@@ -91,52 +95,49 @@ int gc_init() {
 }
 
 
-int gc_is_skippable_ptr(uint64_t *p) {
-    return (*p < (uint64_t)malloc_heap || *p >= (uint64_t)(malloc_heap + MALLOC_HEAP_SIZE)) || /* If outside heap */
-        (p == (uint64_t*)used || p == (uint64_t*)prev_malloced); /* If pointing to gc structures */
+__USER_TEXT int gc_is_skippable_ptr(uint32_t *p) {
+    return (*p < (uint32_t)heap_start || *p >= (uint32_t)heap_end) || /* If points to outside heap */
+        (p == (uint32_t*)used || p == (uint32_t*)prev_malloced); /* If we are checking a gc address */
 }
 
-void gc_scan_follow_obj(header *u) {
-    for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
-        if (gc_is_skippable_ptr((uint64_t *) p))
+__USER_TEXT void gc_scan_follow_obj(header *u) {
+    for (header *p = u + 1; p <= (header *)((uint32_t *)(u + 1 + u->size) - 1); p = (header *)((uint32_t *)p + 1)) {
+        if (gc_is_skippable_ptr((uint32_t *) p))
             continue;
-        uint64_t v = *(uint64_t *)p;
+        uint32_t v = *(uint32_t *)p;
         /* For each memory region, check if it points to any other entry in the used list */
         for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
-            if (((uint64_t)uu->next & 1) == 1)
+            if (((uint32_t)uu->next & 1) == 1)
                 continue;
 
-            if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
+            if (v >= (uint32_t)(uu + 1) && v <= (uint32_t)(uu + 1 + uu->size)) {
                 /* Mark as live */
-                uu->next = (header *)((uint64_t)uu->next | 1);
+                uu->next = (header *)((uint32_t)uu->next | 1);
                 gc_scan_follow_obj(uu);
             }
         }
     }
 }
 
-int gc_scan_heap() {
-    header *heap = (header *) align_up((uint64_t)malloc_heap);
-    header *heap_end = (header *) ((char *)heap + MALLOC_HEAP_SIZE);
-
-    uint64_t *b = (uint64_t *)heap;
+__USER_TEXT int gc_scan_heap() {
+    uint32_t *b = heap_start;
 
     for(header *u = used; u != NULL; u = UNTAG(u->next)) {
         /* If the block is not marked, skip it */
-        if (((uint64_t)u->next & 1) == 0)
+        if (((uint32_t)u->next & 1) == 0)
             continue;
         /* Go through the memory of the used block */
-        for (header *p = u + 1; p <= (header *)((uint64_t *)(u + 1 + u->size) - 1); p = (header *)((uint64_t *)p + 1)) {
-            if (gc_is_skippable_ptr((uint64_t *) p))
+        for (header *p = u + 1; p <= (header *)((uint32_t *)(u + 1 + u->size) - 1); p = (header *)((uint32_t *)p + 1)) {
+            if (gc_is_skippable_ptr((uint32_t *) p))
                 continue;
-            uint64_t v = *(uint64_t *)p;
+            uint32_t v = *(uint32_t *)p;
             for (header *uu = used; uu != NULL; uu = UNTAG(uu->next)) {
-                if (((uint64_t)uu->next & 1) == 1)
+                if (((uint32_t)uu->next & 1) == 1)
                     continue;
 
-                if (v >= (uint64_t)(uu + 1) && v <= (uint64_t)(uu + 1 + uu->size)) {
+                if (v >= (uint32_t)(uu + 1) && v <= (uint32_t)(uu + 1 + uu->size)) {
                     /* Mark as live */
-                    uu->next = (header *)((uint64_t)uu->next | 1);
+                    uu->next = (header *)((uint32_t)uu->next | 1);
                     gc_scan_follow_obj(uu);
                 }
             }
@@ -145,32 +146,34 @@ int gc_scan_heap() {
     return 0;
 }
 
-int gc_scan_region(uint64_t *start, uint64_t *end) {
-    for (uint64_t *p = start; p <= end - 1; p += 1) {
+__USER_TEXT int gc_scan_region(uint32_t *start, uint32_t *end) {
+    user_printf("INFO: GC: scanning region from %x to %x\n", start, end);
+    for (uint32_t *p = start; p <= end - 1; p += 1) {
         if (gc_is_skippable_ptr(p))
             continue;
-        uint64_t v = *p;
+        uint32_t v = *p;
         for (header *u = used; u != NULL; u = UNTAG(u->next)) {
             /* If the block is marked, skip it */
-            if (((uint64_t)u->next & 1) == 1) {
+            if (((uint32_t)u->next & 1) == 1) {
                 continue;
             }
             /* If an address in the region points to a used block, mark it as live */
-            if (v >= (uint64_t)(u + 1) && v <= (uint64_t)(u + 1 + u->size)) {
-                u->next = (header *)((uint64_t)u->next | 1);
+            if (v >= (uint32_t)(u + 1) && v <= (uint32_t)(u + 1 + u->size)) {
+                u->next = (header *)((uint32_t)u->next | 1);
             }
         }
     }
     return 0;
 }
 
-int gc_sweep() {
+__USER_TEXT int gc_sweep() {
     unsigned int num_sweeped = 0;
     // for (header *u = used, *prev = NULL; u != NULL; prev = u, u = UNTAG(u->next)) {
     header *u = used, *prev = NULL;
     while (u != NULL) {
-        if (((uint64_t)u->next & 1) == 0) {
+        if (((uint32_t)u->next & 1) == 0) {
             num_sweeped++;
+            user_printf("INFO: GC: sweeping %x\n", u);
             gc_allocated_size -= (u->size + 1) * sizeof(header);
             if (u == prev_malloced)
                 prev_malloced = prev;
@@ -185,37 +188,37 @@ int gc_sweep() {
         prev = u;
         u = UNTAG(u->next);
     }
-    printf("INFO: GC: sweeped %d objects\n", num_sweeped);
+    user_printf("INFO: GC: sweeped %d objects\n", num_sweeped);
     return 0;
 }
 
-int gc_dump_info() {
+__USER_TEXT int gc_dump_info() {
     int count = 0, marked = 0, unmarked = 0;
     for (header *u = used; u != NULL; u = UNTAG(u->next)) {
         count++;
-        if (((uint64_t)u->next & 1) == 1) {
+        if (((uint32_t)u->next & 1) == 1) {
             marked++;
         } else {
             unmarked++;
         }
     }
-    printf("INFO: GC: %d allocated objects\n", count);
-    printf("INFO: GC: %d marked objects\n", marked);
-    printf("INFO: GC: %d unmarked objects\n", unmarked);
-    printf("INFO: GC: %lu num mallocs\n", gc_stats_get_num_malloc());
-    printf("INFO: GC: %lu total alloc\n", gc_stats_get_allocated_total());
-    printf("INFO: GC: gc done %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
-    printf("INFO: GC: gc recalculated  %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE);
+    user_printf("INFO: GC: %d allocated objects\n", count);
+    user_printf("INFO: GC: %d marked objects\n", marked);
+    user_printf("INFO: GC: %d unmarked objects\n", unmarked);
+    user_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
+    user_printf("INFO: GC: %d total alloc\n", gc_stats_get_allocated_total());
+    user_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
+    user_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
     return 0;
 }
 
-int gc_mark_and_sweep() {
-    uint64_t *stack_end;
-    register void *sp asm ("sp");
-    stack_end = sp;
+__USER_TEXT int gc_mark_and_sweep() {
+    uint32_t *sp;
+    register void *_sp asm ("sp");
+    sp = _sp;
 
-    printf("-----------------------------\n");
-    printf("INFO: GC: starting\n");
+    user_puts("-----------------------------\n");
+    user_puts("INFO: GC: starting\n");
 
     /* Reset gc marks */
     for (header *u = used; u != NULL; u = UNTAG(u->next))
@@ -226,45 +229,49 @@ int gc_mark_and_sweep() {
     }
     /* Scan data segments. Skip the heap. Since "end" is the last
        address PAST bss, we need to subtract 1 */
-    gc_scan_region((uint64_t *)&sdata, (uint64_t *)malloc_heap);
-    gc_scan_region((uint64_t *)(malloc_heap + MALLOC_HEAP_SIZE), (uint64_t *)&end - 1);
+    /* gc_scan_region((uint32_t *)&sdata, (uint32_t *)malloc_heap); */
+    /* gc_scan_region((uint32_t *)(malloc_heap + MALLOC_HEAP_SIZE), (uint32_t *)&end - 1); */
 
-    gc_scan_region(stack_end, (uint64_t *)stack_start);
+    gc_scan_region((uint32_t *) &user_bss_start, (uint32_t *) &user_bss_end);
+    gc_scan_region((uint32_t *) &user_data_misc_start, (uint32_t *) &user_data_misc_end);
+
+    gc_scan_region(sp, (uint32_t *)&user_thread_stack_end);
     gc_scan_heap();
 
 
-    printf("INFO: GC: scan finished\n");
+    user_puts("INFO: GC: scan finished\n");
     gc_dump_info();
     gc_sweep();
-    printf("-----------------------------\n");
+    gc_dump_info();
+    user_puts("-----------------------------\n");
 
     return 0;
 }
 
-int gc_maybe_mark_and_sweep() {
-    if (gc_allocated_size >= (MALLOC_HEAP_SIZE >> 1)) {
-        printf("INFO: GC: gc running %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
-        printf("INFO: GC: gc recalculated %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE);
-        int ret_code = gc_mark_and_sweep();
-        printf("INFO: GC: gc done %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE);
-        printf("INFO: GC: gc recalculated  %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE);
-        return ret_code;
-    }
-    return 0;
-}
+/* __USER_TEXT int gc_maybe_mark_and_sweep() { */
+/*     if (gc_allocated_size >= (MALLOC_HEAP_SIZE >> 1)) { */
+/*         user_printf("INFO: GC: gc running %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE); */
+/*         user_printf("INFO: GC: gc recalculated %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE); */
+/*         int ret_code = gc_mark_and_sweep(); */
+/*         user_printf("INFO: GC: gc done %lu / %d\n", gc_allocated_size, MALLOC_HEAP_SIZE); */
+/*         user_printf("INFO: GC: gc recalculated  %u / %d\n", gc_calc_allocated(), MALLOC_HEAP_SIZE); */
+/*         return ret_code; */
+/*     } */
+/*     return 0; */
+/* } */
 
 
-void gc_alloc_dump() {
-    printf("INFO: GC: heap start %p, end %p\n", malloc_heap, malloc_heap + MALLOC_HEAP_SIZE);
+__USER_TEXT void gc_alloc_dump() {
+    user_printf("INFO: GC: heap start %p, end %p\n", heap_start, heap_end);
     int i = 0;
     for (header *u = used, *tag_addr = used->next;
          u != NULL && UNTAG(u->next) != NULL;
          u = UNTAG(u->next), tag_addr = u->next) {
-        printf("INFO: GC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
+        user_printf("INFO: GC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
     }
 }
 
-void *gc_malloc_units(unsigned int required_units) {
+__USER_TEXT void *gc_malloc_units(unsigned int required_units) {
     /* Set up used list if it is empty */
     if (used == NULL) {
         header *free_base = (header *)heap_start;
@@ -290,7 +297,7 @@ void *gc_malloc_units(unsigned int required_units) {
         header *free_base, *u_end = u + 1 + u->size;
 
         /* Space between this block and the next block. Most common case, so lets check for it first. */
-        if (u->next != NULL && required_units < UNTAG(u->next) - u_end) {
+        if (UNTAG(u->next) != NULL && required_units < UNTAG(u->next) - u_end) {
             free_base = u_end;
             free_base->next = u->next;
             u->next = new_next_ptr(u->next, free_base); // TODO: Why do we not use new_next_ptr here?
@@ -316,22 +323,22 @@ void *gc_malloc_units(unsigned int required_units) {
     return NULL;
 }
 
-void *gc_malloc(unsigned int size) {
+__USER_TEXT void *gc_malloc(unsigned int size) {
     if (size <= 0) {
-        printf("ERROR: GC: MALLOC: got request to malloc with size 0\n");
+        user_puts("ERROR: GC: MALLOC: got request to malloc with size 0\n");
         return (void *)NULL;
     }
     if (!heap_start || !heap_end) {
-        printf("ERROR: GC: MALLOC: missing heap start or end\n");
+        user_puts("ERROR: GC: MALLOC: missing heap start or end\n");
         return (void *)NULL;
     }
 
     unsigned int required_units = (align_up(size) + sizeof(header)) / sizeof(header);
-    if (required_units * sizeof(header) > MALLOC_HEAP_SIZE) {
-        printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %lu, but its more than the size of the heap which is %d\n",
+    if (required_units * sizeof(header) > heap_size) {
+        user_printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %d, but its more than the size of the heap which is %d\n",
                size,
                required_units * sizeof(header),
-               MALLOC_HEAP_SIZE);
+               heap_size);
         return (void *)NULL;
     }
 
@@ -343,10 +350,10 @@ void *gc_malloc(unsigned int size) {
     }
 
     if (ptr == NULL) {
-        printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
+        user_printf("ERROR: GC: MALLOC: couldnt find space for size %d, units %d\n", size, required_units);
     }
     gc_stats_num_malloc += 1;
     gc_stats_allocated_total += required_units * sizeof(header);
-    /* printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap()); */
+    /* user_printf("INFO: GC: MALLOC: currently allocated %d / %d\n", gc_calc_allocated(), gc_get_cap()); */
     return ptr;
 }

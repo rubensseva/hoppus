@@ -1,6 +1,9 @@
 #include <string1.h>
 #include <clisp_utility.h>
 #include <types.h>
+#include <link.h>
+
+#include <USER_stdio.h>
 
 
 // #define NULL (void *)0x0
@@ -10,7 +13,7 @@
    Modifies the str. The returned string is just the str argument, possibly
    another position in the str argument.
 */
-char* trim1(char *str, char delim) {
+__USER_TEXT char* trim1(char *str, char delim) {
     unsigned int size = strlen1(str);
     int new_start = -1;
     for (int i = 0; i < size; i++) {
@@ -33,7 +36,7 @@ char* trim1(char *str, char delim) {
     return str;
 }
 
-int char_in_str(char c, char *s) {
+__USER_TEXT int char_in_str(char c, char *s) {
     unsigned int size = strlen1(s);
     for (int i = 0; i < size; i++) {
         if (c == s[i]) {
@@ -48,8 +51,8 @@ int char_in_str(char c, char *s) {
 
    str must be trimmed for delim at start and end
 */
-char* strtok1(char *str, const char* delim) {
-    static char* _buffer;
+__USER_TEXT char* strtok1(char *str, const char* delim) {
+    static __USER_DATA char* _buffer;
     if(str != NULL) _buffer = str;
     if(_buffer[0] == '\0') return NULL;
 
@@ -83,14 +86,17 @@ char* strtok1(char *str, const char* delim) {
 }
 
 
-uint32_t strlen1(char *str) {
+__USER_TEXT uint32_t strlen1(char *str) {
+    if (str == NULL) {
+        user_puts("STR is NULL\n");
+    }
     for (int i = 0;;i++) {
         if (str[i] == '\0')
             return i;
     }
 }
 
-uint32_t strcmp1(char *str1, char *str2) {
+__USER_TEXT uint32_t strcmp1(char *str1, char *str2) {
     if (strlen1(str1) != strlen1(str2)) {
         return 1;
     }
@@ -102,17 +108,17 @@ uint32_t strcmp1(char *str1, char *str2) {
     return 0;
 }
 
-uint32_t strcpy1(char *str, char *buf) {
-    for (int i = 0; i < strlen1(str); i++) {
-        buf[i] = str[i];
+__USER_TEXT uint32_t strcpy1(char *dest, char *src) {
+    for (int i = 0; i < strlen1(src); i++) {
+        dest[i] = src[i];
     }
-    buf[strlen1(str)] = '\0';
+    dest[strlen1(src)] = '\0';
     return 0;
 }
 
 
 /* From https://www.geeksforgeeks.org/write-your-own-atoi/ */
-int atoi1(char* str)
+__USER_TEXT int atoi1(char* str)
 {
     int res = 0;
     int sign = 1;

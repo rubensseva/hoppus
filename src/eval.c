@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <USER_stdio.h>
 #include <string1.h>
+#include <link.h>
 
 #include <gc.h>
 #include <eval.h>
@@ -21,7 +22,7 @@
     be modified in-place.
     @return Status code
 */
-int quasiquote_eval(expr **e) {
+__USER_TEXT int quasiquote_eval(expr **e) {
     int ret_code;
     if (e == NULL || *e == NULL)
         return 0;
@@ -39,7 +40,7 @@ int quasiquote_eval(expr **e) {
                     expr *evald;
                     ret_code = eval(car(cdr(car(*e))), &evald);
                     if (ret_code < 0) {
-                        printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
+                        user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
                         goto error;
                     }
                     set_car(*e, evald);
@@ -49,7 +50,7 @@ int quasiquote_eval(expr **e) {
                     expr *evald;
                     ret_code = eval(car(cdr(car(*e))), &evald);
                     if (ret_code < 0) {
-                        printf("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
+                        user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
                         goto error;
                     }
                     /* Splice */
@@ -64,7 +65,7 @@ int quasiquote_eval(expr **e) {
                 expr *tmp = car(*e);
                 ret_code = quasiquote_eval(&tmp);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
+                    user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
                     goto error;
                 }
                 set_car(*e, tmp);
@@ -72,13 +73,13 @@ int quasiquote_eval(expr **e) {
             expr *tmp = cdr(*e);
             ret_code = quasiquote_eval(&tmp);
             if (ret_code < 0) {
-                printf("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
+                user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
                 goto error;
             }
             set_cdr(*e, tmp);
             return 0;
         default:
-            printf("ERROR: EVAL: QUASIQUOTE_EVAL: Got unknown type: %d\n", type(*e));
+            user_printf("ERROR: EVAL: QUASIQUOTE_EVAL: Got unknown type: %d\n", type(*e));
             ret_code = -1;
             goto error;
     }
@@ -99,7 +100,7 @@ error:
    @param params List of parameters, the names of the symbols
    @return Status code
 */
-int add_param_symbols(expr *params, expr *args) {
+__USER_TEXT int add_param_symbols(expr *params, expr *args) {
     expr *curr_arg = args, *curr_param = params,
         *rest_param = NULL, *rest_arguments = NULL, *curr_rest_argument = NULL;
     int is_rest = 0;
@@ -108,13 +109,13 @@ int add_param_symbols(expr *params, expr *args) {
     /* TODO: Simplify the boolean logic here */
     while ((!is_rest && !list_end(curr_param)) || !list_end(curr_arg)) {
         if ((!is_rest && list_end(curr_param)) || list_end(curr_arg)) {
-            printf("ERROR: EVAL: ADD_PARAM_SYMBOLS: mismatch between number of args and params\n");
+            user_puts("ERROR: EVAL: ADD_PARAM_SYMBOLS: mismatch between number of args and params\n");
             return NUMBER_OF_ARGUMENTS_ERROR;
         }
 
         if (!is_rest && strcmp1((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
             if (cdr(curr_param) == NULL) {
-                printf("ERROR: EVAL: ADD_PARAM_SYMBOLS: found &rest keyword, but no argument after it\n");
+                user_puts("ERROR: EVAL: ADD_PARAM_SYMBOLS: found &rest keyword, but no argument after it\n");
                 return -1;
             }
             is_rest = 1;
@@ -148,7 +149,7 @@ int add_param_symbols(expr *params, expr *args) {
     return 0;
 }
 
-int remove_param_symbols(expr *params) {
+__USER_TEXT int remove_param_symbols(expr *params) {
     expr *curr_param = params;
     for_each(curr_param) {
         if (strcmp1((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
@@ -156,7 +157,7 @@ int remove_param_symbols(expr *params) {
         }
         int sym_res = symbol_remove_name((char *)dar(curr_param));
         if (sym_res < 0) {
-            printf("WARNING: EVAL: Unable to remove symbol %s\n",
+            user_printf("WARNING: EVAL: Unable to remove symbol %s\n",
                    (char *)dar(curr_param));
             return sym_res;
         }
@@ -172,7 +173,7 @@ int remove_param_symbols(expr *params) {
    @param args The arguments to this invokation
    @return status code
 */
-int function_invocation(symbol *sym, expr *args, expr **out) {
+__USER_TEXT int function_invocation(symbol *sym, expr *args, expr **out) {
     int ret_code;
     expr *defun_params = sym->e;
     expr *function_params = car(cdr(defun_params)), *name = car(defun_params),
@@ -185,7 +186,7 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
     while (!list_end(curr_form)) {
         int eval_res = eval(car(curr_form), out);
         if (eval_res < 0) {
-            printf("ERROR: EVAL: FUNCTION_INVOKATION: error when evaluating function forms\n");
+            user_puts("ERROR: EVAL: FUNCTION_INVOKATION: error when evaluating function forms\n");
             return eval_res;
         }
         curr_form = cdr(curr_form);
@@ -195,10 +196,10 @@ int function_invocation(symbol *sym, expr *args, expr **out) {
     return 0;
 }
 
-int eval(expr *e, expr **out) {
+__USER_TEXT int eval(expr *e, expr **out) {
     int ret_code;
     if (e == NULL) {
-        printf("WARNING: EVAL: Eval got NULL, returning NULL\n");
+        user_puts("WARNING: EVAL: Eval got NULL, returning NULL\n");
         *out = NULL;
         return 0;
     }
@@ -224,7 +225,7 @@ int eval(expr *e, expr **out) {
                 *out = copy;
                 return 0;
             }
-            printf("ERROR: EVAL: couldnt find symbol: %s\n", (char *)data(e));
+            user_printf("ERROR: EVAL: couldnt find symbol: %s\n", (char *)data(e));
             ret_code = UNBOUND_SYMBOL_NAME_ERROR;
             goto error;
         }
@@ -232,7 +233,7 @@ int eval(expr *e, expr **out) {
             expr *proc = e, *fun = car(proc), *arg = cdr(e);
             symbol *sym;
             if (proc == NULL || car(proc) == NULL) {
-                printf("ERROR: EVAL: expr was NULL when evaluating cons cell \n");
+                user_puts("ERROR: EVAL: expr was NULL when evaluating cons cell \n");
                 ret_code = -1;
                 goto error;
             }
@@ -242,13 +243,13 @@ int eval(expr *e, expr **out) {
             }
             /* Here we can invoce special operators, which should not have their arguments evaluated */
             if ((sym = symbol_find((char *)(data(fun)))) == NULL) {
-                printf("ERROR: EVAL: unable find function \"%s\"\n",
+                user_printf("ERROR: EVAL: unable find function \"%s\"\n",
                        (char *)(data(fun)));
                 ret_code = UNBOUND_SYMBOL_NAME_ERROR;
                 goto error;
             }
             if (sym->type == VARIABLE) {
-                printf("ERROR: EVAL: cannot use variable %s as function\n", sym->name);
+                user_printf("ERROR: EVAL: cannot use variable %s as function\n", sym->name);
                 ret_code = TYPE_ERROR;
                 goto error;
             }
@@ -256,13 +257,13 @@ int eval(expr *e, expr **out) {
                 expr *macro_expand;
                 ret_code = function_invocation(sym, arg, &macro_expand);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: got error when expanding macro %d\n", ret_code);
+                    user_printf("ERROR: EVAL: got error when expanding macro %d\n", ret_code);
                     goto error;
                 }
                 expr *evald;
                 ret_code = eval(macro_expand, &evald);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: got error when evaluating expanded macro %d\n", ret_code);
+                    user_printf("ERROR: EVAL: got error when evaluating expanded macro %d\n", ret_code);
                     expr_print(macro_expand);
                     goto error;
                 }
@@ -271,13 +272,13 @@ int eval(expr *e, expr **out) {
             }
             if (sym->is_special_operator) {
                 if (sym->type != BUILTIN) {
-                    printf("ERROR: EVAL: attempting to exec special operator, but the symbol was not of type builtin\n");
+                    user_puts("ERROR: EVAL: attempting to exec special operator, but the symbol was not of type builtin\n");
                     ret_code = TYPE_ERROR;
                     goto error;
                 }
                 ret_code = sym->builtin_fn(arg, out);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
+                    user_printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
                     goto error;
                 }
                 return 0;
@@ -289,7 +290,7 @@ int eval(expr *e, expr **out) {
                 expr *curr_eval;
                 ret_code = eval(car(curr_arg), &curr_eval);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: got error when evaluating argument\n");
+                    user_puts("ERROR: EVAL: got error when evaluating argument\n");
                     expr_print(curr_arg);
                     goto error;
                 }
@@ -306,7 +307,7 @@ int eval(expr *e, expr **out) {
             if (sym->type == BUILTIN) {
                 ret_code = sym->builtin_fn(first_cons, out);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
+                    user_printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
                     goto error;
                 }
                 return 0;
@@ -314,17 +315,17 @@ int eval(expr *e, expr **out) {
             if (sym->type == FUNCTION) {
                 ret_code = function_invocation(sym, first_cons, out);
                 if (ret_code < 0) {
-                    printf("ERROR: EVAL: function \"%s\" encountered an error\n", sym->name);
+                    user_printf("ERROR: EVAL: function \"%s\" encountered an error\n", sym->name);
                     goto error;
                 }
             } else if (sym->type == VARIABLE) {
-                printf("ERROR: EVAL: Cant use variable %s as a function\n", (char*)data(fun));
+                user_printf("ERROR: EVAL: Cant use variable %s as a function\n", (char*)data(fun));
                 ret_code = -1;
                 goto error;
             }
             return 0;
         default:
-            printf("ERROR: EVAL: Got unknown type: %d\n", type(e));
+            user_printf("ERROR: EVAL: Got unknown type: %d\n", type(e));
             ret_code = -1;
             goto error;
     }

@@ -1,26 +1,28 @@
-#include <USER_stdio.h>
-#include <user_thread.h>
-
 #include <clisp_utility.h>
 #include <clisp_config.h>
 #include <clisp_memory.h>
 #include <tokenize.h>
 #include <string1.h>
+#include <constants.h>
 
-int read_tokens_from_file(int fd, token_t *out) {
+#include <link.h>
+#include <USER_stdio.h>
+#include <user_thread.h>
+
+__USER_TEXT int read_tokens_from_file(int fd, token_t *out) {
     char *buf = (char *) my_malloc(EXPR_STR_MAX_LEN);
     read_line(buf);
     // buf[] = '\0';
 
     int res = tokenize(buf, out);
     if (res < 0) {
-        printf("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
+        user_puts("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
         return res;
     }
     return 0;
 }
 
-token_t *tokens_init() {
+__USER_TEXT token_t *tokens_init() {
     token_t *tokens = (token_t *) my_malloc(TOKENS_MAX_NUM * sizeof(token_t));
     for (int i = 0; i < TOKENS_MAX_NUM; i++) {
         tokens[i] = (token_t)NULL;
@@ -28,7 +30,7 @@ token_t *tokens_init() {
     return tokens;
 }
 
-int tokens_add(token_t *tokens, token_t *new_tokens) {
+__USER_TEXT int tokens_add(token_t *tokens, token_t *new_tokens) {
     for (int i = 0; i < TOKENS_MAX_NUM; i++) {
         if (tokens[i] == NULL) {
             for (int j = 0; j < TOKENS_MAX_NUM; j++) {
@@ -43,15 +45,15 @@ int tokens_add(token_t *tokens, token_t *new_tokens) {
     return 0;
 }
 
-int tokens_fill(token_t *tokens, int fd) {
+__USER_TEXT int tokens_fill(token_t *tokens, int fd) {
     if (fd == -1) {
-        printf("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
+        user_puts("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
         return -1;
     }
     token_t *new_tokens = tokens_init();
     int res = read_tokens_from_file(fd, new_tokens);
     if (res < 0) {
-        printf("ERROR: TOKENIZER: TOKENS_FILL: Reading tokens from file\n");
+        user_puts("ERROR: TOKENIZER: TOKENS_FILL: Reading tokens from file\n");
         return res;
     }
     if (res == EOF_CODE) {
@@ -72,10 +74,10 @@ int tokens_fill(token_t *tokens, int fd) {
    @param dest Output parameter. The token will be copied here. If no error occurs,
    it will be malloced with the size of the token.
    @return Return status code */
-int tokens_pop(token_t *tokens, int fd, token_t *out) {
+__USER_TEXT int tokens_pop(token_t *tokens, int fd, token_t *out) {
     int ret_code;
     if (tokens == NULL) {
-        printf("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
+        user_puts("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
         return -1;
     }
 
@@ -110,10 +112,10 @@ int tokens_pop(token_t *tokens, int fd, token_t *out) {
    @param dest Output parameter. The token will be copied here. If no error occurs,
    it will be malloced with the size of the token.
    @return Return status code */
-int tokens_peek(token_t *tokens, int fd, token_t *out) {
+__USER_TEXT int tokens_peek(token_t *tokens, int fd, token_t *out) {
     int ret_code;
     if (tokens == NULL) {
-        printf("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
+        user_puts("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
         return -1;
     }
 
@@ -128,7 +130,7 @@ int tokens_peek(token_t *tokens, int fd, token_t *out) {
     return 0;
 }
 
-int pad_str(char *str, char *pad) {
+__USER_TEXT int pad_str(char *str, char *pad) {
     int is_in_str = 0;
     unsigned int pad_len = strlen1(pad);
     /* We want to recompute the string length each iteration, since the
@@ -156,8 +158,13 @@ int pad_str(char *str, char *pad) {
 
 /**
    @brief Takes a string and tokenizes it. Does not modify "src_code", it makes copies
-   of the tokens and puts them in "dest". */
-int tokenize(char *src_code, token_t *out) {
+   of the tokens and puts them in "dest".
+
+   As a reminder, the reason we use constants for strings here is because strings are
+   put in the .rodata section by the compiler, which ends up in kernel space. So we need
+   some constants that are explicitly put in the user data section.
+*/
+__USER_TEXT int tokenize(char *src_code, token_t *out) {
     /* Strip newlines */
     int src_code_size = strlen1(src_code), is_in_str = 0;
     for (int i = 0; i < src_code_size; i++) {
@@ -168,11 +175,11 @@ int tokenize(char *src_code, token_t *out) {
         }
     }
 
-    pad_str(src_code, ")");
-    pad_str(src_code, "(");
-    pad_str(src_code, "'");
-    pad_str(src_code, "`");
-    pad_str(src_code, ",@");
+    pad_str(src_code, CLOSING_PAREN);
+    pad_str(src_code, OPENING_PAREN);
+    pad_str(src_code, QUOTE_SHORT_STR);
+    pad_str(src_code, QUASIQUOTE_SHORT_STR);
+    pad_str(src_code, COMMA_AT_SHORT_STR);
 
     /* Pad commas, but not comma-ats */
     is_in_str = 0;
@@ -191,16 +198,16 @@ int tokenize(char *src_code, token_t *out) {
 
     /* Tokenize */
     int num_tokens = 0;
-    token_t token = strtok1(src_code, " ");
+    token_t token = strtok1(src_code, WHITESPACE);
     while (token != NULL) {
         if (num_tokens >= TOKENS_MAX_NUM) {
-            printf("ERROR: TOKENIZER: TOKENIZE: Too many tokens\n");
+            user_puts("ERROR: TOKENIZER: TOKENIZE: Too many tokens\n");
             return 01;
         }
         char *new_str = my_malloc(strlen1(token) + 1);
         strcpy1(new_str, token);
         out[num_tokens++] = new_str;
-        token = strtok1(NULL, " ");
+        token = strtok1(NULL, WHITESPACE);
     }
 
     return 0;

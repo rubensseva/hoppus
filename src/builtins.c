@@ -10,6 +10,7 @@
 #include <clisp_memory.h>
 #include <clisp_config.h>
 #include <constants.h>
+#include <link.h>
 
 /**
    Here are all the builtin functions. Some of them are also special operators,
@@ -50,7 +51,7 @@
    f_name --> arg1 --> arg2         list of function logic               list of function logic
 
 */
-int bi_defun(expr *arg, expr **out) {
+__USER_TEXT int bi_defun(expr *arg, expr **out) {
     if (list_length(arg) < 3) return NUMBER_OF_ARGUMENTS_ERROR;
 
     expr *curr = nth(1, arg);
@@ -59,7 +60,7 @@ int bi_defun(expr *arg, expr **out) {
 
         if (strcmp1((char *)dar(curr), REST_ARGUMENTS_STR) == 0) {
             if (cdr(curr) == NULL) {
-                printf("ERROR: BUILTIN: DEFUN: expected a symbol after &rest keyword, but got nothing\n");
+                user_puts("ERROR: BUILTIN: DEFUN: expected a symbol after &rest keyword, but got nothing\n");
                 return NUMBER_OF_ARGUMENTS_ERROR;
             }
         }
@@ -90,7 +91,7 @@ int bi_defun(expr *arg, expr **out) {
    argument, so we should not evaluate this argument. The second argument however, needs
    to be evaluated.
 */
-int bi_define(expr *arg, expr **out) {
+__USER_TEXT int bi_define(expr *arg, expr **out) {
     int ret_code;
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     if (tar(arg) != SYMBOL) return TYPE_ERROR;
@@ -110,19 +111,19 @@ int bi_define(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_add(expr *arg, expr **out) {
+__USER_TEXT int bi_add(expr *arg, expr **out) {
     int acc = 0;
     expr *curr = arg;
     for_each(curr) {
         if (type(car(curr)) != NUMBER) return TYPE_ERROR;
         acc += (int)dar(curr);
     }
-    expr *_out = expr_new_val(NUMBER, (uint64_t)acc);
+    expr *_out = expr_new_val(NUMBER, (uint32_t)acc);
     *out = _out;
     return 0;
 }
 
-int bi_sub(expr *arg, expr **out) {
+__USER_TEXT int bi_sub(expr *arg, expr **out) {
     expr *curr = arg;
     for_each(curr) {
         if (type(car(curr)) != NUMBER) return TYPE_ERROR;
@@ -144,7 +145,7 @@ int bi_sub(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_mult(expr *arg, expr **out) {
+__USER_TEXT int bi_mult(expr *arg, expr **out) {
     int acc = 1;
     if (list_length(arg) == 0) {
         acc = 0;
@@ -155,12 +156,12 @@ int bi_mult(expr *arg, expr **out) {
             acc *= (int)dar(curr);
         }
     }
-    expr *_out = expr_new_val(NUMBER, (uint64_t)acc);
+    expr *_out = expr_new_val(NUMBER, (uint32_t)acc);
     *out = _out;
     return 0;
 }
 
-int bi_div(expr *arg, expr **out) {
+__USER_TEXT int bi_div(expr *arg, expr **out) {
     expr *curr = arg;
     for_each(curr) {
         if (tar(curr) != NUMBER) return TYPE_ERROR;
@@ -181,7 +182,7 @@ int bi_div(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_cons(expr *arg, expr **out) {
+__USER_TEXT int bi_cons(expr *arg, expr **out) {
     unsigned int size = list_length(arg);
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     *out = expr_new_cons(car(arg), car(cdr(arg)));
@@ -189,7 +190,7 @@ int bi_cons(expr *arg, expr **out) {
 }
 
 
-int bi_car(expr *arg, expr **out) {
+__USER_TEXT int bi_car(expr *arg, expr **out) {
     if (arg == NULL || car(arg) == NULL) {
         *out = NULL;
         return 0;
@@ -199,7 +200,7 @@ int bi_car(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_cdr(expr *arg, expr **out) {
+__USER_TEXT int bi_cdr(expr *arg, expr **out) {
     if (arg == NULL || car(arg) == NULL) {
         *out = NULL;
         return 0;
@@ -209,7 +210,7 @@ int bi_cdr(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_progn(expr *arg, expr **out) {
+__USER_TEXT int bi_progn(expr *arg, expr **out) {
     if (arg == NULL) {
         *out = NULL;
         return 0;
@@ -223,7 +224,7 @@ int bi_progn(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_cond(expr *arg, expr **out) {
+__USER_TEXT int bi_cond(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
     for_each(curr) {
@@ -241,7 +242,7 @@ int bi_cond(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_print(expr *arg, expr **out) {
+__USER_TEXT int bi_print(expr *arg, expr **out) {
     int ret_code;
     expr *curr = arg;
     for_each(curr) {
@@ -251,7 +252,7 @@ int bi_print(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_equal(expr *arg, expr **out) {
+__USER_TEXT int bi_equal(expr *arg, expr **out) {
     int val, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -271,25 +272,25 @@ int bi_equal(expr *arg, expr **out) {
             prev = curr;
         }
     }
-    *out = expr_new_val(BOOLEAN, (uint64_t)val);
+    *out = expr_new_val(BOOLEAN, (uint32_t)val);
     return 0;
 }
 
-int bi_gt(expr *arg, expr **out) {
+__USER_TEXT int bi_gt(expr *arg, expr **out) {
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     int val = expr_gt_lt(car(arg), car(cdr(arg)), 1);
-    *out = expr_new_val(BOOLEAN, (uint64_t)val);
+    *out = expr_new_val(BOOLEAN, (uint32_t)val);
     return 0;
 }
 
-int bi_lt(expr *arg, expr **out) {
+__USER_TEXT int bi_lt(expr *arg, expr **out) {
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     int val = expr_gt_lt(car(arg), car(cdr(arg)), 0);
-    *out = expr_new_val(BOOLEAN, (uint64_t)val);
+    *out = expr_new_val(BOOLEAN, (uint32_t)val);
     return 0;
 }
 
-int bi_and(expr *arg, expr **out) {
+__USER_TEXT int bi_and(expr *arg, expr **out) {
     int val, ret_code, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -303,11 +304,11 @@ int bi_and(expr *arg, expr **out) {
             if (val == 0) break;
         }
     }
-    *out = expr_new_val(BOOLEAN, (uint64_t)val);
+    *out = expr_new_val(BOOLEAN, (uint32_t)val);
     return 0;
 }
 
-int bi_or(expr *arg, expr **out) {
+__USER_TEXT int bi_or(expr *arg, expr **out) {
     int val, ret_code, arg_length = list_length(arg);
     if (arg_length == 0) {
         val = 0;
@@ -322,18 +323,18 @@ int bi_or(expr *arg, expr **out) {
         }
     }
 
-    expr* new_expr = expr_new_val(BOOLEAN, (uint64_t)val);
+    expr* new_expr = expr_new_val(BOOLEAN, (uint32_t)val);
     *out = new_expr;
     return 0;
 }
 
-int bi_quote(expr *arg, expr **out) {
+__USER_TEXT int bi_quote(expr *arg, expr **out) {
     if (list_length(arg) != 1) return NUMBER_OF_ARGUMENTS_ERROR;
     *out = car(arg);
     return 0;
 }
 
-int bi_quasiquote(expr *arg, expr **out) {
+__USER_TEXT int bi_quasiquote(expr *arg, expr **out) {
     int ret_code;
     if (list_length(arg) != 1) return NUMBER_OF_ARGUMENTS_ERROR;
     expr *copy;
@@ -346,19 +347,19 @@ int bi_quasiquote(expr *arg, expr **out) {
 /** If this builtin is triggered as part of normal evaluation, something is wrong.
    All comma signs should be within a quasiquote, and will be handled by quasitquote
    without evaluating the comma symbol itself */
-int bi_comma(expr *arg, expr **out) {
-    printf("ERROR: BUILTIN: COMMA: encountered comma outside quasiquote\n");
+__USER_TEXT int bi_comma(expr *arg, expr **out) {
+    user_puts("ERROR: BUILTIN: COMMA: encountered comma outside quasiquote\n");
     return -1;
 }
 /** If this builtin is triggered as part of normal evaluation, something is wrong.
    All comma-at signs should be within a quasiquote, and will be handled by quasitquote
    without evaluating the comma-at symbol itself */
-int bi_comma_at(expr *arg, expr **out) {
-    printf("ERROR: BUILTIN: COMMA-at: encountered comma-at outside quasiquote\n");
+__USER_TEXT int bi_comma_at(expr *arg, expr **out) {
+    user_puts("ERROR: BUILTIN: COMMA-at: encountered comma-at outside quasiquote\n");
     return -1;
 }
 
-int bi_defmacro(expr *arg, expr **out) {
+__USER_TEXT int bi_defmacro(expr *arg, expr **out) {
     if (list_length(arg) < 3) return NUMBER_OF_ARGUMENTS_ERROR;
     expr *curr = car(cdr(arg));
     for_each(curr) {
@@ -372,7 +373,7 @@ int bi_defmacro(expr *arg, expr **out) {
     return 0;
 }
 
-int bi_macroexpand(expr *arg, expr **out) {
+__USER_TEXT int bi_macroexpand(expr *arg, expr **out) {
     int ret_code;
     if (list_length(arg) != 1) return NUMBER_OF_ARGUMENTS_ERROR;
     symbol *sym = symbol_find((char *) dar(car(arg)));

@@ -41,19 +41,19 @@ expr *car(expr *e);
 void set_car(expr *e, expr *new_car);
 expr *cdr(expr *e);
 void set_cdr(expr *e, expr* new_cdr);
-uint64_t data(expr *e);
-void set_data(expr *e, uint64_t data);
+uint32_t data(expr *e);
+void set_data(expr *e, uint32_t data);
 expr_type type(expr *e);
 void set_type(expr *e, expr_type type);
 
 /* type of the car */
 expr_type tar(expr *e);
 /* data of the car */
-uint64_t dar(expr *e);
+uint32_t dar(expr *e);
 
 expr *nth(unsigned int i, expr *e);
 
-expr *expr_new_val(expr_type type, uint64_t data);
+expr *expr_new_val(expr_type type, uint32_t data);
 expr *expr_new_cons(expr* car, expr *cdr);
 int expr_copy(expr *e, expr **out);
 
