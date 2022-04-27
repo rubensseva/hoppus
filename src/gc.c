@@ -173,7 +173,6 @@ __USER_TEXT int gc_sweep() {
     while (u != NULL) {
         if (((uint32_t)u->next & 1) == 0) {
             num_sweeped++;
-            user_printf("INFO: GC: sweeping %x\n", u);
             gc_allocated_size -= (u->size + 1) * sizeof(header);
             if (u == prev_malloced)
                 prev_malloced = prev;
@@ -205,10 +204,6 @@ __USER_TEXT int gc_dump_info() {
     user_printf("INFO: GC: %d allocated objects\n", count);
     user_printf("INFO: GC: %d marked objects\n", marked);
     user_printf("INFO: GC: %d unmarked objects\n", unmarked);
-    user_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
-    user_printf("INFO: GC: %d total alloc\n", gc_stats_get_allocated_total());
-    user_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
-    user_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
     return 0;
 }
 
@@ -241,8 +236,13 @@ __USER_TEXT int gc_mark_and_sweep() {
 
     user_puts("INFO: GC: scan finished\n");
     gc_dump_info();
+    user_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
+    user_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
     gc_sweep();
-    gc_dump_info();
+    user_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
+    user_printf("INFO: GC: %d total alloc\n", gc_stats_get_allocated_total());
+    user_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
+    user_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
     user_puts("-----------------------------\n");
 
     return 0;

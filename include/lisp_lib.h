@@ -62,6 +62,10 @@ __USER_DATA char LISP_LIB_FIFTH[] =      \
     "(defun fifth (l) "     \
     "(nth 4 l)) ";
 
+__USER_DATA char LISP_LIB_FIB[] =  \
+"(defun fib (n)" \
+    "(if (lt n 2) n" \
+    "(+ (fib (- n 1)) (fib (- n 2)))))";
 
 __USER_DATA const char* lib_strs[] = {
     LISP_LIB_IF,
@@ -78,6 +82,7 @@ __USER_DATA const char* lib_strs[] = {
     LISP_LIB_THIRD,
     LISP_LIB_FOURTH,
     LISP_LIB_FIFTH,
+    LISP_LIB_FIB,
 };
 
 

@@ -15,16 +15,6 @@
 #include <link.h>
 #include <USER_stdio.h>
 
-/* #define custom_print(str, ...) { \ */
-/*     static __USER_DATA const char s[] = str; \ */
-/*     user_printf(s, __VA_ARGS__); \ */
-/* } */
-/* #define simple_print(str) { \ */
-/*     static __USER_DATA const char s[] = str; \ */
-/*     user_printf(s); \ */
-/* } */
-
-
 
 __USER_TEXT void create_builtins() {
     symbol *defun = symbol_builtin_create(DEFUN_STR, bi_defun, 1);
@@ -180,25 +170,19 @@ __USER_TEXT int REPL_loop(int fd) {
 __USER_TEXT int clisp_main() {
     int ret_code;
 
-    /* static __USER_DATA const char literal[] = "INFO: MAIN: welcome to ukernel lisp!\n"; */
-    /* user_user_printf(literal); */
-
-    user_puts("HELLOOOO DOES THIS WORK");
-    user_printf("INFO: MAIN: Does this work??? %d\n", 11);
-
-    user_puts("INFO: MAIN: welcome to ukernel lisp!\n");
+    user_puts("INFO: MAIN: welcome to Hoppus!\n");
     gc_init();
     user_puts("INFO: MAIN: gc initialized\n");
 
     create_builtins();
     user_puts("INFO: MAIN: builtins created\n");
 
-    /* ret_code = load_standard_library(); */
-    /* if (ret_code < 0) { */
-    /*     user_printf("ERROR: MAIN: loading standard library: %d\n", ret_code); */
-    /*     return -1; */
-    /* } */
-    /* user_puts("INFO: MAIN: standard library loaded\n"); */
+    ret_code = load_standard_library();
+    if (ret_code < 0) {
+        user_printf("ERROR: MAIN: loading standard library: %d\n", ret_code);
+        return -1;
+    }
+    user_puts("INFO: MAIN: standard library loaded\n");
 
     int fd = 0;
 
