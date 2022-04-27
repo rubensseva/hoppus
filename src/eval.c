@@ -1,19 +1,17 @@
-#include <stdlib.h>
-#include <USER_stdio.h>
 #include <string1.h>
-#include <link.h>
-
 #include <gc.h>
 #include <eval.h>
 #include <parser.h>
 #include <expr.h>
 #include <symbol.h>
-#include <clisp_config.h>
-#include <constants.h>
-#include <clisp_memory.h>
+#include <hoppus_config.h>
+#include <hoppus_constants.h>
+#include <hoppus_memory.h>
 #include <builtins.h>
 #include <list.h>
 
+#include <user_stdio.h>
+#include <link.h>
 
 /** @brief Scans an expression tree for comma or comma-at signs, then takes
     appropriate action.

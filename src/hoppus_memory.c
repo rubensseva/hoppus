@@ -1,5 +1,6 @@
-#include <clisp_memory.h>
+#include <hoppus_memory.h>
 #include <gc.h>
+
 #include <link.h>
 
 /* Some simple inderection functions for easialy changing malloc implementations

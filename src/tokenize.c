@@ -1,12 +1,12 @@
-#include <clisp_utility.h>
-#include <clisp_config.h>
-#include <clisp_memory.h>
+#include <hoppus_utility.h>
+#include <hoppus_config.h>
+#include <hoppus_memory.h>
+#include <hoppus_constants.h>
 #include <tokenize.h>
 #include <string1.h>
-#include <constants.h>
 
 #include <link.h>
-#include <USER_stdio.h>
+#include <user_stdio.h>
 #include <user_thread.h>
 
 __USER_TEXT int read_tokens_from_file(int fd, token_t *out) {

@@ -1,15 +1,15 @@
-#include <stdint.h>
 #include <string1.h>
-
 #include <builtins.h>
 #include <parser.h>
 #include <eval.h>
 #include <list.h>
 #include <expr.h>
 #include <symbol.h>
-#include <clisp_memory.h>
-#include <clisp_config.h>
-#include <constants.h>
+#include <hoppus_memory.h>
+#include <hoppus_config.h>
+#include <hoppus_constants.h>
+
+#include <stdint.h>
 #include <link.h>
 
 /**

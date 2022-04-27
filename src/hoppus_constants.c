@@ -1,4 +1,6 @@
-#include "constants.h"
+#include <hoppus_constants.h>
+
+#include <link.h>
 
 __USER_DATA char WHITESPACE[] = " ";
 __USER_DATA char OPENING_PAREN[] = "(";

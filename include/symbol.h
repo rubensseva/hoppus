@@ -1,7 +1,7 @@
 #ifndef SYMBOL_H_
 #define SYMBOL_H_
 
-#include "parser.h"
+#include <parser.h>
 
 typedef int builtin_fn_t(expr *arg, expr **res);
 

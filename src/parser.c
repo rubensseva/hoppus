@@ -1,17 +1,16 @@
-#include <USER_stdio.h>
-#include <stdint.h>
-#include <types.h>
-#include <link.h>
-
 #include <string1.h>
 #include <expr.h>
 #include <parser.h>
-#include <clisp_utility.h>
-#include <clisp_config.h>
-#include <constants.h>
-#include <clisp_memory.h>
+#include <hoppus_utility.h>
+#include <hoppus_config.h>
+#include <hoppus_constants.h>
+#include <hoppus_memory.h>
 #include <tokenize.h>
 
+#include <stdint.h>
+#include <types.h>
+#include <link.h>
+#include <user_stdio.h>
 
 /**
    @brief Create a LISP string representation from a C string.

@@ -1,10 +1,12 @@
-#include <USER_stdio.h>
 #include <symbol.h>
-#include <clisp_config.h>
-#include <clisp_memory.h>
+#include <hoppus_config.h>
+#include <hoppus_memory.h>
 #include <string1.h>
+
 #include <types.h>
 #include <link.h>
+#include <user_stdio.h>
+
 
 __USER_DATA int n_symbol = 0;
 __USER_DATA symbol *symbols[SYMBOLS_MAX_NUM];

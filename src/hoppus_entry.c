@@ -3,17 +3,16 @@
 #include <tokenize.h>
 #include <parser.h>
 #include <eval.h>
-#include <clisp_memory.h>
 #include <symbol.h>
 #include <builtins.h>
-#include <clisp_config.h>
-#include <constants.h>
+#include <hoppus_memory.h>
+#include <hoppus_config.h>
+#include <hoppus_constants.h>
 #include <lisp_lib.h>
-
 #include <symbol.h>
 
 #include <link.h>
-#include <USER_stdio.h>
+#include <user_stdio.h>
 
 
 __USER_TEXT void create_builtins() {

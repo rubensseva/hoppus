@@ -1,9 +1,9 @@
+#include <string1.h>
+#include <hoppus_utility.h>
+#include <hoppus_constants.h>
+
 #include <stdint.h>
 #include <link.h>
-
-#include <string1.h>
-#include <clisp_utility.h>
-#include <constants.h>
 
 __USER_TEXT int isdigit(char c) {
     return c >= '0' && c <= '9';

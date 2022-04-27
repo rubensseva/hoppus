@@ -1,7 +1,7 @@
 #ifndef BUILTINS_H_
 #define BUILTINS_H_
 
-#include "parser.h"
+#include <parser.h>
 
 int bi_defun(expr *arg, expr **out);
 int bi_define(expr *arg, expr **out);
