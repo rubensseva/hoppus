@@ -117,12 +117,9 @@ __USER_TEXT uint32_t strcpy1(char *dest, char *src) {
 }
 
 
-/* From https://www.geeksforgeeks.org/write-your-own-atoi/ */
 __USER_TEXT int atoi1(char* str)
 {
-    int res = 0;
-    int sign = 1;
-    int i = 0;
+    int res = 0, sign = 1, i = 0;
     if (str[0] == '-') {
         sign = -1;
         i++;

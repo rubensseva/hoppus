@@ -136,10 +136,7 @@ __USER_TEXT int REPL_loop(int fd) {
     token_t *tokens = tokens_init();
     expr *parsed = NULL, *evald = NULL;
     while (1) {
-        if (fd == 1) {
-            user_puts("$ ");
-            // fflush(stdout);
-        }
+        user_puts("$ ");
 
         ret_code = parse_tokens(tokens, fd, &parsed);
         if (ret_code < 0) {
