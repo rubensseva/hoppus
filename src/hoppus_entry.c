@@ -202,7 +202,6 @@ __USER_TEXT int clisp_main() {
 
 
     user_printf("INFO: MAIN: GC: num mallocs: %lu\n", gc_stats_get_num_malloc());
-    user_printf("INFO: MAIN: GC: total allocated: %lu\n", gc_stats_get_allocated_total());
     user_printf("INFO: MAIN: exiting with code: %d\n", ret_code);
     user_puts("INFO: MAIN: bye...\n");
     return ret_code;

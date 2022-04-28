@@ -21,6 +21,9 @@ struct header {
     header *next;
 };
 
+uint32_t align_up(uint32_t ptr, uint32_t size);
+uint32_t align_down(uint32_t ptr, uint32_t size);
+
 uint32_t gc_stats_get_num_malloc();
 uint32_t gc_stats_get_allocated_total();
 
