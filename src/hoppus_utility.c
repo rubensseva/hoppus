@@ -3,7 +3,7 @@
 #include <hoppus_constants.h>
 
 #include <stdint.h>
-#include <link.h>
+#include <hoppus_link.h>
 
 __USER_TEXT int isdigit(char c) {
     return c >= '0' && c <= '9';

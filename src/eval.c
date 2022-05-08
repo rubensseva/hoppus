@@ -7,11 +7,11 @@
 #include <hoppus_config.h>
 #include <hoppus_constants.h>
 #include <hoppus_memory.h>
+#include <hoppus_stdio.h>
 #include <builtins.h>
 #include <list.h>
+#include <hoppus_link.h>
 
-#include <user_stdio.h>
-#include <link.h>
 
 /** @brief Scans an expression tree for comma or comma-at signs, then takes
     appropriate action.
@@ -38,7 +38,7 @@ __USER_TEXT int quasiquote_eval(expr **e) {
                     expr *evald;
                     ret_code = eval(car(cdr(car(*e))), &evald);
                     if (ret_code < 0) {
-                        user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
+                        hoppus_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma\n");
                         goto error;
                     }
                     set_car(*e, evald);
@@ -48,7 +48,7 @@ __USER_TEXT int quasiquote_eval(expr **e) {
                     expr *evald;
                     ret_code = eval(car(cdr(car(*e))), &evald);
                     if (ret_code < 0) {
-                        user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
+                        hoppus_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Evaluating cdr of comma-at\n");
                         goto error;
                     }
                     /* Splice */
@@ -63,7 +63,7 @@ __USER_TEXT int quasiquote_eval(expr **e) {
                 expr *tmp = car(*e);
                 ret_code = quasiquote_eval(&tmp);
                 if (ret_code < 0) {
-                    user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
+                    hoppus_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on car\n");
                     goto error;
                 }
                 set_car(*e, tmp);
@@ -71,13 +71,13 @@ __USER_TEXT int quasiquote_eval(expr **e) {
             expr *tmp = cdr(*e);
             ret_code = quasiquote_eval(&tmp);
             if (ret_code < 0) {
-                user_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
+                hoppus_puts("ERROR: EVAL: QUASIQUOTE_EVAL: Recursively running quasiquote_eval on cdr\n");
                 goto error;
             }
             set_cdr(*e, tmp);
             return 0;
         default:
-            user_printf("ERROR: EVAL: QUASIQUOTE_EVAL: Got unknown type: %d\n", type(*e));
+            hoppus_printf("ERROR: EVAL: QUASIQUOTE_EVAL: Got unknown type: %d\n", type(*e));
             ret_code = -1;
             goto error;
     }
@@ -107,13 +107,13 @@ __USER_TEXT int add_param_symbols(expr *params, expr *args) {
     /* TODO: Simplify the boolean logic here */
     while ((!is_rest && !list_end(curr_param)) || !list_end(curr_arg)) {
         if ((!is_rest && list_end(curr_param)) || list_end(curr_arg)) {
-            user_puts("ERROR: EVAL: ADD_PARAM_SYMBOLS: mismatch between number of args and params\n");
+            hoppus_puts("ERROR: EVAL: ADD_PARAM_SYMBOLS: mismatch between number of args and params\n");
             return NUMBER_OF_ARGUMENTS_ERROR;
         }
 
         if (!is_rest && strcmp1((char *)dar(curr_param), REST_ARGUMENTS_STR) == 0) {
             if (cdr(curr_param) == NULL) {
-                user_puts("ERROR: EVAL: ADD_PARAM_SYMBOLS: found &rest keyword, but no argument after it\n");
+                hoppus_puts("ERROR: EVAL: ADD_PARAM_SYMBOLS: found &rest keyword, but no argument after it\n");
                 return -1;
             }
             is_rest = 1;
@@ -155,7 +155,7 @@ __USER_TEXT int remove_param_symbols(expr *params) {
         }
         int sym_res = symbol_remove_name((char *)dar(curr_param));
         if (sym_res < 0) {
-            user_printf("WARNING: EVAL: Unable to remove symbol %s\n",
+            hoppus_printf("WARNING: EVAL: Unable to remove symbol %s\n",
                    (char *)dar(curr_param));
             return sym_res;
         }
@@ -184,7 +184,7 @@ __USER_TEXT int function_invocation(symbol *sym, expr *args, expr **out) {
     while (!list_end(curr_form)) {
         int eval_res = eval(car(curr_form), out);
         if (eval_res < 0) {
-            user_puts("ERROR: EVAL: FUNCTION_INVOKATION: error when evaluating function forms\n");
+            hoppus_puts("ERROR: EVAL: FUNCTION_INVOKATION: error when evaluating function forms\n");
             return eval_res;
         }
         curr_form = cdr(curr_form);
@@ -197,7 +197,7 @@ __USER_TEXT int function_invocation(symbol *sym, expr *args, expr **out) {
 __USER_TEXT int eval(expr *e, expr **out) {
     int ret_code;
     if (e == NULL) {
-        user_puts("WARNING: EVAL: Eval got NULL, returning NULL\n");
+        hoppus_puts("WARNING: EVAL: Eval got NULL, returning NULL\n");
         *out = NULL;
         return 0;
     }
@@ -223,7 +223,7 @@ __USER_TEXT int eval(expr *e, expr **out) {
                 *out = copy;
                 return 0;
             }
-            user_printf("ERROR: EVAL: couldnt find symbol: %s\n", (char *)data(e));
+            hoppus_printf("ERROR: EVAL: couldnt find symbol: %s\n", (char *)data(e));
             ret_code = UNBOUND_SYMBOL_NAME_ERROR;
             goto error;
         }
@@ -231,7 +231,7 @@ __USER_TEXT int eval(expr *e, expr **out) {
             expr *proc = e, *fun = car(proc), *arg = cdr(e);
             symbol *sym;
             if (proc == NULL || car(proc) == NULL) {
-                user_puts("ERROR: EVAL: expr was NULL when evaluating cons cell \n");
+                hoppus_puts("ERROR: EVAL: expr was NULL when evaluating cons cell \n");
                 ret_code = -1;
                 goto error;
             }
@@ -241,13 +241,13 @@ __USER_TEXT int eval(expr *e, expr **out) {
             }
             /* Here we can invoce special operators, which should not have their arguments evaluated */
             if ((sym = symbol_find((char *)(data(fun)))) == NULL) {
-                user_printf("ERROR: EVAL: unable find function \"%s\"\n",
+                hoppus_printf("ERROR: EVAL: unable find function \"%s\"\n",
                        (char *)(data(fun)));
                 ret_code = UNBOUND_SYMBOL_NAME_ERROR;
                 goto error;
             }
             if (sym->type == VARIABLE) {
-                user_printf("ERROR: EVAL: cannot use variable %s as function\n", sym->name);
+                hoppus_printf("ERROR: EVAL: cannot use variable %s as function\n", sym->name);
                 ret_code = TYPE_ERROR;
                 goto error;
             }
@@ -255,13 +255,13 @@ __USER_TEXT int eval(expr *e, expr **out) {
                 expr *macro_expand;
                 ret_code = function_invocation(sym, arg, &macro_expand);
                 if (ret_code < 0) {
-                    user_printf("ERROR: EVAL: got error when expanding macro %d\n", ret_code);
+                    hoppus_printf("ERROR: EVAL: got error when expanding macro %d\n", ret_code);
                     goto error;
                 }
                 expr *evald;
                 ret_code = eval(macro_expand, &evald);
                 if (ret_code < 0) {
-                    user_printf("ERROR: EVAL: got error when evaluating expanded macro %d\n", ret_code);
+                    hoppus_printf("ERROR: EVAL: got error when evaluating expanded macro %d\n", ret_code);
                     expr_print(macro_expand);
                     goto error;
                 }
@@ -270,13 +270,13 @@ __USER_TEXT int eval(expr *e, expr **out) {
             }
             if (sym->is_special_operator) {
                 if (sym->type != BUILTIN) {
-                    user_puts("ERROR: EVAL: attempting to exec special operator, but the symbol was not of type builtin\n");
+                    hoppus_puts("ERROR: EVAL: attempting to exec special operator, but the symbol was not of type builtin\n");
                     ret_code = TYPE_ERROR;
                     goto error;
                 }
                 ret_code = sym->builtin_fn(arg, out);
                 if (ret_code < 0) {
-                    user_printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
+                    hoppus_printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
                     goto error;
                 }
                 return 0;
@@ -288,7 +288,7 @@ __USER_TEXT int eval(expr *e, expr **out) {
                 expr *curr_eval;
                 ret_code = eval(car(curr_arg), &curr_eval);
                 if (ret_code < 0) {
-                    user_puts("ERROR: EVAL: got error when evaluating argument\n");
+                    hoppus_puts("ERROR: EVAL: got error when evaluating argument\n");
                     expr_print(curr_arg);
                     goto error;
                 }
@@ -305,7 +305,7 @@ __USER_TEXT int eval(expr *e, expr **out) {
             if (sym->type == BUILTIN) {
                 ret_code = sym->builtin_fn(first_cons, out);
                 if (ret_code < 0) {
-                    user_printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
+                    hoppus_printf("ERROR: EVAL: builtin function \"%s\" encountered an error\n", sym->name);
                     goto error;
                 }
                 return 0;
@@ -313,17 +313,17 @@ __USER_TEXT int eval(expr *e, expr **out) {
             if (sym->type == FUNCTION) {
                 ret_code = function_invocation(sym, first_cons, out);
                 if (ret_code < 0) {
-                    user_printf("ERROR: EVAL: function \"%s\" encountered an error\n", sym->name);
+                    hoppus_printf("ERROR: EVAL: function \"%s\" encountered an error\n", sym->name);
                     goto error;
                 }
             } else if (sym->type == VARIABLE) {
-                user_printf("ERROR: EVAL: Cant use variable %s as a function\n", (char*)data(fun));
+                hoppus_printf("ERROR: EVAL: Cant use variable %s as a function\n", (char*)data(fun));
                 ret_code = -1;
                 goto error;
             }
             return 0;
         default:
-            user_printf("ERROR: EVAL: Got unknown type: %d\n", type(e));
+            hoppus_printf("ERROR: EVAL: Got unknown type: %d\n", type(e));
             ret_code = -1;
             goto error;
     }

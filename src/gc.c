@@ -1,13 +1,24 @@
 #include <gc.h>
 #include <hoppus_utility.h>
+#include <hoppus_stdio.h>
+#include <hoppus_link.h>
 
-#include <user_stdio.h>
 #include <stdint.h>
-#include <link.h>
 
 #define UNTAG(p) ((header *)(((uint32_t) (p)) & 0xFFFFFFFC))
 
 typedef uint64_t small_obj;
+
+#ifdef HOPPUS_PLATFORM
+#if HOPPUS_PLATFORM == HOPPUS_X86
+#include <stdio.h>
+#define MALLOC_HEAP_SIZE 4096
+char malloc_heap[MALLOC_HEAP_SIZE];
+uint64_t stack_start;
+#elif HOPPUS_PLATFORM == HOPPUS_X86
+uint32_t stack_start = &user_thread_stack_start;
+#endif
+#endif
 
 /* 128 bytes for bitmap gives 1024 objects, which is 8192 bytes */
 #define BITMAP_SIZE 128
@@ -66,11 +77,11 @@ __USER_TEXT void gc_bitmap_init(uint8_t bitmap[]) {
 
 __USER_TEXT void gc_bitmap_print(uint8_t bitmap[]) {
     for (int i = 0; i < BITMAP_SIZE * 8; i++) {
-        user_printf("%d", gc_bitmap_get(bitmap, i))
+        hoppus_printf("%d", gc_bitmap_get(bitmap, i))
         if (i % 100 == 0)
-            user_puts("\n");
+            hoppus_puts("\n");
     }
-    user_puts("\n");
+    hoppus_puts("\n");
 }
 
 __USER_TEXT uint32_t gc_stats_get_num_malloc() {
@@ -105,8 +116,31 @@ __USER_TEXT header *new_next_ptr(header *old_next, header *new_next) {
 }
 
 __USER_TEXT int gc_init() {
+
+#ifdef HOPPUS_PLATFORM
+#if HOPPUS_PLATFORM == HOPPUS_X86
+    statfp = fopen("/proc/self/stat", "r");
+    if (statfp == NULL) {
+        perror("open");
+        printf("ERROR: GC: GC_INIT: Opening stat\n");
+        return -1;
+    }
+    fscanf(statfp,
+           "%*d %*s %*c %*d %*d %*d %*d %*d %*u "
+           "%*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld "
+           "%*ld %*ld %*ld %*ld %*llu %*lu %*ld "
+           "%*lu %*lu %*lu %lu", &stack_start);
+    fclose(statfp);
+
+
+    heap_start = (header *)align_up((uint32_t)malloc_heap, sizeof(header));
+    heap_end = (header *)align_down((uint32_t)((char *) malloc_heap + MALLOC_HEAP_SIZE), sizeof(header));
+#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
     heap_start = (header *)align_up((uint32_t)&user_thread_heap_start, sizeof(header));
     heap_end = (header *)align_down((uint32_t)&user_thread_heap_end, sizeof(header));
+#endif
+#endif
+
     heap_size = (char *)heap_end - (char *)heap_start;
 
     heap_split = (header *)((small_obj *)heap_start + (BITMAP_SIZE * 8));
@@ -177,7 +211,7 @@ __USER_TEXT int gc_scan_heap() {
 }
 
 __USER_TEXT int gc_scan_region(uint32_t *start, uint32_t *end) {
-    user_printf("INFO: GC: scanning region from %x to %x...\n", start, end);
+    hoppus_printf("INFO: GC: scanning region from %x to %x...\n", start, end);
     for (uint32_t *p = start; p <= end - 1; p += 1) {
         if (gc_is_skippable_ptr(p))
             continue;
@@ -234,8 +268,8 @@ __USER_TEXT int gc_sweep() {
             num_small_sweeped++;
         }
     }
-    user_printf("INFO: GC: sweeped %d objects\n", num_sweeped);
-    user_printf("INFO: GC: sweeped %d small objects\n", num_small_sweeped);
+    hoppus_printf("INFO: GC: sweeped %d objects\n", num_sweeped);
+    hoppus_printf("INFO: GC: sweeped %d small objects\n", num_small_sweeped);
     return 0;
 }
 
@@ -260,12 +294,12 @@ __USER_TEXT int gc_dump_info() {
             }
         }
     }
-    user_printf("INFO: GC: %d allocated objects\n", count);
-    user_printf("INFO: GC: %d marked objects\n", marked);
-    user_printf("INFO: GC: %d unmarked objects\n", unmarked);
-    user_printf("INFO: GC: %d small allocated objects\n", small_count);
-    user_printf("INFO: GC: %d small marked objects\n", small_marked);
-    user_printf("INFO: GC: %d small unmarked objects\n", small_unmarked);
+    hoppus_printf("INFO: GC: %d allocated objects\n", count);
+    hoppus_printf("INFO: GC: %d marked objects\n", marked);
+    hoppus_printf("INFO: GC: %d unmarked objects\n", unmarked);
+    hoppus_printf("INFO: GC: %d small allocated objects\n", small_count);
+    hoppus_printf("INFO: GC: %d small marked objects\n", small_marked);
+    hoppus_printf("INFO: GC: %d small unmarked objects\n", small_unmarked);
     return 0;
 }
 
@@ -274,8 +308,8 @@ __USER_TEXT int gc_mark_and_sweep() {
     register void *_sp asm ("sp");
     sp = _sp;
 
-    user_puts("-----------------------------\n");
-    user_puts("INFO: GC: starting\n");
+    hoppus_puts("-----------------------------\n");
+    hoppus_puts("INFO: GC: starting\n");
 
     /* Reset gc marks */
     for (header *u = large_used; u != NULL; u = UNTAG(u->next))
@@ -287,37 +321,46 @@ __USER_TEXT int gc_mark_and_sweep() {
         return 0;
     }
 
-    gc_scan_region((uint32_t *) &user_bss_start, (uint32_t *) &user_bss_end);
-    gc_scan_region((uint32_t *) &user_data_misc_start, (uint32_t *) &user_data_misc_end);
+#ifdef HOPPUS_PLATFORM
+#if HOPPUS_PLATFORM == HOPPUS_X86
+    /* provided by linker, sdata is from customized default linker script,
+      not in regular default linker script */
+    extern char end, sdata;
+    gc_scan_region((uint32_t *)&sdata, (uint32_t *)malloc_heap);
+    gc_scan_region((uint32_t *)(malloc_heap + MALLOC_HEAP_SIZE), (uint32_t *)&end - 1);
+#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
+    gc_scan_region((uint32_t *)&user_bss_start, (uint32_t *)&user_bss_end);
+    gc_scan_region((uint32_t *)&user_data_misc_start, (uint32_t *)&user_data_misc_end);
+#endif
+#endif
+    gc_scan_region(sp, (uint32_t *)stack_end);
 
-    gc_scan_region(sp, (uint32_t *)&user_thread_stack_end);
-
-    user_puts("INFO: GC: scanning marked objects...\n");
+    hoppus_puts("INFO: GC: scanning marked objects...\n");
     gc_scan_heap();
 
 
-    user_puts("INFO: GC: scan finished\n");
+    hoppus_puts("INFO: GC: scan finished\n");
     gc_dump_info();
-    user_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
-    user_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
+    hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
+    hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
     /* gc_bitmap_print(alloc_bitmap); */
     gc_sweep();
     /* gc_bitmap_print(alloc_bitmap); */
-    user_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
-    user_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
-    user_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
-    user_puts("-----------------------------\n");
+    hoppus_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
+    hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
+    hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
+    hoppus_puts("-----------------------------\n");
 
     return 0;
 }
 
 __USER_TEXT void gc_alloc_dump() {
-    user_printf("INFO: GC: heap start %p, end %p\n", heap_start, heap_end);
+    hoppus_printf("INFO: GC: heap start %p, end %p\n", heap_start, heap_end);
     int i = 0;
     for (header *u = large_used, *tag_addr = large_used->next;
          u != NULL && UNTAG(u->next) != NULL;
          u = UNTAG(u->next), tag_addr = u->next) {
-        user_printf("INFO: GC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
+        hoppus_printf("INFO: GC: %d: tag_addr: %p, %p -> %p, size: %lu\n", i++, tag_addr, u, u + u->size, u->size * sizeof(header));
     }
 }
 
@@ -378,7 +421,7 @@ __USER_TEXT void *gc_malloc_large(unsigned int size) {
 
     unsigned int required_units = (align_up(size, sizeof(header)) + sizeof(header)) / sizeof(header);
     if (required_units * sizeof(header) > heap_size) {
-        user_printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %d, but its more than the size of the heap which is %d\n",
+        hoppus_printf("ERROR: GC: MALLOC: got request to allocate %d bytes, which means I need to allocate a total of %d, but its more than the size of the heap which is %d\n",
                size,
                required_units * sizeof(header),
                heap_size);
@@ -414,18 +457,18 @@ __USER_TEXT void *gc_malloc_small() {
                 return &((small_obj *)heap_start)[j];
             }
         }
-        user_printf("ERROR: GC: couldnt find available slot in 32-bit region that should be available %x, %d\n", ((uint32_t*)alloc_bitmap)[i / 4], i)
+        hoppus_printf("ERROR: GC: couldnt find available slot in 32-bit region that should be available %x, %d\n", ((uint32_t*)alloc_bitmap)[i / 4], i)
     }
     return NULL;
 }
 
 __USER_TEXT void *gc_malloc(unsigned int size) {
     if (size <= 0) {
-        user_puts("ERROR: GC: MALLOC: got request to malloc with size 0\n");
+        hoppus_puts("ERROR: GC: MALLOC: got request to malloc with size 0\n");
         return (void *)NULL;
     }
     if (!heap_start || !heap_split || !heap_end) {
-        user_puts("ERROR: GC: MALLOC: missing heap start or end\n");
+        hoppus_puts("ERROR: GC: MALLOC: missing heap start or end\n");
         return (void *)NULL;
     }
 
@@ -447,7 +490,7 @@ __USER_TEXT void *gc_malloc(unsigned int size) {
     }
 
     if (ptr == NULL) {
-        user_printf("ERROR: GC: MALLOC: couldnt find space for size %d\n", size);
+        hoppus_printf("ERROR: GC: MALLOC: couldnt find space for size %d\n", size);
     }
     gc_stats_num_malloc += 1;
     return ptr;

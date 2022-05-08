@@ -2,21 +2,20 @@
 #include <hoppus_config.h>
 #include <hoppus_memory.h>
 #include <hoppus_constants.h>
+#include <hoppus_stdio.h>
 #include <tokenize.h>
 #include <string1.h>
 
-#include <link.h>
-#include <user_stdio.h>
-#include <user_thread.h>
+#include <hoppus_link.h>
 
 __USER_TEXT int read_tokens_from_file(int fd, token_t *out) {
     char *buf = (char *) my_malloc(EXPR_STR_MAX_LEN);
-    read_line(buf);
+    hoppus_read_line(buf);
     // buf[] = '\0';
 
     int res = tokenize(buf, out);
     if (res < 0) {
-        user_puts("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
+        hoppus_puts("ERROR: TOKENIZER: READ_TOKENS_FROM_FILE: error when tokenizing string\n");
         return res;
     }
     return 0;
@@ -47,13 +46,13 @@ __USER_TEXT int tokens_add(token_t *tokens, token_t *new_tokens) {
 
 __USER_TEXT int tokens_fill(token_t *tokens, int fd) {
     if (fd == -1) {
-        user_puts("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
+        hoppus_puts("ERROR: TOKENIZER: TOKENS_POP: trying to read more tokens, but fd is -1\n");
         return -1;
     }
     token_t *new_tokens = tokens_init();
     int res = read_tokens_from_file(fd, new_tokens);
     if (res < 0) {
-        user_puts("ERROR: TOKENIZER: TOKENS_FILL: Reading tokens from file\n");
+        hoppus_puts("ERROR: TOKENIZER: TOKENS_FILL: Reading tokens from file\n");
         return res;
     }
     if (res == EOF_CODE) {
@@ -77,7 +76,7 @@ __USER_TEXT int tokens_fill(token_t *tokens, int fd) {
 __USER_TEXT int tokens_pop(token_t *tokens, int fd, token_t *out) {
     int ret_code;
     if (tokens == NULL) {
-        user_puts("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
+        hoppus_puts("ERROR: TOKENIZER: TOKENS_POP: tokens was NULL when attempting to pop tokens\n");
         return -1;
     }
 
@@ -115,7 +114,7 @@ __USER_TEXT int tokens_pop(token_t *tokens, int fd, token_t *out) {
 __USER_TEXT int tokens_peek(token_t *tokens, int fd, token_t *out) {
     int ret_code;
     if (tokens == NULL) {
-        user_puts("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
+        hoppus_puts("ERROR: TOKENIZER: TOKENS_PEEK: tokens was NULL when attempting to peek tokens\n");
         return -1;
     }
 
@@ -201,7 +200,7 @@ __USER_TEXT int tokenize(char *src_code, token_t *out) {
     token_t token = strtok1(src_code, WHITESPACE);
     while (token != NULL) {
         if (num_tokens >= TOKENS_MAX_NUM) {
-            user_puts("ERROR: TOKENIZER: TOKENIZE: Too many tokens\n");
+            hoppus_puts("ERROR: TOKENIZER: TOKENIZE: Too many tokens\n");
             return 01;
         }
         char *new_str = my_malloc(strlen1(token) + 1);

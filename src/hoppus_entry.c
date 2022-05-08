@@ -8,11 +8,10 @@
 #include <hoppus_memory.h>
 #include <hoppus_config.h>
 #include <hoppus_constants.h>
+#include <hoppus_stdio.h>
 #include <lisp_lib.h>
 #include <symbol.h>
-
-#include <link.h>
-#include <user_stdio.h>
+#include <hoppus_link.h>
 
 
 __USER_TEXT void create_builtins() {
@@ -68,32 +67,32 @@ __USER_TEXT void create_builtins() {
 __USER_TEXT void parser_error(int error) {
     switch (error) {
         case GENERIC_ERROR:
-            user_puts("ERROR: MAIN: PARSER: generic error, no more info\n");
+            hoppus_puts("ERROR: MAIN: PARSER: generic error, no more info\n");
         case EOF_WHILE_READING_EXPR_ERROR_CODE:
-            user_puts("ERROR: MAIN: PARSER: got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
+            hoppus_puts("ERROR: MAIN: PARSER: got EOF while parsing an unfinished LISP list. Unmatched opening parentheses?\n");
         default:
-            user_printf("ERROR: MAIN: PARSER: unknown error: %d\n", error);
+            hoppus_printf("ERROR: MAIN: PARSER: unknown error: %d\n", error);
     }
 }
 __USER_TEXT void eval_error(int error) {
     switch (error) {
         case GENERIC_ERROR:
-            user_puts("ERROR: MAIN: EVAL: generic error\n");
+            hoppus_puts("ERROR: MAIN: EVAL: generic error\n");
             break;
         case UNBOUND_SYMBOL_NAME_ERROR:
-            user_puts("ERROR: MAIN: EVAL: unbound symbol name\n");
+            hoppus_puts("ERROR: MAIN: EVAL: unbound symbol name\n");
             break;
         case NUMBER_OF_ARGUMENTS_ERROR:
-            user_puts("ERROR: MAIN: EVAL: wrong number of arguments\n");
+            hoppus_puts("ERROR: MAIN: EVAL: wrong number of arguments\n");
             break;
         case TYPE_ERROR:
-            user_puts("ERROR: MAIN: EVAL: type error\n");
+            hoppus_puts("ERROR: MAIN: EVAL: type error\n");
             break;
         case INVALID_FORM_ERROR:
-            user_puts("ERROR: MAIN: EVAL: invalid form\n");
+            hoppus_puts("ERROR: MAIN: EVAL: invalid form\n");
             break;
         default:
-            user_printf("ERROR: MAIN: EVAL: unknown error: %d\n", error);
+            hoppus_printf("ERROR: MAIN: EVAL: unknown error: %d\n", error);
     }
 }
 
@@ -106,14 +105,14 @@ __USER_TEXT int load_standard_library() {
         strcpy1(copy, (char *)lib_strs[i]);
         ret_code = tokenize(copy, tokens);
         if (ret_code < 0) {
-            user_printf("ERROR: MAIN: tokenizing standard library string %s\n", (char *)lib_strs[0]);
+            hoppus_printf("ERROR: MAIN: tokenizing standard library string %s\n", (char *)lib_strs[0]);
             return ret_code;
         }
 
         expr *parsed;
         ret_code = parse_tokens(tokens, 0, &parsed);
         if (ret_code < 0) {
-            user_printf("ERROR: MAIN: parsing standard library tokens %s\n", (char *) lib_strs[0]);
+            hoppus_printf("ERROR: MAIN: parsing standard library tokens %s\n", (char *) lib_strs[0]);
             parser_error(ret_code);
             return ret_code;
         }
@@ -122,7 +121,7 @@ __USER_TEXT int load_standard_library() {
         expr *evald;
         ret_code = eval(parsed, &evald);
         if (ret_code < 0) {
-            user_printf("ERROR: MAIN: evaluating standard library forms: %s\n", (char *) lib_strs[0]);
+            hoppus_printf("ERROR: MAIN: evaluating standard library forms: %s\n", (char *) lib_strs[0]);
             eval_error(ret_code);
             return ret_code;
         }
@@ -136,7 +135,7 @@ __USER_TEXT int REPL_loop(int fd) {
     token_t *tokens = tokens_init();
     expr *parsed = NULL, *evald = NULL;
     while (1) {
-        user_puts("$ ");
+        hoppus_puts("$ ");
 
         ret_code = parse_tokens(tokens, fd, &parsed);
         if (ret_code < 0) {
@@ -144,8 +143,8 @@ __USER_TEXT int REPL_loop(int fd) {
             return ret_code;
         }
         if (ret_code == EOF_CODE) {
-            user_puts("INFO: MAIN: EOF\n");
-            user_puts("INFO: MAIN: return value: ");
+            hoppus_puts("INFO: MAIN: EOF\n");
+            hoppus_puts("INFO: MAIN: return value: ");
             expr_print(evald);
             return 0;
         }
@@ -166,43 +165,43 @@ __USER_TEXT int REPL_loop(int fd) {
 __USER_TEXT int clisp_main() {
     int ret_code;
 
-    user_puts("INFO: MAIN: welcome to Hoppus!\n");
+    hoppus_puts("INFO: MAIN: welcome to Hoppus!\n");
     gc_init();
-    user_puts("INFO: MAIN: gc initialized\n");
+    hoppus_puts("INFO: MAIN: gc initialized\n");
 
     create_builtins();
-    user_puts("INFO: MAIN: builtins created\n");
+    hoppus_puts("INFO: MAIN: builtins created\n");
 
     ret_code = load_standard_library();
     if (ret_code < 0) {
-        user_printf("ERROR: MAIN: loading standard library: %d\n", ret_code);
+        hoppus_printf("ERROR: MAIN: loading standard library: %d\n", ret_code);
         return -1;
     }
-    user_puts("INFO: MAIN: standard library loaded\n");
+    hoppus_puts("INFO: MAIN: standard library loaded\n");
 
     int fd = 0;
 
-    user_puts("INFO: MAIN: starting REPL loop\n");
+    hoppus_puts("INFO: MAIN: starting REPL loop\n");
 
     ret_code = REPL_loop(fd);
     if (ret_code < 0) {
-        user_printf("ERROR: MAIN: %d\n", ret_code);
+        hoppus_printf("ERROR: MAIN: %d\n", ret_code);
         return -1;
     }
 
     /* if (fd != 1) { */
     /*     close(fd); */
-    /*     user_puts("INFO: MAIN: starting REPL loop after file read\n"); */
+    /*     hoppus_puts("INFO: MAIN: starting REPL loop after file read\n"); */
     /*     ret_code = REPL_loop(1); */
     /*     if (ret_code < 0) { */
-    /*         user_printf("ERROR: MAIN: %d\n", ret_code); */
+    /*         hoppus_printf("ERROR: MAIN: %d\n", ret_code); */
     /*         return -1; */
     /*     } */
     /* } */
 
 
-    user_printf("INFO: MAIN: GC: num mallocs: %lu\n", gc_stats_get_num_malloc());
-    user_printf("INFO: MAIN: exiting with code: %d\n", ret_code);
-    user_puts("INFO: MAIN: bye...\n");
+    hoppus_printf("INFO: MAIN: GC: num mallocs: %lu\n", gc_stats_get_num_malloc());
+    hoppus_printf("INFO: MAIN: exiting with code: %d\n", ret_code);
+    hoppus_puts("INFO: MAIN: bye...\n");
     return ret_code;
 }

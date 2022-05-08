@@ -1,7 +1,7 @@
 #ifndef LISP_LIB_H_
 #define LISP_LIB_H_
 
-#include <link.h>
+#include <hoppus_link.h>
 
 __USER_DATA char LISP_LIB_IF[] = \
     "(defmacro if (pred form other-form) " \

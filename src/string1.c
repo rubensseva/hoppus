@@ -1,9 +1,9 @@
 #include <string1.h>
 #include <hoppus_utility.h>
+#include <hoppus_stdio.h>
 
-#include <link.h>
-#include <types.h>
-#include <user_stdio.h>
+#include <hoppus_link.h>
+#include <hoppus_types.h>
 
 
 // #define NULL (void *)0x0
@@ -88,7 +88,7 @@ __USER_TEXT char* strtok1(char *str, const char* delim) {
 
 __USER_TEXT uint32_t strlen1(char *str) {
     if (str == NULL) {
-        user_puts("STR is NULL\n");
+        hoppus_puts("STR is NULL\n");
     }
     for (int i = 0;;i++) {
         if (str[i] == '\0')

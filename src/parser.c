@@ -5,12 +5,12 @@
 #include <hoppus_config.h>
 #include <hoppus_constants.h>
 #include <hoppus_memory.h>
+#include <hoppus_stdio.h>
+#include <hoppus_types.h>
 #include <tokenize.h>
 
 #include <stdint.h>
-#include <types.h>
-#include <link.h>
-#include <user_stdio.h>
+#include <hoppus_link.h>
 
 /**
    @brief Create a LISP string representation from a C string.
@@ -68,7 +68,7 @@ __USER_TEXT int parse_tokens(token_t *tokens, int fd, expr **out) {
     int ret_code; token_t token;
     ret_code = tokens_pop(tokens, fd, &token);
     if (ret_code < 0) {
-        user_puts("ERROR: PARSER: popping tokens\n");
+        hoppus_puts("ERROR: PARSER: popping tokens\n");
         return ret_code;
     }
     if (ret_code == EOF_CODE)
@@ -113,7 +113,7 @@ __USER_TEXT int parse_tokens(token_t *tokens, int fd, expr **out) {
             curr = expr_new_cons(new, NULL);
             if (!first) {
                 if (type(new) != SYMBOL)
-                    user_printf("WARNING: PARSER: First entry in a list was not a symbol, instead it had type: %d\n", type(new));
+                    hoppus_printf("WARNING: PARSER: First entry in a list was not a symbol, instead it had type: %d\n", type(new));
                 first = curr;
             }
             if (prev)
@@ -126,7 +126,7 @@ __USER_TEXT int parse_tokens(token_t *tokens, int fd, expr **out) {
             return ret_code;
         *out = first;
     } else if (strcmp1(CLOSING_PAREN, token) == 0) {
-        user_puts("ERROR: PARSER: Unmatched closing parentheses\n");
+        hoppus_puts("ERROR: PARSER: Unmatched closing parentheses\n");
         return -1;
     } else {
         /* If not any of the above, then its a symbol */

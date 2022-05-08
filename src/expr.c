@@ -3,11 +3,11 @@
 #include <list.h>
 #include <hoppus_memory.h>
 #include <hoppus_config.h>
+#include <hoppus_stdio.h>
+#include <hoppus_link.h>
 
-#include <link.h>
 
-
-#define CDR_UNTAG(cdr) ((expr *)(((uint32_t) cdr) & 0xFFFFFFFE))
+#define CDR_UNTAG(cdr) ((expr *)(((uint32_t) cdr) & CDR_MASK))
 #define CDR_IS_CONS(cdr) (!((expr *)(((uint32_t) (cdr)) & 1)))
 #define CDR_OTHER_TYPE(cdr) ((expr_type)(((uint32_t) (cdr)) >> 1))
 
@@ -44,7 +44,7 @@ __USER_TEXT void set_car(expr *e, expr *new_car) {
    cons cell, in which case the LSB should be 0, so there is no need to mask
    the value. But could be nice to do this in any case, to avoid future bugs? */
 __USER_TEXT expr *cdr(expr *e) {
-    return (expr *)((uint32_t) e->cdr & 0xFFFFFFFE);
+    return (expr *)((uint32_t) e->cdr & CDR_MASK);
 };
 __USER_TEXT void set_cdr(expr *e, expr* new_cdr) {
     e->cdr = (expr *)((uint32_t) CDR_UNTAG(new_cdr) | !CDR_IS_CONS(e->cdr));
@@ -62,7 +62,7 @@ __USER_TEXT expr_type type(expr *e) {
 };
 __USER_TEXT void set_type(expr *e, expr_type type) {
     if (type == CONS) {
-        e->cdr = (expr *)((uint32_t)(e->cdr) & 0xFFFFFFFE);
+        e->cdr = (expr *)((uint32_t)(e->cdr) & CDR_MASK);
     } else {
         e->cdr = (expr *)((((uint32_t) type) << 1) | 1);
     }
@@ -127,18 +127,18 @@ __USER_TEXT int expr_copy(expr* e, expr **out) {
             expr *_car, *_cdr;
             int cpy_res = expr_copy(car(e), &_car);
             if (cpy_res < 0) {
-                user_puts("ERROR: EXPR: COPY: error for car field of cons cell\n");
+                hoppus_puts("ERROR: EXPR: COPY: error for car field of cons cell\n");
                 return cpy_res;
             }
             cpy_res = expr_copy(cdr(e), &_cdr);
             if (cpy_res < 0) {
-                user_puts("ERROR: EXPR: COPY: error for cdr field of cons cell\n");
+                hoppus_puts("ERROR: EXPR: COPY: error for cdr field of cons cell\n");
                 return cpy_res;
             }
             *out = expr_new_cons(_car, _cdr);
             return 0;
         default:
-            user_puts("ERROR: EXPR: COPY: unknown type\n");
+            hoppus_puts("ERROR: EXPR: COPY: unknown type\n");
             return -1;
     }
 }
@@ -157,7 +157,7 @@ __USER_TEXT int expr_is_true(expr *e) {
         case CONS:
             return 1;
         default:
-            user_puts("ERROR: EXPR: EXPR_IS_TRUE: Got unknown type\n");
+            hoppus_puts("ERROR: EXPR: EXPR_IS_TRUE: Got unknown type\n");
             return 0;
     }
 }
@@ -171,13 +171,13 @@ __USER_TEXT int expr_is_equal(expr *e1, expr *e2) {
         case CHAR:
         case BOOLEAN:
             if (!(type(e2) == NUMBER || type(e2) == CHAR || type(e2) == BOOLEAN)) {
-                user_puts("ERROR: EXPR: EXPR_IS_EQUAL: equal can only compare number, char or boolean with number, char or boolean\n");
+                hoppus_puts("ERROR: EXPR: EXPR_IS_EQUAL: equal can only compare number, char or boolean with number, char or boolean\n");
                 return -1;
             }
             return (int)data(e1) == (int)data(e2);
         case SYMBOL:
             if (type(e2) != SYMBOL) {
-                user_puts("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare symbol with something else\n");
+                hoppus_puts("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare symbol with something else\n");
                 return -1;
             }
             /* TODO: Perhaps just comparing the pointers is better here? */
@@ -185,7 +185,7 @@ __USER_TEXT int expr_is_equal(expr *e1, expr *e2) {
             return cmp_eq ? 0 : 1;
         case CONS:;
             if (type(e2) != CONS) {
-                user_puts("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare cons cell with something else\n");
+                hoppus_puts("ERROR: EXPR: EXPR_IS_EQUAL: trying to compare cons cell with something else\n");
                 return -1;
             }
 
@@ -197,7 +197,7 @@ __USER_TEXT int expr_is_equal(expr *e1, expr *e2) {
             return expr_is_equal(cdr(curr1), cdr(curr2));
 
         default:
-            user_puts("ERROR: EXPR: EXPR_IS_EQUAL: got unknown type when checking if true or false\n");
+            hoppus_puts("ERROR: EXPR: EXPR_IS_EQUAL: got unknown type when checking if true or false\n");
             return -1;
     }
 }
@@ -210,11 +210,11 @@ __USER_TEXT int expr_gt_lt(expr *e1, expr *e2, int gt_or_lt) {
         return e1 == e2;
 
     if (type(e2) == SYMBOL) {
-        user_puts("ERROR: EXPR: GT/LT: cant use gt/lt on symbol\n");
+        hoppus_puts("ERROR: EXPR: GT/LT: cant use gt/lt on symbol\n");
         return -1;
     }
     if (type(e2) == CONS) {
-        user_puts("ERROR: EXPR: GT/LT: cant use gt/lt on cons\n");
+        hoppus_puts("ERROR: EXPR: GT/LT: cant use gt/lt on cons\n");
         return -1;
     }
 
@@ -223,20 +223,20 @@ __USER_TEXT int expr_gt_lt(expr *e1, expr *e2, int gt_or_lt) {
         case CHAR:
         case BOOLEAN:
             if (!(type(e2) == NUMBER || type(e2) == CHAR || type(e2) == BOOLEAN)) {
-                user_puts("ERROR: EXPR: GT/LT: can only compare number, char or boolean with number, char or boolean\n");
+                hoppus_puts("ERROR: EXPR: GT/LT: can only compare number, char or boolean with number, char or boolean\n");
                 return -1;
             }
             if (gt_or_lt)
                 return (int)data(e1) > (int)data(e2);
             return (int)data(e1) < (int)data(e2);
         case SYMBOL:
-            user_puts("ERROR: EXPR: GT/LT: cant use gt/lt on symbol\n");
+            hoppus_puts("ERROR: EXPR: GT/LT: cant use gt/lt on symbol\n");
             return -1;
         case CONS:;
-            user_puts("ERROR: EXPR: GT/LT: cant use gt/lt on cons\n");
+            hoppus_puts("ERROR: EXPR: GT/LT: cant use gt/lt on cons\n");
             return -1;
         default:
-            user_puts("ERROR: EXPR: GT/LT: got unknown type when checking if true or false\n");
+            hoppus_puts("ERROR: EXPR: GT/LT: got unknown type when checking if true or false\n");
             return -1;
     }
 }
@@ -255,7 +255,7 @@ __USER_TEXT int expr_is_str(expr *e) {
 __USER_TEXT int str_from_expr(expr *e, char **out) {
     unsigned int length = list_length(e);
     if (length >= LISP_STR_MAX_LEN) {
-        user_printf("ERROR: EXPR: String is too large: %d\n", length);
+        hoppus_printf("ERROR: EXPR: String is too large: %d\n", length);
         return -1;
     }
     char *str = (char *) my_malloc(length + 1);
@@ -271,57 +271,57 @@ __USER_TEXT int str_from_expr(expr *e, char **out) {
 
 __USER_TEXT int expr_print_tree(expr *e) {
     if (e == NULL) {
-        user_puts("nil");
+        hoppus_puts("nil");
         return 0;
     }
     switch(type(e)) {
         case NUMBER:
-            user_printf("%d", (int)data(e));
+            hoppus_printf("%d", (int)data(e));
             return 0;
         case CHAR:
-            user_printf("'%c'", (char)data(e));
+            hoppus_printf("'%c'", (char)data(e));
             return 0;
         case SYMBOL:
-            user_printf("%s", (char *)data(e));
+            hoppus_printf("%s", (char *)data(e));
             return 0;
         case CONS:;
             if (expr_is_str(e)) {
                 char *str;
                 int ret_code = str_from_expr(e, &str);
                 if (ret_code < 0) {
-                    user_puts("ERROR: EXPR: PRINT: Converting expr to string\n");
+                    hoppus_puts("ERROR: EXPR: PRINT: Converting expr to string\n");
                     return -1;
                 }
-                user_puts("\"");
-                user_printf("%s", str);
-                user_puts("\"");
+                hoppus_puts("\"");
+                hoppus_printf("%s", str);
+                hoppus_puts("\"");
                 return 0;
             }
-            user_puts("(");
+            hoppus_puts("(");
             expr *curr = e;
             for_each(curr) {
                 expr_print_tree(car(curr));
                 if (!list_end(cdr(curr))) {
-                    user_puts(" ");
+                    hoppus_puts(" ");
                 }
             }
-            user_puts(")");
+            hoppus_puts(")");
             return 0;
         case BOOLEAN:
             if (data(e)) {
-                user_puts("true");
+                hoppus_puts("true");
             } else {
-                user_puts("false");
+                hoppus_puts("false");
             }
             return 0;
         default:
-            user_puts("ERROR: EXPR: PRINT: Got unknown expr type\n");
+            hoppus_puts("ERROR: EXPR: PRINT: Got unknown expr type\n");
             return -1;
     }
 }
 
 __USER_TEXT int expr_print(expr *e) {
     expr_print_tree(e);
-    user_puts("\n");
+    hoppus_puts("\n");
     return 0;
 }

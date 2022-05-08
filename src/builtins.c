@@ -8,9 +8,10 @@
 #include <hoppus_memory.h>
 #include <hoppus_config.h>
 #include <hoppus_constants.h>
+#include <hoppus_stdio.h>
+#include <hoppus_link.h>
 
 #include <stdint.h>
-#include <link.h>
 
 /**
    Here are all the builtin functions. Some of them are also special operators,
@@ -60,7 +61,7 @@ __USER_TEXT int bi_defun(expr *arg, expr **out) {
 
         if (strcmp1((char *)dar(curr), REST_ARGUMENTS_STR) == 0) {
             if (cdr(curr) == NULL) {
-                user_puts("ERROR: BUILTIN: DEFUN: expected a symbol after &rest keyword, but got nothing\n");
+                hoppus_puts("ERROR: BUILTIN: DEFUN: expected a symbol after &rest keyword, but got nothing\n");
                 return NUMBER_OF_ARGUMENTS_ERROR;
             }
         }
@@ -348,14 +349,14 @@ __USER_TEXT int bi_quasiquote(expr *arg, expr **out) {
    All comma signs should be within a quasiquote, and will be handled by quasitquote
    without evaluating the comma symbol itself */
 __USER_TEXT int bi_comma(expr *arg, expr **out) {
-    user_puts("ERROR: BUILTIN: COMMA: encountered comma outside quasiquote\n");
+    hoppus_puts("ERROR: BUILTIN: COMMA: encountered comma outside quasiquote\n");
     return -1;
 }
 /** If this builtin is triggered as part of normal evaluation, something is wrong.
    All comma-at signs should be within a quasiquote, and will be handled by quasitquote
    without evaluating the comma-at symbol itself */
 __USER_TEXT int bi_comma_at(expr *arg, expr **out) {
-    user_puts("ERROR: BUILTIN: COMMA-at: encountered comma-at outside quasiquote\n");
+    hoppus_puts("ERROR: BUILTIN: COMMA-at: encountered comma-at outside quasiquote\n");
     return -1;
 }
 

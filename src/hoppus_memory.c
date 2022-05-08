@@ -1,7 +1,6 @@
 #include <hoppus_memory.h>
 #include <gc.h>
-
-#include <link.h>
+#include <hoppus_link.h>
 
 /* Some simple inderection functions for easialy changing malloc implementations
    between custom malloc functions and std lib */

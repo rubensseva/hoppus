@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
-#include <link.h>
+#include <hoppus_link.h>
 
 /*
   Constants that should be generally available, but not

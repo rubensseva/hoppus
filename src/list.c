@@ -1,7 +1,8 @@
 #include <list.h>
 #include <eval.h>
 
-#include <link.h>
+#include <hoppus_types.h>
+#include <hoppus_link.h>
 
 /**
    When iterating through the list, a NULL pointer signifies the end

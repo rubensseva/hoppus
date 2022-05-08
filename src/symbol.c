@@ -1,11 +1,11 @@
 #include <symbol.h>
 #include <hoppus_config.h>
 #include <hoppus_memory.h>
+#include <hoppus_stdio.h>
+#include <hoppus_types.h>
 #include <string1.h>
 
-#include <types.h>
-#include <link.h>
-#include <user_stdio.h>
+#include <hoppus_link.h>
 
 
 __USER_DATA int n_symbol = 0;
@@ -29,7 +29,7 @@ __USER_TEXT symbol *symbol_builtin_create(char *name, builtin_fn_t *fn, int is_s
 
 __USER_TEXT void symbol_add(symbol *s) {
     if (n_symbol >= SYMBOLS_MAX_NUM - 1) {
-        user_puts("ERROR: SYMBOL: Too many symbols\n");
+        hoppus_puts("ERROR: SYMBOL: Too many symbols\n");
     } else {
         symbols[n_symbol++] = s;
     }

@@ -2,6 +2,15 @@
 #define EXPR_H_
 
 #include <stdint.h>
+#include <hoppus_config.h>
+
+#ifndef HOPPUS_PLATFROM
+    #define CDR_MASK 0xFFFFFFFE
+#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
+    #define CDR_MASK 0xFFFFFFFFFFFFFFFE
+#elif HOPPUS_PLATFORM == HOPPUS_X86
+    #define CDR_MASK 0xFFFFFFFE
+#endif
 
 /* This is a little bit hacky, but it works.
    As long as we dont define values for the enum below, it will grow from 0 and increase

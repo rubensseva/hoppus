@@ -4,7 +4,6 @@
 #include <parser.h>
 #include <symbol.h>
 
-#include <user_stdio.h>
 #include <stdint.h>
 
 
