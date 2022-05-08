@@ -5,11 +5,12 @@
 #include <hoppus_config.h>
 #include <hoppus_stdio.h>
 #include <hoppus_link.h>
+#include <hoppus_types.h>
 
 
-#define CDR_UNTAG(cdr) ((expr *)(((uint32_t) cdr) & CDR_MASK))
-#define CDR_IS_CONS(cdr) (!((expr *)(((uint32_t) (cdr)) & 1)))
-#define CDR_OTHER_TYPE(cdr) ((expr_type)(((uint32_t) (cdr)) >> 1))
+#define CDR_UNTAG(cdr) ((expr *)(((uintptr_t) cdr) & CDR_MASK))
+#define CDR_IS_CONS(cdr) (!((expr *)(((uintptr_t) (cdr)) & 1)))
+#define CDR_OTHER_TYPE(cdr) ((expr_type)(((uintptr_t) (cdr)) >> 1))
 
 __USER_DATA char SYMBOL_TYPE_STR[] = "symbol";
 __USER_DATA char NUMBER_TYPE_STR[] = "number";
@@ -44,15 +45,15 @@ __USER_TEXT void set_car(expr *e, expr *new_car) {
    cons cell, in which case the LSB should be 0, so there is no need to mask
    the value. But could be nice to do this in any case, to avoid future bugs? */
 __USER_TEXT expr *cdr(expr *e) {
-    return (expr *)((uint32_t) e->cdr & CDR_MASK);
+    return (expr *)((uintptr_t) e->cdr & CDR_MASK);
 };
 __USER_TEXT void set_cdr(expr *e, expr* new_cdr) {
-    e->cdr = (expr *)((uint32_t) CDR_UNTAG(new_cdr) | !CDR_IS_CONS(e->cdr));
+    e->cdr = (expr *)((uintptr_t) CDR_UNTAG(new_cdr) | !CDR_IS_CONS(e->cdr));
 }
-__USER_TEXT uint32_t data(expr *e) {
-    return (uint32_t) car(e);
+__USER_TEXT uintptr_t data(expr *e) {
+    return (uintptr_t) car(e);
 }
-__USER_TEXT void set_data(expr *e, uint32_t data) {
+__USER_TEXT void set_data(expr *e, uintptr_t data) {
     e->car = (expr *)data;
 }
 __USER_TEXT expr_type type(expr *e) {
@@ -62,16 +63,16 @@ __USER_TEXT expr_type type(expr *e) {
 };
 __USER_TEXT void set_type(expr *e, expr_type type) {
     if (type == CONS) {
-        e->cdr = (expr *)((uint32_t)(e->cdr) & CDR_MASK);
+        e->cdr = (expr *)((uintptr_t)(e->cdr) & CDR_MASK);
     } else {
-        e->cdr = (expr *)((((uint32_t) type) << 1) | 1);
+        e->cdr = (expr *)((((uintptr_t) type) << 1) | 1);
     }
 };
 
 __USER_TEXT expr_type tar(expr *e) {
     return type(car(e));
 }
-__USER_TEXT uint32_t dar(expr *e) {
+__USER_TEXT uintptr_t dar(expr *e) {
     return data(car(e));
 }
 
@@ -91,7 +92,7 @@ __USER_TEXT expr *expr_new() {
     return new;
 }
 
-__USER_TEXT expr *expr_new_val(expr_type type, uint32_t data) {
+__USER_TEXT expr *expr_new_val(expr_type type, uintptr_t data) {
     expr *new = expr_new();
     set_type(new, type);
     set_data(new, data);

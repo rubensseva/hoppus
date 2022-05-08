@@ -5,6 +5,7 @@
 #include <hoppus_link.h>
 #include <hoppus_types.h>
 
+#include <stdlib.h>
 
 // #define NULL (void *)0x0
 
@@ -108,7 +109,7 @@ __USER_TEXT uint32_t strcmp1(char *str1, char *str2) {
     return 0;
 }
 
-__USER_TEXT uint32_t strcpy1(char *dest, char *src) {
+__USER_TEXT uintptr_t strcpy1(char *dest, char *src) {
     for (int i = 0; i < strlen1(src); i++) {
         dest[i] = src[i];
     }

@@ -3,8 +3,7 @@
 
 #include <hoppus_config.h>
 
-#ifndef HOPPUS_PLATFORM
-#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
+#ifdef HOPPUS_RISCV_F9
 
 #include <user_stdio.h>
 #include <user_thread.h>
@@ -18,7 +17,8 @@
         read_line(buf);         \
     }
 
-#elif HOPPUS_PLATFORM == HOPPUS_X86
+#endif
+#ifdef HOPPUS_X86
 
 #include <stdio.h>
 #include <stdlib.h>

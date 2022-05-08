@@ -6,6 +6,9 @@ CFLAGS = -g3
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -T $(LINKER_SCRIPT)
 
+# Define HOPPUS_X86 or HOPPUS_RISCV_F9 to build for corresponding platforms
+CFLAGS += -DHOPPUS_X86
+
 INCLUDE_DIR = include
 SOURCE_DIR = src
 

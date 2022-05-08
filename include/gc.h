@@ -21,8 +21,8 @@ struct header {
     header *next;
 };
 
-uint32_t align_up(uint32_t ptr, uint32_t size);
-uint32_t align_down(uint32_t ptr, uint32_t size);
+uintptr_t align_up(uintptr_t ptr, uint32_t size);
+uintptr_t align_down(uintptr_t ptr, uint32_t size);
 
 uint32_t gc_stats_get_num_malloc();
 uint32_t gc_stats_get_allocated_total();
@@ -31,5 +31,22 @@ int gc_init();
 int gc_maybe_mark_and_sweep();
 
 void *gc_malloc(unsigned int size);
+
+/* The size should be that of a cons cell, redeclaring that size here to avoid importing
+ too much LISP related stuff.*/
+struct cons_cell_size {
+    uintptr_t foo;
+    uintptr_t bar;
+};
+typedef struct cons_cell_size small_obj;
+
+#ifdef HOPPUS_X86
+#define HEADER_NEXT_PTR_MASK 0xFFFFFFFFFFFFFFFC
+#endif
+#ifdef HOPPUS_RISCV_F9
+#define HEADER_NEXT_PTR_MASK 0xFFFFFFFC
+#endif
+
+#define UNTAG(p) ((header *)(((uintptr_t) (p)) & HEADER_NEXT_PTR_MASK))
 
 #endif // GC_H_

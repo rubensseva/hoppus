@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <hoppus_link.h>
 
-__USER_TEXT int isdigit(char c) {
+__USER_TEXT int is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
@@ -13,10 +13,10 @@ __USER_TEXT int isdigit(char c) {
 __USER_TEXT int is_number(char *s) {
     for (int i = 0; s[i]!= '\0'; i++) {
         if (i == 0 && s[i] == '-') {
-            if (s[i + 1] == '\0' || !isdigit(s[i + 1])) {
+            if (s[i + 1] == '\0' || !is_digit(s[i + 1])) {
                 return 0;
             }
-        } else if (isdigit(s[i]) == 0) {
+        } else if (is_digit(s[i]) == 0) {
             return 0;
         }
     }

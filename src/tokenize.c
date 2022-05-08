@@ -3,10 +3,13 @@
 #include <hoppus_memory.h>
 #include <hoppus_constants.h>
 #include <hoppus_stdio.h>
+#include <hoppus_types.h>
 #include <tokenize.h>
 #include <string1.h>
 
 #include <hoppus_link.h>
+
+#include <stdlib.h>
 
 __USER_TEXT int read_tokens_from_file(int fd, token_t *out) {
     char *buf = (char *) my_malloc(EXPR_STR_MAX_LEN);

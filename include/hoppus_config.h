@@ -20,17 +20,5 @@
 #define EXPR_STR_MAX_LEN 128
 #define LISP_STR_MAX_LEN 128
 
-/* Build configuration */
-
-/*
-  1 : x86
-  2 : riscv F9
-*/
-
-#define HOPPUS_X86 1
-#define HOPPUS_RISCV_F9 2
-
-#define HOPPUS_PLATFORM HOPPUS_X86
-
 
 #endif // CONFIG_H_

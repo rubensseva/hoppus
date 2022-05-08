@@ -8,9 +8,10 @@
 #include <hoppus_constants.h>
 #include <hoppus_memory.h>
 #include <hoppus_stdio.h>
+#include <hoppus_types.h>
+#include <hoppus_link.h>
 #include <builtins.h>
 #include <list.h>
-#include <hoppus_link.h>
 
 
 /** @brief Scans an expression tree for comma or comma-at signs, then takes

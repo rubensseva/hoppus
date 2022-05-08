@@ -4,12 +4,11 @@
 #include <stdint.h>
 #include <hoppus_config.h>
 
-#ifndef HOPPUS_PLATFROM
+#ifdef HOPPUS_RISCV_F9
     #define CDR_MASK 0xFFFFFFFE
-#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
+#endif
+#ifdef HOPPUS_X86
     #define CDR_MASK 0xFFFFFFFFFFFFFFFE
-#elif HOPPUS_PLATFORM == HOPPUS_X86
-    #define CDR_MASK 0xFFFFFFFE
 #endif
 
 /* This is a little bit hacky, but it works.
@@ -50,19 +49,19 @@ expr *car(expr *e);
 void set_car(expr *e, expr *new_car);
 expr *cdr(expr *e);
 void set_cdr(expr *e, expr* new_cdr);
-uint32_t data(expr *e);
-void set_data(expr *e, uint32_t data);
+uintptr_t data(expr *e);
+void set_data(expr *e, uintptr_t data);
 expr_type type(expr *e);
 void set_type(expr *e, expr_type type);
 
 /* type of the car */
 expr_type tar(expr *e);
 /* data of the car */
-uint32_t dar(expr *e);
+uintptr_t dar(expr *e);
 
 expr *nth(unsigned int i, expr *e);
 
-expr *expr_new_val(expr_type type, uint32_t data);
+expr *expr_new_val(expr_type type, uintptr_t data);
 expr *expr_new_cons(expr* car, expr *cdr);
 int expr_copy(expr *e, expr **out);
 

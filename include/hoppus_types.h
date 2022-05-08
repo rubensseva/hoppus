@@ -3,12 +3,14 @@
 
 #include <hoppus_config.h>
 
-#ifndef HOPPUS_PLATFORM
-#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
+#ifdef HOPPUS_RISCV_F9
 #include <types.h>
-#elif HOPPUS_PLATFORM == HOPPUS_X86
+#endif
+#ifdef HOPPUS_X86
 #include <stddef.h>
+#include <stdlib.h>
 #endif
 
+#include <stdlib.h>
 
 #endif // HOPPUS_TYPES_H_

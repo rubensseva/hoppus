@@ -119,7 +119,7 @@ __USER_TEXT int bi_add(expr *arg, expr **out) {
         if (type(car(curr)) != NUMBER) return TYPE_ERROR;
         acc += (int)dar(curr);
     }
-    expr *_out = expr_new_val(NUMBER, (uint32_t)acc);
+    expr *_out = expr_new_val(NUMBER, (uintptr_t)acc);
     *out = _out;
     return 0;
 }
@@ -157,7 +157,7 @@ __USER_TEXT int bi_mult(expr *arg, expr **out) {
             acc *= (int)dar(curr);
         }
     }
-    expr *_out = expr_new_val(NUMBER, (uint32_t)acc);
+    expr *_out = expr_new_val(NUMBER, (uintptr_t)acc);
     *out = _out;
     return 0;
 }
@@ -273,21 +273,21 @@ __USER_TEXT int bi_equal(expr *arg, expr **out) {
             prev = curr;
         }
     }
-    *out = expr_new_val(BOOLEAN, (uint32_t)val);
+    *out = expr_new_val(BOOLEAN, (uintptr_t)val);
     return 0;
 }
 
 __USER_TEXT int bi_gt(expr *arg, expr **out) {
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     int val = expr_gt_lt(car(arg), car(cdr(arg)), 1);
-    *out = expr_new_val(BOOLEAN, (uint32_t)val);
+    *out = expr_new_val(BOOLEAN, (uintptr_t)val);
     return 0;
 }
 
 __USER_TEXT int bi_lt(expr *arg, expr **out) {
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     int val = expr_gt_lt(car(arg), car(cdr(arg)), 0);
-    *out = expr_new_val(BOOLEAN, (uint32_t)val);
+    *out = expr_new_val(BOOLEAN, (uintptr_t)val);
     return 0;
 }
 
@@ -305,7 +305,7 @@ __USER_TEXT int bi_and(expr *arg, expr **out) {
             if (val == 0) break;
         }
     }
-    *out = expr_new_val(BOOLEAN, (uint32_t)val);
+    *out = expr_new_val(BOOLEAN, (uintptr_t)val);
     return 0;
 }
 
@@ -324,7 +324,7 @@ __USER_TEXT int bi_or(expr *arg, expr **out) {
         }
     }
 
-    expr* new_expr = expr_new_val(BOOLEAN, (uint32_t)val);
+    expr* new_expr = expr_new_val(BOOLEAN, (uintptr_t)val);
     *out = new_expr;
     return 0;
 }

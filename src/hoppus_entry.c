@@ -9,6 +9,7 @@
 #include <hoppus_config.h>
 #include <hoppus_constants.h>
 #include <hoppus_stdio.h>
+#include <hoppus_types.h>
 #include <lisp_lib.h>
 #include <symbol.h>
 #include <hoppus_link.h>
@@ -206,10 +207,8 @@ __USER_TEXT int clisp_main() {
     return ret_code;
 }
 
-#ifdef HOPPUS_PLATFORM
-#if HOPPUS_PLATFORM == HOPPUS_X86
+#ifdef HOPPUS_X86
 int main() {
     return clisp_main();
 }
-#endif
 #endif

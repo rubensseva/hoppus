@@ -2,26 +2,25 @@
 #include <hoppus_utility.h>
 #include <hoppus_stdio.h>
 #include <hoppus_link.h>
+#include <hoppus_types.h>
 
 #include <stdint.h>
 
-#define UNTAG(p) ((header *)(((uint32_t) (p)) & 0xFFFFFFFC))
-
-typedef uint64_t small_obj;
-
-#ifdef HOPPUS_PLATFORM
-#if HOPPUS_PLATFORM == HOPPUS_X86
+#ifdef HOPPUS_X86
 #include <stdio.h>
-#define MALLOC_HEAP_SIZE 4096
+#define MALLOC_HEAP_SIZE 65536
 char malloc_heap[MALLOC_HEAP_SIZE];
-uint64_t stack_end;
-#elif HOPPUS_PLATFORM == HOPPUS_X86
-uint32_t stack_end = &user_thread_stack_end;
+uintptr_t stack_end;
+#define FULL_BITMASK 0xFFFFFFFFFFFFFFFF
 #endif
+#ifdef HOPPUS_RISCV_F9
+uintptr_t stack_end = &user_thread_stack_end;
+#define FULL_BITMASK 0xFFFFFFFF
 #endif
 
 /* 128 bytes for bitmap gives 1024 objects, which is 8192 bytes */
-#define BITMAP_SIZE 128
+/* #define BITMAP_SIZE 128 */
+#define BITMAP_SIZE 256
 
 /* provided by linker, sdata is from customized default linker script,
    not in regular default linker script */
@@ -30,7 +29,7 @@ extern char end, sdata;
 __USER_DATA header *large_used = NULL;
 __USER_DATA header *large_prev_malloced = NULL;
 
-__USER_DATA int small_prev_malloced_byte = 0;
+__USER_DATA int small_prev_malloced = 0;
 
 // char malloc_heap[MALLOC_HEAP_SIZE];
 __USER_DATA uint32_t gc_allocated_size = 0;
@@ -66,7 +65,7 @@ __USER_TEXT void gc_bitmap_set(uint8_t bitmap[], int i, int val) {
 }
 
 __USER_TEXT int gc_bitmap_addr_to_i(small_obj *o) {
-    return (align_down((uint32_t)o, sizeof(small_obj)) - (uint32_t)heap_start) / sizeof(small_obj);
+    return (align_down((uintptr_t)o, sizeof(small_obj)) - (uintptr_t)heap_start) / sizeof(small_obj);
 }
 
 __USER_TEXT void gc_bitmap_init(uint8_t bitmap[]) {
@@ -77,7 +76,7 @@ __USER_TEXT void gc_bitmap_init(uint8_t bitmap[]) {
 
 __USER_TEXT void gc_bitmap_print(uint8_t bitmap[]) {
     for (int i = 0; i < BITMAP_SIZE * 8; i++) {
-        hoppus_printf("%d", gc_bitmap_get(bitmap, i))
+        hoppus_printf("%d", gc_bitmap_get(bitmap, i));
         if (i % 100 == 0)
             hoppus_puts("\n");
     }
@@ -100,25 +99,24 @@ __USER_TEXT unsigned int gc_calc_allocated() {
 }
 
 
-__USER_TEXT uint32_t align_up(uint32_t ptr, uint32_t size) {
+__USER_TEXT uintptr_t align_up(uintptr_t ptr, uint32_t size) {
     if (ptr % size != 0)
         ptr += size - ptr % size;
     return ptr;
 }
-__USER_TEXT uint32_t align_down(uint32_t ptr, uint32_t size) {
+__USER_TEXT uintptr_t align_down(uintptr_t ptr, uint32_t size) {
     if (ptr % size != 0)
         ptr -= ptr % size;
     return ptr;
 }
 
 __USER_TEXT header *new_next_ptr(header *old_next, header *new_next) {
-    return (header *)((uint32_t)UNTAG(new_next) | ((uint32_t)old_next & 1));
+    return (header *)((uintptr_t)UNTAG(new_next) | ((uintptr_t)old_next & 1));
 }
 
 __USER_TEXT int gc_init() {
 
-#ifdef HOPPUS_PLATFORM
-#if HOPPUS_PLATFORM == HOPPUS_X86
+#ifdef HOPPUS_X86
     FILE *statfp = fopen("/proc/self/stat", "r");
     if (statfp == NULL) {
         perror("open");
@@ -131,14 +129,12 @@ __USER_TEXT int gc_init() {
            "%*ld %*ld %*ld %*ld %*llu %*lu %*ld "
            "%*lu %*lu %*lu %lu", &stack_end);
     fclose(statfp);
-
-
-    heap_start = (header *)align_up((uint32_t)malloc_heap, sizeof(header));
-    heap_end = (header *)align_down((uint32_t)((char *) malloc_heap + MALLOC_HEAP_SIZE), sizeof(header));
-#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
-    heap_start = (header *)align_up((uint32_t)&user_thread_heap_start, sizeof(header));
-    heap_end = (header *)align_down((uint32_t)&user_thread_heap_end, sizeof(header));
+    heap_start = (header *)align_up((uintptr_t)&malloc_heap, sizeof(header));
+    heap_end = (header *)align_down((uintptr_t)(((char *)&malloc_heap) + MALLOC_HEAP_SIZE), sizeof(header));
 #endif
+#ifdef HOPPUS_RISCV_F9
+    heap_start = (header *)align_up((uintptr_t)&user_thread_heap_start, sizeof(header));
+    heap_end = (header *)align_down((uintptr_t)&user_thread_heap_end, sizeof(header));
 #endif
 
     heap_size = (char *)heap_end - (char *)heap_start;
@@ -153,37 +149,37 @@ __USER_TEXT int gc_init() {
     return 0;
 }
 
-__USER_TEXT int gc_is_skippable_ptr(uint32_t *p) {
-    return (*p < (uint32_t)heap_start || *p >= (uint32_t)heap_end) || /* If points to outside heap */
-        (p == (uint32_t*)large_used || p == (uint32_t*)large_prev_malloced); /* If we are checking a gc address */
+__USER_TEXT int gc_is_skippable_ptr(uintptr_t *p) {
+    return (*p < (uintptr_t)heap_start || *p >= (uintptr_t)heap_end) || /* If points to outside heap */
+        (p == (uintptr_t*)large_used || p == (uintptr_t*)large_prev_malloced); /* If we are checking a gc address */
 }
 
-__USER_TEXT void gc_scan_follow_region(uint32_t *start, uint32_t *end) {
-    for (uint32_t *p = start; p <= end - 1; p++) {
+__USER_TEXT void gc_scan_follow_region(uintptr_t *start, uintptr_t *end) {
+    for (uintptr_t *p = start; p <= end - 1; p++) {
 
-        if (gc_is_skippable_ptr((uint32_t *) p))
+        if (gc_is_skippable_ptr((uintptr_t *) p))
             continue;
-        uint32_t v = *(uint32_t *)p;
+        uintptr_t v = *(uintptr_t *)p;
 
         /* If its in the small objects heap */
-        if (v < (uint32_t)heap_split) {
+        if (v < (uintptr_t)heap_split) {
             int i = gc_bitmap_addr_to_i((small_obj *)v);
             if (gc_bitmap_get(alloc_bitmap, i) && !gc_bitmap_get(marked_bitmap, i)) {
                 gc_bitmap_set(marked_bitmap, i, 1);
-                gc_scan_follow_region((uint32_t *)v, (uint32_t *)((small_obj *)v + 1));
+                gc_scan_follow_region((uintptr_t *)v, (uintptr_t *)((small_obj *)v + 1));
             }
             continue;
         }
 
         /* If its in the large objects heap */
         for (header *uu = large_used; uu != NULL; uu = UNTAG(uu->next)) {
-            if (v < (uint32_t)(uu))
+            if (v < (uintptr_t)(uu))
                 break;
-            if (v >= (uint32_t)(uu + 1) && v <= (uint32_t)(uu + 1 + uu->size)) {
-                if (((uint32_t)uu->next & 1) == 1)
+            if (v >= (uintptr_t)(uu + 1) && v <= (uintptr_t)(uu + 1 + uu->size)) {
+                if (((uintptr_t)uu->next & 1) == 1)
                     break;
-                uu->next = (header *)((uint32_t)uu->next | 1);
-                gc_scan_follow_region((uint32_t *)(uu + 1), (uint32_t *)(uu + 1 + uu->size));
+                uu->next = (header *)((uintptr_t)uu->next | 1);
+                gc_scan_follow_region((uintptr_t *)(uu + 1), (uintptr_t *)(uu + 1 + uu->size));
                 break;
             }
         }
@@ -197,28 +193,28 @@ __USER_TEXT int gc_scan_heap() {
         if (!gc_bitmap_get(alloc_bitmap, i) || !gc_bitmap_get(marked_bitmap, i))
             continue;
         small_obj *o = &((small_obj *)heap_start)[i];
-        gc_scan_follow_region((uint32_t *)o, (uint32_t *)(o + 1));
+        gc_scan_follow_region((uintptr_t *)o, (uintptr_t *)(o + 1));
     }
 
     /* Scan large objects heap */
     for(header *u = large_used; u != NULL; u = UNTAG(u->next)) {
         /* If the block is not marked, skip it */
-        if (((uint32_t)u->next & 1) == 0)
+        if (((uintptr_t)u->next & 1) == 0)
             continue;
-        gc_scan_follow_region((uint32_t *)(u + 1), (uint32_t *)(u + 1 + u->size));
+        gc_scan_follow_region((uintptr_t *)(u + 1), (uintptr_t *)(u + 1 + u->size));
     }
     return 0;
 }
 
-__USER_TEXT int gc_scan_region(uint32_t *start, uint32_t *end) {
+__USER_TEXT int gc_scan_region(uintptr_t *start, uintptr_t *end) {
     hoppus_printf("INFO: GC: scanning region from %x to %x...\n", start, end);
-    for (uint32_t *p = start; p <= end - 1; p += 1) {
+    for (uintptr_t *p = start; p <= end - 1; p += 1) {
         if (gc_is_skippable_ptr(p))
             continue;
-        uint32_t v = *p;
+        uintptr_t v = *p;
 
         /* If its in the small objects heap */
-        if (v < (uint32_t)heap_split) {
+        if (v < (uintptr_t)heap_split) {
             int i = gc_bitmap_addr_to_i((small_obj *)v);
             if (gc_bitmap_get(alloc_bitmap, i) && !gc_bitmap_get(marked_bitmap, i)) {
                 gc_bitmap_set(marked_bitmap, i, 1);
@@ -228,11 +224,11 @@ __USER_TEXT int gc_scan_region(uint32_t *start, uint32_t *end) {
 
         /* If its in the large objects heap */
         for (header *u = large_used; u != NULL; u = UNTAG(u->next)) {
-            if (v < (uint32_t)(u))
+            if (v < (uintptr_t)(u))
                 break;
             /* If an address in the region points to a used block, mark it as live */
-            if (v >= (uint32_t)(u + 1) && v <= (uint32_t)(u + 1 + u->size)) {
-                u->next = (header *)((uint32_t)u->next | 1);
+            if (v >= (uintptr_t)(u + 1) && v <= (uintptr_t)(u + 1 + u->size)) {
+                u->next = (header *)((uintptr_t)u->next | 1);
                 break;
             }
         }
@@ -244,7 +240,7 @@ __USER_TEXT int gc_sweep() {
     unsigned int num_sweeped = 0;
     header *u = large_used, *prev = NULL;
     while (u != NULL) {
-        if (((uint32_t)u->next & 1) == 0) {
+        if (((uintptr_t)u->next & 1) == 0) {
             num_sweeped++;
             gc_allocated_size -= (u->size + 1) * sizeof(header);
             if (u == large_prev_malloced)
@@ -277,7 +273,7 @@ __USER_TEXT int gc_dump_info() {
     int count = 0, marked = 0, unmarked = 0;
     for (header *u = large_used; u != NULL; u = UNTAG(u->next)) {
         count++;
-        if (((uint32_t)u->next & 1) == 1) {
+        if (((uintptr_t)u->next & 1) == 1) {
             marked++;
         } else {
             unmarked++;
@@ -304,7 +300,7 @@ __USER_TEXT int gc_dump_info() {
 }
 
 __USER_TEXT int gc_mark_and_sweep() {
-    uint32_t *sp;
+    uintptr_t *sp;
     register void *_sp asm ("sp");
     sp = _sp;
 
@@ -321,19 +317,19 @@ __USER_TEXT int gc_mark_and_sweep() {
         return 0;
     }
 
-#ifdef HOPPUS_PLATFORM
-#if HOPPUS_PLATFORM == HOPPUS_X86
+#ifdef HOPPUS_X86
     /* provided by linker, sdata is from customized default linker script,
       not in regular default linker script */
     extern char end, sdata;
-    gc_scan_region((uint32_t *)&sdata, (uint32_t *)malloc_heap);
-    gc_scan_region((uint32_t *)(malloc_heap + MALLOC_HEAP_SIZE), (uint32_t *)&end - 1);
-#elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
-    gc_scan_region((uint32_t *)&user_bss_start, (uint32_t *)&user_bss_end);
-    gc_scan_region((uint32_t *)&user_data_misc_start, (uint32_t *)&user_data_misc_end);
+    gc_scan_region((uintptr_t *)&sdata, (uintptr_t *)malloc_heap);
+    gc_scan_region((uintptr_t *)(malloc_heap + MALLOC_HEAP_SIZE), (uintptr_t *)&end - 1);
 #endif
+#ifdef HOPPUS_RISCV_F9
+    gc_scan_region((uintptr_t *)&user_bss_start, (uintptr_t *)&user_bss_end);
+    gc_scan_region((uintptr_t *)&user_data_misc_start, (uintptr_t *)&user_data_misc_end);
 #endif
-    gc_scan_region(sp, (uint32_t *)stack_end);
+
+    gc_scan_region(sp, (uintptr_t *)stack_end);
 
     hoppus_puts("INFO: GC: scanning marked objects...\n");
     gc_scan_heap();
@@ -381,11 +377,11 @@ __USER_TEXT void *gc_malloc_units(unsigned int required_units) {
     }
     int first_round = 1;
     for (header *u = UNTAG(large_prev_malloced);; u = UNTAG(u->next)) {
+        if (u == NULL)
+            u = large_used;
         if (!first_round && u == large_prev_malloced)
             break;
         first_round = 0;
-        if (u == NULL)
-            u = large_used;
 
         header *free_base, *u_end = u + 1 + u->size;
 
@@ -437,27 +433,27 @@ __USER_TEXT void *gc_malloc_large(unsigned int size) {
 __USER_TEXT void *gc_malloc_small() {
     /* Jump 32 bits at a time */
     int first_round = 1;
-    for (int i = small_prev_malloced_byte;; i += 4) {
+    for (int i = small_prev_malloced;; i += sizeof(uintptr_t)) {
         if (first_round) {
             first_round = 0;
-        } else if (i == small_prev_malloced_byte) {
+        } else if (i == small_prev_malloced) {
             break;
         }
         if (i == BITMAP_SIZE) {
             i = 0;
             continue;
         }
-        /* If all bits are taken in this 32 bit area, go to next */
-        if (((uint32_t*)alloc_bitmap)[i / 4] == 0xFFFFFFFF)
+        /* If all bits are taken in this 32/64 bit area, go to next */
+        if (((uintptr_t*)alloc_bitmap)[i / sizeof(uintptr_t)] == FULL_BITMASK)
             continue;
-        for (int j = i * 8; j < (i * 8) + 32; j++) {
+        for (int j = i * 8; j < (i * 8) + (sizeof(uintptr_t) * 8); j++) {
             if (!gc_bitmap_get(alloc_bitmap, j)) {
                 gc_bitmap_set(alloc_bitmap, j, 1);
-                small_prev_malloced_byte = i;
+                small_prev_malloced = i;
                 return &((small_obj *)heap_start)[j];
             }
         }
-        hoppus_printf("ERROR: GC: couldnt find available slot in 32-bit region that should be available %x, %d\n", ((uint32_t*)alloc_bitmap)[i / 4], i)
+        hoppus_printf("ERROR: GC: couldnt find available slot in 32-bit region that should be available %x, %d\n", ((uintptr_t*)alloc_bitmap)[i / 4], i)
     }
     return NULL;
 }
