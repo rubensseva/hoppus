@@ -205,3 +205,11 @@ __USER_TEXT int clisp_main() {
     hoppus_puts("INFO: MAIN: bye...\n");
     return ret_code;
 }
+
+#ifdef HOPPUS_PLATFORM
+#if HOPPUS_PLATFORM == HOPPUS_X86
+int main() {
+    return clisp_main();
+}
+#endif
+#endif

@@ -4,7 +4,7 @@ CFLAGS = -g3
 # CFLAGS = -O3
 # CFLAGS += -fsanitize=address
 CFLAGS += -fno-omit-frame-pointer
-# CFLAGS += -T $(LINKER_SCRIPT)
+CFLAGS += -T $(LINKER_SCRIPT)
 
 INCLUDE_DIR = include
 SOURCE_DIR = src

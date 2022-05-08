@@ -8,8 +8,8 @@
 #elif HOPPUS_PLATFORM == HOPPUS_RISCV_F9
     #include <link.h>
 #elif HOPPUS_PLATFORM == HOPPUS_X86
-    #define __USER_TEXT         __attribute__ ((section(".user_text")))
-    #define __USER_DATA         __attribute__ ((section(".user_data")))
+    #define __USER_TEXT         __attribute__ (())
+    #define __USER_DATA         __attribute__ (())
 #endif
 
 #define __USER_TEXT         __attribute__ (())

@@ -14,9 +14,9 @@ typedef uint64_t small_obj;
 #include <stdio.h>
 #define MALLOC_HEAP_SIZE 4096
 char malloc_heap[MALLOC_HEAP_SIZE];
-uint64_t stack_start;
+uint64_t stack_end;
 #elif HOPPUS_PLATFORM == HOPPUS_X86
-uint32_t stack_start = &user_thread_stack_start;
+uint32_t stack_end = &user_thread_stack_end;
 #endif
 #endif
 
@@ -119,7 +119,7 @@ __USER_TEXT int gc_init() {
 
 #ifdef HOPPUS_PLATFORM
 #if HOPPUS_PLATFORM == HOPPUS_X86
-    statfp = fopen("/proc/self/stat", "r");
+    FILE *statfp = fopen("/proc/self/stat", "r");
     if (statfp == NULL) {
         perror("open");
         printf("ERROR: GC: GC_INIT: Opening stat\n");
@@ -129,7 +129,7 @@ __USER_TEXT int gc_init() {
            "%*d %*s %*c %*d %*d %*d %*d %*d %*u "
            "%*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld "
            "%*ld %*ld %*ld %*ld %*llu %*lu %*ld "
-           "%*lu %*lu %*lu %lu", &stack_start);
+           "%*lu %*lu %*lu %lu", &stack_end);
     fclose(statfp);
 
 
