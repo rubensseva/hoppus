@@ -175,8 +175,7 @@ __USER_TEXT int remove_param_symbols(expr *params) {
 __USER_TEXT int function_invocation(symbol *sym, expr *args, expr **out) {
     int ret_code;
     expr *defun_params = sym->e;
-    expr *function_params = car(cdr(defun_params)), *name = car(defun_params),
-        *forms = cdr(cdr(defun_params));;
+    expr *function_params = car(cdr(defun_params)), *forms = cdr(cdr(defun_params));
 
     if ((ret_code = add_param_symbols(function_params, args)) < 0) return ret_code;
 

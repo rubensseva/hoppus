@@ -185,7 +185,7 @@ __USER_TEXT int tokenize(char *src_code, token_t *out) {
 
     /* Pad commas, but not comma-ats */
     is_in_str = 0;
-    for (int i = 0, j = 0; i < strlen1(src_code) - 1; i++) {
+    for (int i = 0; i < strlen1(src_code) - 1; i++) {
         if (src_code[i] == '"')
             is_in_str = !is_in_str;
         if (src_code[i] == ',' && src_code[i + 1] != '@') {

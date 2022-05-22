@@ -14,7 +14,7 @@ uintptr_t stack_end;
 #define FULL_BITMASK 0xFFFFFFFFFFFFFFFF
 #endif
 #ifdef HOPPUS_RISCV_F9
-uintptr_t stack_end = &user_thread_stack_end;
+__USER_DATA uintptr_t stack_end = (uintptr_t) &user_thread_stack_end;
 #define FULL_BITMASK 0xFFFFFFFF
 #endif
 

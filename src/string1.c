@@ -27,7 +27,6 @@ __USER_TEXT char* trim1(char *str, char delim) {
     str = &str[new_start];
     size = strlen1(str);
 
-    int new_end = -1;
     for (int i = size - 1; i > 0; i--) {
         if (str[i] != delim) {
             break;

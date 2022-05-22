@@ -5,14 +5,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/tokenize.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/tokenize.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/tokenize.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -20,14 +21,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/list.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/list.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/list.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -35,14 +37,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/string1.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/string1.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/string1.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -50,14 +53,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/hoppus_constants.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/hoppus_constants.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/hoppus_constants.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -65,14 +69,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/hoppus_memory.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/hoppus_memory.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/hoppus_memory.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -80,14 +85,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/hoppus_utility.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/hoppus_utility.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/hoppus_utility.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -95,14 +101,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/parser.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/parser.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/parser.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -110,14 +117,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/eval.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/eval.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/eval.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -125,14 +133,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/hoppus_entry.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/hoppus_entry.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/hoppus_entry.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -140,14 +149,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/symbol.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/symbol.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/symbol.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -155,14 +165,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/expr.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/expr.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/expr.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -170,14 +181,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/gc.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/gc.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/gc.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -185,14 +197,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "src/builtins.c"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/src/builtins.c",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/src/builtins.c",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -200,14 +213,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_types.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_types.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_types.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -215,14 +229,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/gc.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/gc.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/gc.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -230,14 +245,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_constants.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_constants.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_constants.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -245,14 +261,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/lisp_lib.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/lisp_lib.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/lisp_lib.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -260,14 +277,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_stdio.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_stdio.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_stdio.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -275,14 +293,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/list.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/list.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/list.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -290,14 +309,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/expr.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/expr.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/expr.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -305,14 +325,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/eval.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/eval.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/eval.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -320,14 +341,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_config.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_config.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_config.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -335,14 +357,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/parser.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/parser.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/parser.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -350,14 +373,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_entry.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_entry.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_entry.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -365,14 +389,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/builtins.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/builtins.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/builtins.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -380,14 +405,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_link.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_link.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_link.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -395,14 +421,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/string1.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/string1.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/string1.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -410,14 +437,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/symbol.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/symbol.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/symbol.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -425,14 +453,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/tokenize.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/tokenize.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/tokenize.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -440,14 +469,15 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_utility.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_utility.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_utility.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   },
   {
     "arguments": [
@@ -455,13 +485,14 @@
       "-c",
       "-g3",
       "-fno-omit-frame-pointer",
+      "-DHOPPUS_X86",
       "-Iinclude",
       "-o",
       "build/ukernel_lisp.out",
       "include/hoppus_memory.h"
     ],
-    "directory": "/home/ruben/Code/Ruben/hoppus",
-    "file": "/home/ruben/Code/Ruben/hoppus/include/hoppus_memory.h",
-    "output": "/home/ruben/Code/Ruben/hoppus/build/ukernel_lisp.out"
+    "directory": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus",
+    "file": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/include/hoppus_memory.h",
+    "output": "/home/ruben/Code/MasterThesis/f9-riscv/user/hoppus/build/ukernel_lisp.out"
   }
 ]

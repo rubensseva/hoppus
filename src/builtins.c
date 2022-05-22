@@ -184,7 +184,6 @@ __USER_TEXT int bi_div(expr *arg, expr **out) {
 }
 
 __USER_TEXT int bi_cons(expr *arg, expr **out) {
-    unsigned int size = list_length(arg);
     if (list_length(arg) != 2) return NUMBER_OF_ARGUMENTS_ERROR;
     *out = expr_new_cons(car(arg), car(cdr(arg)));
     return 0;
