@@ -47,12 +47,19 @@ __USER_DATA uint32_t gc_stats_num_malloc = 0;
 __USER_DATA uint8_t alloc_bitmap[BITMAP_SIZE];
 __USER_DATA uint8_t marked_bitmap[BITMAP_SIZE];
 
-__USER_TEXT int gc_bitmap_get(uint8_t bitmap[], int i) {
-    int byte = i / 8;
-    int bit_in_byte = (i % 8);
-    int bit = (bitmap[byte] >> bit_in_byte) & 1;
-    return bit;
-}
+/* A macro is used for getting entries from bitmaps, the
+   function that was previously used is kept in comments
+   since the variable names could be nice for understanding
+   how the macro works. */
+/* __USER_TEXT int gc_bitmap_get(uint8_t bitmap[], int i) { */
+/*     int byte = i / 8; */
+/*     int bit_in_byte = (i % 8); */
+/*     int bit = (bitmap[byte] >> bit_in_byte) & 1; */
+/*     return bit; */
+/* } */
+#define gc_bitmap_get(bitmap, i) \
+        (bitmap[((i) / 8)] >> ((i) % 8) & 1)
+
 
 __USER_TEXT void gc_bitmap_set(uint8_t bitmap[], int i, int val) {
     int byte = i / 8;
