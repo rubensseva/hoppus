@@ -7,11 +7,19 @@
 
 #include <user_stdio.h>
 #include <user_thread.h>
+#include <user_thread_log.h>
+
+/* #define hoppus_printf(str, ...) {               \ */
+/*         user_printf(str, __VA_ARGS__);          \ */
+/*     } */
 #define hoppus_printf(str, ...) {               \
-        user_printf(str, __VA_ARGS__);          \
+        user_log_printf(str, __VA_ARGS__);          \
     }
+/* #define hoppus_puts(str) { \ */
+/*         user_puts(str);    \ */
+/*     } */
 #define hoppus_puts(str) { \
-        user_puts(str);    \
+        user_log_puts(str);    \
     }
 #define hoppus_read_line(str) { \
         read_line(buf);         \

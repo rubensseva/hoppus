@@ -14,13 +14,14 @@ uintptr_t stack_end;
 #define FULL_BITMASK 0xFFFFFFFFFFFFFFFF
 #endif
 #ifdef HOPPUS_RISCV_F9
-__USER_DATA uintptr_t stack_end = (uintptr_t) &user_thread_stack_end;
+__USER_DATA uintptr_t stack_end = (uintptr_t) &hoppus_thread_stack_end;
 #define FULL_BITMASK 0xFFFFFFFF
 #endif
 
 /* 128 bytes for bitmap gives 1024 objects, which is 8192 bytes */
-/* #define BITMAP_SIZE 128 */
-#define BITMAP_SIZE 256
+/* #define BITMAP_SIZE 64 */
+#define BITMAP_SIZE 128
+/* #define BITMAP_SIZE 256 */
 
 /* provided by linker, sdata is from customized default linker script,
    not in regular default linker script */
@@ -140,13 +141,23 @@ __USER_TEXT int gc_init() {
     heap_end = (header *)align_down((uintptr_t)(((char *)&malloc_heap) + MALLOC_HEAP_SIZE), sizeof(header));
 #endif
 #ifdef HOPPUS_RISCV_F9
-    heap_start = (header *)align_up((uintptr_t)&user_thread_heap_start, sizeof(header));
-    heap_end = (header *)align_down((uintptr_t)&user_thread_heap_end, sizeof(header));
+    heap_start = (header *)align_up((uintptr_t)&hoppus_thread_heap_start, sizeof(header));
+    heap_end = (header *)align_down((uintptr_t)&hoppus_thread_heap_end, sizeof(header));
 #endif
 
     heap_size = (char *)heap_end - (char *)heap_start;
 
     heap_split = (header *)((small_obj *)heap_start + (BITMAP_SIZE * 8));
+    if (heap_split <= heap_start || heap_split >= heap_end) {
+        hoppus_puts("ERROR: GC: Unable split heap\n");
+        return 1;
+    }
+    hoppus_printf("INFO: GC: heap_start: %x, heap_end: %x, heap_size: %d\n",
+                  heap_start, heap_end, heap_size);
+    hoppus_printf("INFO: GC: small_heap_start: %x, small_heap_end: %x, small_heap_size: %d\n",
+                  heap_start, heap_split, (char *) heap_split - (char *) heap_start);
+    hoppus_printf("INFO: GC: large_heap_start: %x, large_heap_end: %x, large_heap_size: %d\n",
+                  heap_split, heap_end, (char *) heap_end - (char *) heap_split);
 
     gc_bitmap_init(alloc_bitmap);
     gc_bitmap_init(marked_bitmap);
@@ -333,7 +344,7 @@ __USER_TEXT int gc_mark_and_sweep() {
 #endif
 #ifdef HOPPUS_RISCV_F9
     gc_scan_region((uintptr_t *)&user_bss_start, (uintptr_t *)&user_bss_end);
-    gc_scan_region((uintptr_t *)&user_data_misc_start, (uintptr_t *)&user_data_misc_end);
+    gc_scan_region((uintptr_t *)&user_threads_data_start, (uintptr_t *)&user_threads_data_end);
 #endif
 
     gc_scan_region(sp, (uintptr_t *)stack_end);
@@ -346,9 +357,9 @@ __USER_TEXT int gc_mark_and_sweep() {
     gc_dump_info();
     hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
     hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
-    /* gc_bitmap_print(alloc_bitmap); */
+    gc_bitmap_print(alloc_bitmap);
     gc_sweep();
-    /* gc_bitmap_print(alloc_bitmap); */
+    gc_bitmap_print(alloc_bitmap);
     hoppus_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
     hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
     hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
@@ -370,6 +381,11 @@ __USER_TEXT void gc_alloc_dump() {
 __USER_TEXT void *gc_malloc_units(unsigned int required_units) {
     /* Set up used list if it is empty */
     if (large_used == NULL) {
+        if ((header *)heap_split + required_units > heap_end) {
+            hoppus_printf("ERROR: GC: not enough space for %d, even though its the first object on large objects heap\n",
+                          required_units * sizeof(header));
+            return NULL;
+        }
         header *free_base = (header *)heap_split;
         free_base->size = required_units - 1;
         free_base->next = NULL;
