@@ -255,11 +255,11 @@ __USER_TEXT int gc_scan_region(uintptr_t *start, uintptr_t *end) {
 }
 
 __USER_TEXT int gc_sweep() {
-    unsigned int num_sweeped = 0;
+    unsigned int num_large_sweeped = 0;
     header *u = large_used, *prev = NULL;
     while (u != NULL) {
         if (((uintptr_t)u->next & 1) == 0) {
-            num_sweeped++;
+            num_large_sweeped++;
             gc_allocated_size -= (u->size + 1) * sizeof(header);
             if (u == large_prev_malloced)
                 large_prev_malloced = prev;
@@ -282,19 +282,19 @@ __USER_TEXT int gc_sweep() {
             num_small_sweeped++;
         }
     }
-    hoppus_printf("INFO: GC: sweeped %d objects\n", num_sweeped);
+    hoppus_printf("INFO: GC: sweeped %d large objects\n", num_large_sweeped);
     hoppus_printf("INFO: GC: sweeped %d small objects\n", num_small_sweeped);
     return 0;
 }
 
 __USER_TEXT int gc_dump_info() {
-    int count = 0, marked = 0, unmarked = 0;
+    int large_count = 0, large_marked = 0, large_unmarked = 0;
     for (header *u = large_used; u != NULL; u = UNTAG(u->next)) {
-        count++;
+        large_count++;
         if (((uintptr_t)u->next & 1) == 1) {
-            marked++;
+            large_marked++;
         } else {
-            unmarked++;
+            large_unmarked++;
         }
     }
     int small_count = 0, small_marked = 0, small_unmarked = 0;
@@ -308,9 +308,9 @@ __USER_TEXT int gc_dump_info() {
             }
         }
     }
-    hoppus_printf("INFO: GC: %d allocated objects\n", count);
-    hoppus_printf("INFO: GC: %d marked objects\n", marked);
-    hoppus_printf("INFO: GC: %d unmarked objects\n", unmarked);
+    hoppus_printf("INFO: GC: %d large allocated objects\n", large_count);
+    hoppus_printf("INFO: GC: %d large marked objects\n", large_marked);
+    hoppus_printf("INFO: GC: %d large unmarked objects\n", large_unmarked);
     hoppus_printf("INFO: GC: %d small allocated objects\n", small_count);
     hoppus_printf("INFO: GC: %d small marked objects\n", small_marked);
     hoppus_printf("INFO: GC: %d small unmarked objects\n", small_unmarked);
@@ -357,9 +357,9 @@ __USER_TEXT int gc_mark_and_sweep() {
     gc_dump_info();
     hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
     hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
-    gc_bitmap_print(alloc_bitmap);
+    /* gc_bitmap_print(alloc_bitmap); */
     gc_sweep();
-    gc_bitmap_print(alloc_bitmap);
+    /* gc_bitmap_print(alloc_bitmap); */
     hoppus_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
     hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
     hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
