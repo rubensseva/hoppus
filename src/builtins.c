@@ -390,12 +390,13 @@ __USER_TEXT int bi_macroexpand(expr *arg, expr **out) {
 }
 
 /** Time the evaluation of a form, return the result of evaluation and print the time.
-    Does not support a time invocation inside another time invocation */
-__USER_TEXT int bi_time(expr *arg, expr **out) {
+    Does not support a time invocation inside another time invocation
+    HACK: Need to tell gcc to not optimize this builtin, otherwise the variables values
+    are somehow stored between function calls. There is probably a much better way to solve it
+    but setting the -O0 attribute works for now. */
+__USER_TEXT __attribute__((optimize("O0"))) int bi_time(expr *arg, expr **out) {
 #ifdef HOPPUS_RISCV_F9
     int ret_code;
-    timer_init();
-    timer_reset();
     TIMER_START();
     ret_code = eval(car(arg), out);
     TIMER_LATCH();
@@ -405,9 +406,9 @@ __USER_TEXT int bi_time(expr *arg, expr **out) {
         return ret_code;
     }
     int counter_val = timer_get();
+    timer_reset();
     int us = timer_counter_to_microseconds(counter_val);
-    int s = us / 1000000;
-    hoppus_printf("counter: %d, time (us): %d us, time (s): %d s \n", counter_val, us, s);
+    hoppus_printf("counter: %d, time (us): %d us \n", counter_val, us);
     return 0;
 #endif
 #ifdef HOPPUS_X86
