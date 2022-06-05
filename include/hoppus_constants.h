@@ -45,6 +45,7 @@ extern char MACROEXPAND_STR[];
 /* __USER_DATA char QUASIQUOTE_STR[] = "quasiquote"; */
 /* __USER_DATA char COMMA_STR[] = "comma"; */
 /* __USER_DATA char COMMA_AT_STR[] = "comma-at"; */
+extern char TIME_STR[];
 
 extern char BOOL_STR_T[];
 extern char BOOL_STR_F[];

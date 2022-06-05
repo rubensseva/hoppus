@@ -11,6 +11,10 @@
 #include <hoppus_stdio.h>
 #include <hoppus_link.h>
 
+#ifdef HOPPUS_RISCV_F9
+#include <timer_ESP32_C3.h>
+#endif
+
 #include <stdint.h>
 
 /**
@@ -383,4 +387,31 @@ __USER_TEXT int bi_macroexpand(expr *arg, expr **out) {
         return ret_code;
     *out = macro_expand;
     return 0;
+}
+
+/** Time the evaluation of a form, return the result of evaluation and print the time.
+    Does not support a time invocation inside another time invocation */
+__USER_TEXT int bi_time(expr *arg, expr **out) {
+#ifdef HOPPUS_RISCV_F9
+    int ret_code;
+    timer_init();
+    timer_reset();
+    TIMER_START();
+    ret_code = eval(car(arg), out);
+    TIMER_LATCH();
+    if (ret_code < 0) {
+        timer_reset();
+        hoppus_puts("evaluation failed of form to time\n");
+        return ret_code;
+    }
+    int counter_val = timer_get();
+    int us = timer_counter_to_microseconds(counter_val);
+    int s = us / 1000000;
+    hoppus_printf("counter: %d, time (us): %d us, time (s): %d s \n", counter_val, us, s);
+    return 0;
+#endif
+#ifdef HOPPUS_X86
+    hoppus_printf("time not implemented on x86 yet\n");
+    return 1;
+#endif
 }

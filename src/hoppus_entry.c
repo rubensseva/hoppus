@@ -39,6 +39,7 @@ __USER_TEXT void create_builtins() {
     symbol *quasiquote = symbol_builtin_create(QUASIQUOTE_STR, bi_quasiquote, 1);
     symbol *comma = symbol_builtin_create(COMMA_STR, bi_comma, 1);
     symbol *comma_at = symbol_builtin_create(COMMA_AT_STR, bi_comma_at, 1);
+    symbol *time = symbol_builtin_create(TIME_STR, bi_time, 1);
 
     symbol_add(defun);
     symbol_add(define);
@@ -63,6 +64,7 @@ __USER_TEXT void create_builtins() {
     symbol_add(quasiquote);
     symbol_add(comma);
     symbol_add(comma_at);
+    symbol_add(time);
 }
 
 __USER_TEXT void parser_error(int error) {
