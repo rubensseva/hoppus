@@ -225,7 +225,7 @@ __USER_TEXT int gc_scan_heap() {
 }
 
 __USER_TEXT int gc_scan_region(uintptr_t *start, uintptr_t *end) {
-    hoppus_printf("INFO: GC: scanning region from %x to %x...\n", start, end);
+    /* hoppus_printf("INFO: GC: scanning region from %x to %x...\n", start, end); */
     for (uintptr_t *p = start; p <= end - 1; p += 1) {
         if (gc_is_skippable_ptr(p))
             continue;
@@ -282,8 +282,8 @@ __USER_TEXT int gc_sweep() {
             num_small_sweeped++;
         }
     }
-    hoppus_printf("INFO: GC: sweeped %d large objects\n", num_large_sweeped);
-    hoppus_printf("INFO: GC: sweeped %d small objects\n", num_small_sweeped);
+    /* hoppus_printf("INFO: GC: sweeped %d large objects\n", num_large_sweeped); */
+    /* hoppus_printf("INFO: GC: sweeped %d small objects\n", num_small_sweeped); */
     return 0;
 }
 
@@ -322,8 +322,8 @@ __USER_TEXT int gc_mark_and_sweep() {
     register void *_sp asm ("sp");
     sp = _sp;
 
-    hoppus_puts("-----------------------------\n");
-    hoppus_puts("INFO: GC: starting\n");
+    /* hoppus_puts("-----------------------------\n"); */
+    /* hoppus_puts("INFO: GC: starting\n"); */
 
     /* Reset gc marks */
     for (header *u = large_used; u != NULL; u = UNTAG(u->next))
@@ -349,21 +349,21 @@ __USER_TEXT int gc_mark_and_sweep() {
 
     gc_scan_region(sp, (uintptr_t *)stack_end);
 
-    hoppus_puts("INFO: GC: scanning marked objects...\n");
+    /* hoppus_puts("INFO: GC: scanning marked objects...\n"); */
     gc_scan_heap();
 
 
-    hoppus_puts("INFO: GC: scan finished\n");
-    gc_dump_info();
-    hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
-    hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
+    /* hoppus_puts("INFO: GC: scan finished\n"); */
+    /* gc_dump_info(); */
+    /* hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size); */
+    /* hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size); */
     /* gc_bitmap_print(alloc_bitmap); */
     gc_sweep();
     /* gc_bitmap_print(alloc_bitmap); */
-    hoppus_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc());
-    hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size);
-    hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size);
-    hoppus_puts("-----------------------------\n");
+    /* hoppus_printf("INFO: GC: %d num mallocs\n", gc_stats_get_num_malloc()); */
+    /* hoppus_printf("INFO: GC: %d / %d bytes allocated\n", gc_allocated_size, heap_size); */
+    /* hoppus_printf("INFO: GC: %d / %d recalculated\n", gc_calc_allocated(), heap_size); */
+    /* hoppus_puts("-----------------------------\n"); */
 
     return 0;
 }
