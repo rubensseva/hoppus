@@ -4,7 +4,7 @@
 #include <hoppus_config.h>
 
 #ifdef HOPPUS_RISCV_F9
-    #include <link.h>
+    #include <platform/link.h>
 #endif
 #ifdef HOPPUS_X86
     #define __USER_TEXT         __attribute__ (())

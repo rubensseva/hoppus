@@ -12,7 +12,7 @@
 #include <hoppus_link.h>
 
 #ifdef HOPPUS_RISCV_F9
-#include <timer_ESP32_C3.h>
+#include <ESP32_C3_timer.h>
 #endif
 
 #include <stdint.h>
