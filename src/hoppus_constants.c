@@ -39,6 +39,7 @@ __USER_DATA char MACROEXPAND_STR[] = "macroexpand";
 /* __USER_DATA char COMMA_STR[] = "comma"; */
 /* __USER_DATA char COMMA_AT_STR[] = "comma-at"; */
 __USER_DATA char TIME_STR[] = "time";
+__USER_DATA char IPC_STR[] = "ipc";
 
 __USER_DATA char BOOL_STR_T[] = "true";
 __USER_DATA char BOOL_STR_F[] = "false";

@@ -13,6 +13,7 @@
 
 #ifdef HOPPUS_RISCV_F9
 #include <ESP32_C3_timer.h>
+#include <F9.h>
 #endif
 
 #include <stdint.h>
@@ -408,11 +409,47 @@ __USER_TEXT __attribute__((optimize("O0"))) int bi_time(expr *arg, expr **out) {
     int counter_val = timer_get();
     timer_reset();
     int us = timer_counter_to_microseconds(counter_val);
-    hoppus_printf("counter: %d, time (us): %d us \n", counter_val, us);
+    hoppus_printf("counter: %d, time: %d us \n", counter_val, us);
     return 0;
 #endif
 #ifdef HOPPUS_X86
     hoppus_printf("time not implemented on x86 yet\n");
+    return 1;
+#endif
+}
+
+/**
+   Builtin for sending an F9 IPC message to another thread.
+   example: (ipc to_thread_id timeout arg1 arg2 ...)
+ */
+__USER_TEXT int bi_ipc(expr *arg, expr **out) {
+#ifdef HOPPUS_RISCV_F9
+    int ret_code;
+
+    L4_ThreadId_t to_tid = {.raw = dar(arg)};
+
+    int timeout = dar(cdr(arg));
+    expr *curr = cdr(cdr(arg));
+    int num_msgs = list_length(curr);
+
+    L4_Word_t *msgs = my_malloc(num_msgs * sizeof(L4_Word_t));
+    int msg_i = 0;
+
+    for_each(curr) {
+        msgs[msg_i++] = dar(curr);
+    }
+
+    L4_Msg_t msg;
+    L4_MsgClear(&msg);
+    L4_MsgPut(&msg, 0, num_msgs, msgs, 0, NULL);
+
+    L4_MsgLoad(&msg);
+    L4_Ipc(to_tid, L4_nilthread, timeout, (L4_ThreadId_t *) 0);
+
+    return 0;
+#endif
+#ifdef HOPPUS_X86
+    hoppus_printf("ipc not implemented on x86\n");
     return 1;
 #endif
 }
