@@ -413,7 +413,7 @@ __USER_TEXT __attribute__((optimize("O0"))) int bi_time(expr *arg, expr **out) {
     return 0;
 #endif
 #ifdef HOPPUS_X86
-    hoppus_printf("time not implemented on x86 yet\n");
+    hoppus_puts("time not implemented on x86 yet\n");
     return 1;
 #endif
 }
@@ -449,7 +449,7 @@ __USER_TEXT int bi_ipc(expr *arg, expr **out) {
     return 0;
 #endif
 #ifdef HOPPUS_X86
-    hoppus_printf("ipc not implemented on x86\n");
+    hoppus_puts("ipc not implemented on x86\n");
     return 1;
 #endif
 }
